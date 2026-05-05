@@ -1,0 +1,13 @@
+# Godot / .NET build outputs
+.godot/
+bin/
+obj/
+
+# Local package outputs
+*.nupkg
+*.snupkg
+
+# Editor and OS noise
+.DS_Store
+*.swp
+
