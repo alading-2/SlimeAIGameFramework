@@ -21,5 +21,11 @@ public enum AbilityCategory
     Effect = 4,
 
     /// <summary>目标。</summary>
-    Target = 5
+    Target = 5,
+
+    /// <summary>资源与表现。</summary>
+    Visual = 6,
+
+    /// <summary>链式效果。</summary>
+    Chain = 7
 }

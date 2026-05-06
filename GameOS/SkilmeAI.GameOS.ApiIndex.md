@@ -45,6 +45,8 @@
 | `SkilmeAI.GameOS.Runtime.Schedule.SystemTag` | enum | migrated | 系统标签。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.ProjectStateService` | class | migrated | 项目状态服务。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.SystemRunCondition` | class | migrated | 系统运行条件。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.ScheduleCategory` | enum | bootstrap | Schedule DataKey 分类：System / Preset / Spawn。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.ScheduleDataKeys` | static class | bootstrap | 系统配置、系统预设和 Spawn config 使用的 Runtime DataKey。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.IRuntimeSystem` | interface | migrated | 系统生命周期协议。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.IRuntimeCommandHandler<TRequest,TResult>` | interface | migrated | 系统命令处理协议。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.RuntimeSchedule` | class | migrated | 纯 C# Runtime 调度器。 |
@@ -71,7 +73,7 @@
 | API | 类型 | 状态 | 说明 |
 | --- | --- | --- | --- |
 | `SkilmeAI.GameOS.Capabilities.Movement.Vector2Value` | record struct | migrated | 纯 C# 二维向量值，避免 Capability 内核直接依赖 Godot 类型。 |
-| `SkilmeAI.GameOS.Capabilities.Movement.MovementDataKeys` | static class | migrated | Movement 运行时 DataKey：Position / Velocity / FacingDirection / IsMoving / MoveSpeed / InputDirection / AIMoveDirection / AIMoveSpeedMultiplier / CanMoveInput / LastMoveDirection。 |
+| `SkilmeAI.GameOS.Capabilities.Movement.MovementDataKeys` | static class | migrated | Movement 运行时与 authoring DataKey：Position / Velocity / FacingDirection / IsMoving / MoveSpeed / InputDirection / AIMoveDirection / AIMoveSpeedMultiplier / CanMoveInput / LastMoveDirection，以及 handler 可映射到 MovementParams 的 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc 参数。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.MoveMode` | enum | migrated | 当前迁入 `None / Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc`。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.MovementParams` | record struct | migrated | 全部旧 `MoveMode` 纯运行时策略使用的方向、目标点、目标实体、附着偏移、速度、轨道、波形、Bezier、Boomerang、曲线、时长、距离、可选运动碰撞参数和朝向参数。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.OrientationMode` | enum | bootstrap | Movement 视觉朝向模式：FollowMovement / SpinOnly / FollowMovementAndSpin。 |
@@ -128,7 +130,7 @@
 | `SkilmeAI.GameOS.Capabilities.Damage.DamageRepeatOptions` | record struct | bootstrap | DamageTool 周期伤害参数。 |
 | `SkilmeAI.GameOS.Capabilities.Damage.DamageApplyResult` | class | bootstrap | DamageTool 多目标 / 周期伤害结果。 |
 | `SkilmeAI.GameOS.Capabilities.Damage.DamageTool` | static class | bootstrap | 多目标和周期伤害工具，统一调用 DamageService 与 TimerManager。 |
-| `SkilmeAI.GameOS.Capabilities.Ability.AbilityDataKeys` | static class | bootstrap | Ability 运行时 DataKey：类型、触发模式、目标语义、自动索敌、启用、执行中、冷却、充能和伤害参数。 |
+| `SkilmeAI.GameOS.Capabilities.Ability.AbilityDataKeys` | static class | bootstrap | Ability 运行时 DataKey：类型、触发模式、目标语义、自动索敌、描述 / 图标 / 分组 / 消耗、冷却、充能、伤害、施法范围、效果半径和链式参数。 |
 | `SkilmeAI.GameOS.Capabilities.Ability.AbilityType` | enum | bootstrap | 技能类型：Active / Passive / Weapon。 |
 | `SkilmeAI.GameOS.Capabilities.Ability.AbilityTriggerMode` | enum flags | bootstrap | 技能触发模式：Manual / OnEvent / Periodic / Permanent。 |
 | `SkilmeAI.GameOS.Capabilities.Ability.AbilityTargetSelection` | enum | bootstrap | 技能目标输入语义：None / Entity / Point / EntityOrPoint。 |
@@ -150,7 +152,7 @@
 | `SkilmeAI.GameOS.Capabilities.Effect.EffectSpawnOptions` | class | bootstrap | 效果生成参数。 |
 | `SkilmeAI.GameOS.Capabilities.Effect.EffectSpawnResult` | record struct | bootstrap | 效果生成结果。 |
 | `SkilmeAI.GameOS.Capabilities.Effect.EffectTool` | static class | bootstrap | 纯 Runtime 效果生成工具，写入 Data、位置、关系并发布 `effect:spawned`。 |
-| `SkilmeAI.GameOS.Capabilities.Feature.FeatureDataKeys` | static class | bootstrap | Feature 运行时 DataKey：FeatureId / HandlerId / IsEnabled / IsActive / ActivationCount。 |
+| `SkilmeAI.GameOS.Capabilities.Feature.FeatureDataKeys` | static class | bootstrap | Feature 运行时 DataKey：FeatureId / HandlerId / Description / Category / modifier authoring 字段 / IsEnabled / IsActive / ActivationCount。 |
 | `SkilmeAI.GameOS.Capabilities.Feature.FeatureDefinition` | class | bootstrap | 可授予能力定义，包含 FeatureId、HandlerId 和授予时 Modifier 列表。 |
 | `SkilmeAI.GameOS.Capabilities.Feature.FeatureModifierEntry` | record struct | bootstrap | Feature 授予时应用到 Owner Data 的 Modifier 配置。 |
 | `SkilmeAI.GameOS.Capabilities.Feature.FeatureContext` | class | bootstrap | Feature 生命周期上下文，承载 Owner / Feature / Definition / ActivationData / ExecuteResult。 |
@@ -164,7 +166,7 @@
 | `SkilmeAI.GameOS.Capabilities.Attack.AttackTriggerResult` | enum | bootstrap | 普通攻击请求结果和失败原因。 |
 | `SkilmeAI.GameOS.Capabilities.Attack.AttackTriggerReport` | record struct | bootstrap | 普通攻击请求报告。 |
 | `SkilmeAI.GameOS.Capabilities.Attack.AttackService` | class | bootstrap | 普通攻击最小 Runtime 服务，消费 `GameEventType.Attack.Requested`，处理前摇 / 后摇 / 冷却并通过 `DamageService` 结算 `DamageTags.Attack` 伤害。 |
-| `SkilmeAI.GameOS.Capabilities.Unit.UnitDataKeys` | static class | bootstrap | Unit 表现层 DataKey：AvailableAnimations。 |
+| `SkilmeAI.GameOS.Capabilities.Unit.UnitDataKeys` | static class | bootstrap | Unit 运行时 DataKey：Name / EntityType / DeathType / VisualScenePath / HealthBarHeight / IsShowHealthBar / PickupRange / ExpReward / DetectionRange / AvailableAnimations。 |
 | `SkilmeAI.GameOS.Capabilities.AI.AIDataKeys` | static class | bootstrap | AI 运行时 DataKey：IsEnabled / TargetEntity / TargetPosition / HasTargetPosition / IsAttackRequested / AttackRange / PatrolCenter / PatrolRadius / PatrolWaitTime / PatrolTargetPosition / HasPatrolTargetPosition / PatrolWaitRemaining / PatrolDirectionSign。 |
 | `SkilmeAI.GameOS.Capabilities.AI.AIContext` | class | bootstrap | AI 行为树 Tick 上下文，承载实体、delta、AbilityService、自动施法上下文和可选自动索敌技能集合。 |
 | `SkilmeAI.GameOS.Capabilities.AI.AIState` | enum | bootstrap | AI 节点返回状态：Failure / Success / Running。 |
@@ -222,7 +224,8 @@
 | `DataOS/Generators/generate-runtime-snapshot.sh` | script | active | 从 SQLite authoring DB 生成 Runtime JSON snapshot。 |
 | `DataOS/Validation/validate-dataos.sh` | script | active | 校验 DataOS authoring DB 的外键、空键、bool、资源分类和路径。 |
 | `Tests/SkilmeAI.GameOS.Tests` | console project | active | 覆盖 Event/Data/DataOS snapshot/Entity/Relationship/Schedule/Pool/Timer/Resource/Movement/MovementCollision、DamageService、HealService、DamageTool、AbilityService 点选目标语义、Ability 自动索敌、ProjectileTool 生成与命中生命周期、EffectTool 动画名写入、FeatureService、AttackService、AI 行为树、AI 巡逻、AI 行为树预制块、AI 攻击请求、AI 自动索敌施法上下文准备、Damage 处理器管线、目标查询注入和 OrientationParams 最小行为。 |
-| `Games/BrotatoLike/Src/Game/Main.cs` | Godot scene script | active | 当前 headless smoke 覆盖 Movement、MovementCollision、Damage / ContactDamage / Attack、旧 AttackComponent 兼容包装、Attack 动画播放 / 可用动画回退选择 / 取消 / 完成回退、Godot AI bridge、Ability 点选目标、Ability 自动索敌、Projectile / Effect Runtime 生成与 Godot 实例化、Effect 动画播放、Projectile 命中伤害 / 穿透 / 生命周期销毁、Godot Physics broadphase、GodotMovementDriver、GodotOrientationComponent、GodotBridge Entity/Component/TimerDriver 和 GodotNodePool 接入。 |
+| `Games/BrotatoLike/Src/Game/BrotatoLikeDataOSBootstrap.cs` | class | active | 游戏侧正式 DataOS snapshot 入口，可读取 `res://DataOS/Snapshots/runtime_snapshot.json`、注册资源并按记录生成 Runtime Entity。 |
+| `Games/BrotatoLike/Src/Game/Main.cs` | Godot scene script | active | 当前 headless smoke 覆盖 Movement、MovementCollision、Damage / ContactDamage / Attack、旧 AttackComponent 兼容包装、Attack 动画播放、Godot AI bridge、Ability 点选目标、Ability 自动索敌、Projectile / Effect Runtime 与 Godot 实例化、DataOS bootstrap 生成 Runtime Entity、Godot Physics broadphase、GodotMovementDriver、GodotOrientationComponent、GodotBridge 和 GodotNodePool 接入。 |
 | `Games/BrotatoLike/Tools/run-godot-smoke.sh` | script | active | 使用 Godot 4.6.2 mono CLI 运行 BrotatoLike Runtime / Movement / MovementCollision / Damage / ContactDamage / Attack / Attack Animation lifecycle / Godot AI bridge / Ability 点选目标 / Ability 自动索敌 / Projectile / Effect Runtime 与 Godot 实例化 / Effect 动画播放 / Projectile 命中生命周期 / 穿透 / MaxLifeTime 销毁 / Godot Physics broadphase / Godot Orientation / GodotBridge smoke。 |
 
 Movement 已完成旧 `MoveMode` 纯 C# Capability 策略迁入、Godot 2D 位移桥、运行时圆形扫描版运动碰撞、同帧多命中派发、Godot Physics broadphase 查询和 Godot 朝向输出第一批。Collision 已完成层常量、DataKey、过滤策略、运行时事件和 Godot `Area2D` / Hurtbox bridge 第一批。Damage 已完成 DamageService / HealService / DamageTool / DamageDataKeys / ContactDamage bridge / 处理器管线第一批。Ability 已完成最小 Runtime 切片、点选目标语义、自动索敌第一段、Periodic 自动触发 Tick 并可选调用 Feature handler；Projectile / Effect 已完成纯 Runtime 生成入口和 Godot 实例化第一段，Projectile 已完成命中生命周期、穿透多目标和 MaxLifeTime 停止销毁，Effect 已完成动画播放第一段；Feature 已完成最小生命周期；AI 已完成最小纯 Runtime 行为树、最近目标查询、巡逻、行为树预制块、Ability 自动索敌上下文准备、Godot AI bridge 和攻击请求事件；Attack 已完成最小 Runtime 结算、GodotAttackComponent bridge、旧 AttackComponent 兼容包装、Attack 动画事件桥第二段和旧 Attack 动画选择兼容第一段。DataOS 已建立 SQLite schema / migration / generator / validator / Runtime snapshot loader 最小闭环。

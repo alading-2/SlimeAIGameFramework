@@ -109,6 +109,187 @@ public static class AbilityDataKeys
         Description = "技能触发时调用的 Feature Handler Id。"
     });
 
+    /// <summary>技能分组 Id。</summary>
+    public static readonly DataMeta FeatureGroupId = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.FeatureGroupId",
+        DisplayName = "Feature Group Id",
+        Type = typeof(string),
+        Category = AbilityCategory.Basic,
+        DefaultValue = string.Empty,
+        Description = "技能在游戏侧 Feature 目录中的分组 Id。"
+    });
+
+    /// <summary>技能描述。</summary>
+    public static readonly DataMeta Description = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.Description",
+        DisplayName = "Ability Description",
+        Type = typeof(string),
+        Category = AbilityCategory.Basic,
+        DefaultValue = string.Empty,
+        Description = "技能 UI 和工具使用的描述文本。"
+    });
+
+    /// <summary>技能图标路径。</summary>
+    public static readonly DataMeta IconPath = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.IconPath",
+        DisplayName = "Ability Icon Path",
+        Type = typeof(string),
+        Category = AbilityCategory.Visual,
+        DefaultValue = string.Empty,
+        Description = "技能图标使用的 res:// 资源路径。"
+    });
+
+    /// <summary>当前等级。</summary>
+    public static readonly DataMeta Level = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.Level",
+        DisplayName = "Ability Level",
+        Type = typeof(int),
+        Category = AbilityCategory.Basic,
+        DefaultValue = 1,
+        MinValue = 0f,
+        Description = "技能当前等级。"
+    });
+
+    /// <summary>最大等级。</summary>
+    public static readonly DataMeta MaxLevel = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.MaxLevel",
+        DisplayName = "Ability Max Level",
+        Type = typeof(int),
+        Category = AbilityCategory.Basic,
+        DefaultValue = 1,
+        MinValue = 0f,
+        Description = "技能最大等级。"
+    });
+
+    /// <summary>消耗类型。</summary>
+    public static readonly DataMeta CostType = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.CostType",
+        DisplayName = "Ability Cost Type",
+        Type = typeof(string),
+        Category = AbilityCategory.Cooldown,
+        DefaultValue = string.Empty,
+        Description = "技能消耗资源类型。"
+    });
+
+    /// <summary>消耗数值。</summary>
+    public static readonly DataMeta CostAmount = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.CostAmount",
+        DisplayName = "Ability Cost Amount",
+        Type = typeof(float),
+        Category = AbilityCategory.Cooldown,
+        DefaultValue = 0f,
+        MinValue = 0f,
+        Description = "技能触发需要消耗的资源数量。"
+    });
+
+    /// <summary>充能恢复时间。</summary>
+    public static readonly DataMeta ChargeTime = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.ChargeTime",
+        DisplayName = "Ability Charge Time",
+        Type = typeof(float),
+        Category = AbilityCategory.Charge,
+        DefaultValue = 0f,
+        MinValue = 0f,
+        Description = "恢复一层充能需要的时间。"
+    });
+
+    /// <summary>施法距离。</summary>
+    public static readonly DataMeta CastRange = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.CastRange",
+        DisplayName = "Ability Cast Range",
+        Type = typeof(float),
+        Category = AbilityCategory.Target,
+        DefaultValue = -1f,
+        MinValue = -1f,
+        SupportModifiers = true,
+        Description = "技能施法或自动索敌参考距离；-1 表示不限制。"
+    });
+
+    /// <summary>效果半径。</summary>
+    public static readonly DataMeta EffectRadius = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.EffectRadius",
+        DisplayName = "Ability Effect Radius",
+        Type = typeof(float),
+        Category = AbilityCategory.Effect,
+        DefaultValue = 0f,
+        MinValue = 0f,
+        SupportModifiers = true,
+        Description = "技能命中、AOE 或表现使用的效果半径。"
+    });
+
+    /// <summary>链式弹跳次数。</summary>
+    public static readonly DataMeta ChainCount = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.ChainCount",
+        DisplayName = "Ability Chain Count",
+        Type = typeof(int),
+        Category = AbilityCategory.Chain,
+        DefaultValue = 0,
+        MinValue = 0f,
+        Description = "链式技能最多弹跳次数。"
+    });
+
+    /// <summary>链式弹跳范围。</summary>
+    public static readonly DataMeta ChainRange = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.ChainRange",
+        DisplayName = "Ability Chain Range",
+        Type = typeof(float),
+        Category = AbilityCategory.Chain,
+        DefaultValue = 0f,
+        MinValue = 0f,
+        SupportModifiers = true,
+        Description = "链式技能每次弹跳查找目标的半径。"
+    });
+
+    /// <summary>链式弹跳延迟。</summary>
+    public static readonly DataMeta ChainDelay = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.ChainDelay",
+        DisplayName = "Ability Chain Delay",
+        Type = typeof(float),
+        Category = AbilityCategory.Chain,
+        DefaultValue = 0f,
+        MinValue = 0f,
+        Description = "链式技能每次弹跳之间的延迟秒数。"
+    });
+
+    /// <summary>链式伤害衰减，0-100。</summary>
+    public static readonly DataMeta ChainDamageDecay = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.ChainDamageDecay",
+        DisplayName = "Ability Chain Damage Decay",
+        Type = typeof(float),
+        Category = AbilityCategory.Chain,
+        DefaultValue = 100f,
+        MinValue = 0f,
+        MaxValue = 100f,
+        IsPercentage = true,
+        SupportModifiers = true,
+        Description = "链式技能每次弹跳后的伤害保留百分比。"
+    });
+
+    /// <summary>链式连线效果场景路径。</summary>
+    public static readonly DataMeta LineEffectScenePath = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.LineEffectScenePath",
+        DisplayName = "Ability Line Effect Scene Path",
+        Type = typeof(string),
+        Category = AbilityCategory.Visual,
+        DefaultValue = string.Empty,
+        Description = "链式技能连线特效使用的 res:// 场景路径。"
+    });
+
     /// <summary>是否启用。</summary>
     public static readonly DataMeta IsEnabled = DataRegistry.Register(new DataMeta
     {
@@ -254,6 +435,21 @@ public static class AbilityDataKeys
         _ = AutoTargetIgnoreSameTeam;
         _ = AutoTargetRequiresDamageable;
         _ = FeatureHandlerId;
+        _ = FeatureGroupId;
+        _ = Description;
+        _ = IconPath;
+        _ = Level;
+        _ = MaxLevel;
+        _ = CostType;
+        _ = CostAmount;
+        _ = ChargeTime;
+        _ = CastRange;
+        _ = EffectRadius;
+        _ = ChainCount;
+        _ = ChainRange;
+        _ = ChainDelay;
+        _ = ChainDamageDecay;
+        _ = LineEffectScenePath;
         _ = IsEnabled;
         _ = IsActive;
         _ = Cooldown;

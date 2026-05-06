@@ -6,7 +6,7 @@
 
 ## 当前执行到哪一步
 
-当前已完成到 `M17 DataOS 正式适配最小闭环`。
+当前已完成到 `M27.3 Ability handler 真实执行闭环扩展`。
 
 已验证完成：
 
@@ -20,6 +20,7 @@
 - 旧 `assets/` 已复制到 `Games/BrotatoLike/assets`，旧 `Data/` 和 `Src/Main/` 已复制到 `Games/BrotatoLike/MigrationInput/` 并排除编译。
 - Godot 引擎源码入口已固定为 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`，构建脚本在 `/home/slime/Code/SkilmeAI/Engine/Tools/build-linux-editor-mono.sh`。
 - `M17`：DataOS 已建立 SQLite core schema、migration、generator、validator 和 Runtime JSON snapshot loader；BrotatoLike 已接入第一批 authoring seed、生成 snapshot，并在 Godot smoke 中读取 snapshot 写入 Runtime Data、注册资源映射。
+- `M18+`：BrotatoLike DataOS seed 已扩大到 TargetingIndicator、ChainAbility、旧 AbilityData 通用字段、Ability handler-specific 参数第三段、Feature definition / modifier、System config / preset、Spawn config 和更多旧 ResourcePaths；框架补充 Unit / Ability / Feature / Schedule DataMeta，并新增 Movement handler authoring DataKey；游戏侧新增 `BrotatoLikeDataOSBootstrap` 和 `BrotatoLikeAbilityHandlers`，正式代码可从 snapshot 生成 Runtime Entity；SineWave / Boomerang / BezierCurve / CircularArc / Orbit / AttachToHost、Dash、ChainLightning、Slam、TargetPoint、CircleDamage 和 AuraShield 已从 DataOS Runtime Data 进入真实 handler 执行闭环。
 
 最新验证命令：
 
@@ -146,8 +147,8 @@ cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 
 ## 当前下一步执行顺序
 
-1. 扩大 DataOS 旧 DataNew 迁移范围，并把 snapshot 驱动接入正式游戏生成入口。
-2. 将 BrotatoLike Godot smoke 接入统一场景测试 runner。
+1. 继续扩大 DataOS 旧 DataNew 剩余字段和真实生成入口，推进剩余 Ability / Projectile / Effect / Feature handler 数据驱动。
+2. 继续把真实主场景、UI 和 SpawnSystem 专项 smoke 接入 BrotatoLike 统一场景测试 runner。
 3. 继续按 Capability 迁移缺口补 Feature actions 和正式数据适配。
 4. Godot 引擎 trace 等自定义 Godot CLI 构建完成后再接入。
 

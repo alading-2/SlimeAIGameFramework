@@ -5,6 +5,12 @@ namespace SkilmeAI.GameOS.Capabilities.Unit;
 /// </summary>
 public enum UnitCategory
 {
+    /// <summary>基础配置。</summary>
+    Basic = 0,
+
+    /// <summary>视觉配置。</summary>
+    Visual = 1,
+
     /// <summary>运行时表现状态。</summary>
-    Runtime = 0
+    Runtime = 2
 }

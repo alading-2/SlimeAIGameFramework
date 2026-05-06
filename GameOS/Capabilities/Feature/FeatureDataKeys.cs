@@ -29,6 +29,72 @@ public static class FeatureDataKeys
         Description = "运行时处理器注册 Id。"
     });
 
+    /// <summary>Feature 描述。</summary>
+    public static readonly DataMeta Description = DataRegistry.Register(new DataMeta
+    {
+        Key = "Feature.Description",
+        DisplayName = "Feature Description",
+        Type = typeof(string),
+        Category = FeatureCategory.Basic,
+        DefaultValue = string.Empty,
+        Description = "Feature UI 和工具使用的描述文本。"
+    });
+
+    /// <summary>Feature 分类。</summary>
+    public static readonly DataMeta Category = DataRegistry.Register(new DataMeta
+    {
+        Key = "Feature.Category",
+        DisplayName = "Feature Category",
+        Type = typeof(string),
+        Category = FeatureCategory.Basic,
+        DefaultValue = string.Empty,
+        Description = "Feature 在游戏侧 authoring 中的分类。"
+    });
+
+    /// <summary>修改器目标 DataKey。</summary>
+    public static readonly DataMeta ModifierTargetKey = DataRegistry.Register(new DataMeta
+    {
+        Key = "Feature.Modifier.TargetKey",
+        DisplayName = "Modifier Target Key",
+        Type = typeof(string),
+        Category = FeatureCategory.Modifier,
+        DefaultValue = string.Empty,
+        Description = "Feature 修改器作用的 Runtime DataKey。"
+    });
+
+    /// <summary>修改器类型。</summary>
+    public static readonly DataMeta ModifierType = DataRegistry.Register(new DataMeta
+    {
+        Key = "Feature.Modifier.Type",
+        DisplayName = "Modifier Type",
+        Type = typeof(string),
+        Category = FeatureCategory.Modifier,
+        DefaultValue = string.Empty,
+        Description = "Feature 修改器类型。"
+    });
+
+    /// <summary>修改器数值。</summary>
+    public static readonly DataMeta ModifierValue = DataRegistry.Register(new DataMeta
+    {
+        Key = "Feature.Modifier.Value",
+        DisplayName = "Modifier Value",
+        Type = typeof(float),
+        Category = FeatureCategory.Modifier,
+        DefaultValue = 0f,
+        Description = "Feature 修改器数值。"
+    });
+
+    /// <summary>修改器优先级。</summary>
+    public static readonly DataMeta ModifierPriority = DataRegistry.Register(new DataMeta
+    {
+        Key = "Feature.Modifier.Priority",
+        DisplayName = "Modifier Priority",
+        Type = typeof(int),
+        Category = FeatureCategory.Modifier,
+        DefaultValue = 0,
+        Description = "Feature 修改器计算优先级。"
+    });
+
     /// <summary>是否启用。</summary>
     public static readonly DataMeta IsEnabled = DataRegistry.Register(new DataMeta
     {
@@ -70,6 +136,12 @@ public static class FeatureDataKeys
     {
         _ = FeatureId;
         _ = HandlerId;
+        _ = Description;
+        _ = Category;
+        _ = ModifierTargetKey;
+        _ = ModifierType;
+        _ = ModifierValue;
+        _ = ModifierPriority;
         _ = IsEnabled;
         _ = IsActive;
         _ = ActivationCount;

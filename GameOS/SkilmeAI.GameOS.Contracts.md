@@ -32,6 +32,7 @@
 - `SkilmeAI.GameOS.Runtime.Schedule.RuntimeSchedule`
 - `SkilmeAI.GameOS.Runtime.Schedule.ProjectStateService`
 - `SkilmeAI.GameOS.Runtime.Schedule.SystemRunCondition`
+- `SkilmeAI.GameOS.Runtime.Schedule.ScheduleDataKeys`
 - `SkilmeAI.GameOS.Runtime.Resource.ResourceCatalog`
 - `SkilmeAI.GameOS.Runtime.Resource.ResourceManagement`
 - `SkilmeAI.GameOS.Runtime.Pool.ObjectPool<T>`
@@ -135,7 +136,7 @@
 - `ProjectStateService` 维护 `GameFlowState / OverlayFlags / SimulationState` 三域状态。
 - `SystemRunCondition` 把流程、覆盖层、模拟状态门禁前置到调度层。
 - `IRuntimeSystem` 是生命周期协议；`IRuntimeCommandHandler<TRequest,TResult>` 是命令入口协议。
-- 当前 Schedule 不挂 Godot Node，不接 DataOS 生成配置；GodotBridge / DataOS 后续接入。
+- `ScheduleDataKeys` 覆盖系统配置、系统预设和 Spawn config 的第一批 DataOS authoring 字段；当前不自动装载 RuntimeSchedule，游戏侧仍需显式消费 snapshot。
 
 ## Runtime Resource 契约
 
@@ -160,7 +161,7 @@
 
 - `MovementSystem` 是纯 C# 调度系统，当前负责 `Start / Stop / Tick`、速度积分、最大时长 / 最大距离停止和 `GameEventType.Movement.Started / Stopped`。
 - Movement 内核不依赖 `Godot.Vector2` 或 `Node2D`；位置、速度、朝向统一用 `Vector2Value` 写入 `MovementDataKeys`。
-- `MovementDataKeys.Position / Velocity / FacingDirection / IsMoving / MoveSpeed` 是当前稳定 Data 入口；`MoveSpeed` 支持数值 Modifier。
+- `MovementDataKeys.Position / Velocity / FacingDirection / IsMoving / MoveSpeed` 是当前稳定 Runtime Data 入口；`MoveSpeed` 支持数值 Modifier。`MovementDataKeys` 也提供 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc 的 handler authoring 参数，供 Ability / Feature handler 从 DataOS 读取后显式映射到 `MovementParams`。
 - 当前已迁入 `MoveMode.Charge / Orbit / SineWave / Parabola / CircularArc`。Charge 支持方向移动、目标点移动、速度、`MaxDuration = -1` 不限制、`MaxDistance = -1` 不限制、`ReachDistance` 到点停止；Orbit 支持固定圆心、半径、初始角、角速度、总角度；SineWave 支持基础方向、速度、振幅、频率和相位；Parabola 支持固定终点、总时长和顶点高度；CircularArc 支持固定终点、半径、方向和总时长。
 - `IMovementStrategy` 只输出速度和朝向意图，不处理伤害、AI、动画或 Godot 物理体。
 - Godot 场景中的 2D 位移桥接第一段已迁入：`GodotEntity2D` 注册时把初始 `Node2D.Position` 写入 Movement Data，`GodotMovementDriver` 推进 `MovementSystem.Tick` 并把 `MovementDataKeys.Position` 同步回 `Node2D.Position`。
@@ -203,7 +204,7 @@
 ## Ability Capability 契约
 
 - `AbilityService` 是当前最小正式施法入口，接收 `AbilityCastContext`，不做统一自动索敌或点选决策。
-- `AbilityDataKeys` 当前覆盖启用、执行中、冷却、剩余冷却、充能、触发模式、目标输入语义、自动索敌参数、伤害参数和可选 `FeatureHandlerId`。
+- `AbilityDataKeys` 当前覆盖启用、执行中、冷却、剩余冷却、充能、触发模式、目标输入语义、自动索敌参数、伤害参数、描述 / 图标 / 分组 / 消耗 / 施法距离 / 效果半径 / 链式参数和可选 `FeatureHandlerId`。
 - `TryTrigger` 顺序是：施法者死亡检查、启用检查、执行中检查、冷却检查、充能检查、目标检查、消耗充能、启动冷却、执行伤害或 Feature handler、发布事件。
 - `TickAutoTriggers` 只消费外部系统准备好的 `AbilityCastContext`，当前支持 `AbilityTriggerMode.Periodic`，先推进冷却，再对冷却归零的周期技能调用 `TryTrigger`。
 - `AbilityCastContext.TargetPosition` 承载输入层完成点选后的目标点；`AbilityTargetSelection.Entity` 要求 `Targets`，`Point` 要求 `TargetPosition`，`EntityOrPoint` 接受二者任一。
@@ -241,6 +242,7 @@
 - `FeatureService.Grant` 会把 `FeatureModifierEntry` 转成 `DataModifier` 写入 Owner Data，Modifier source 标记为 Feature 实体；`Remove` 通过 `Data.RemoveModifiersBySource(feature)` 回滚。
 - `FeatureHandlerRegistry` 以完整 `HandlerId` 查询 handler，不使用分组作为运行时查找键。
 - `GameEventType.Feature` 当前覆盖 Granted / Removed / Enabled / Disabled / Activated / Executed / Ended。
+- `FeatureDataKeys` 当前覆盖 Feature Id / HandlerId / 描述 / 分类 / 启用状态和 modifier authoring 字段；复杂 Feature action 仍通过 handler 扩展。
 
 ## AI Capability 契约
 
@@ -267,7 +269,7 @@
 - 命中结算统一调用 `DamageService`，伤害标签固定带 `DamageTags.Attack`，不直接修改 HP。
 - 前摇、后摇和冷却由注入的 `TimerManager` 驱动；`Cancel` 会取消当前攻击相关 Timer、回到 Idle，并发布 `Attack.Cancelled`。
 - `AttackService` 不播放动画、不持有 Godot Node；Godot 层通过 `GodotAttackComponent` 完成服务注册、导出参数写入、节点目标映射和动画请求转发，动画实际播放由 `GodotUnitAnimationComponent` 执行。
-- `UnitDataKeys.AvailableAnimations` 是 Godot 动画桥写入的表现层运行态列表，供攻击、预览或工具层选择可播放动画名。
+- `UnitDataKeys` 当前覆盖单位名称、实体类型、死亡类型、视觉场景路径、血条配置、拾取范围、经验奖励、检测范围和 `AvailableAnimations`；视觉路径只保存 `res://` 字符串。
 
 当前不包含：
 
