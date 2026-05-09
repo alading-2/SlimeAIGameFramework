@@ -1,0 +1,279 @@
+# GameOS Capability 索引
+
+> 状态：routing-index  
+> 更新日期：2026-05-09  
+> 范围：AI 任务路由、Capability 所有权、状态规范、验证证据。
+
+## 定位
+
+本索引是 GameOS Capability 工作的第一路由入口。它告诉 AI 或开发者：某个 Capability 归哪个 skill 所有，应该先读哪些 contract / debug 文档，涉及哪些 DataKeys 和 Events，GodotBridge 边界在哪里，以及需要哪些验证证据。
+
+本文件不是 runtime registry，不改变 public API。`capability.json` 仍是本地 metadata 来源；本索引用来补充跨 Capability 的路由和证据规则。
+
+## 状态规则
+
+规范状态：
+
+| Status | 含义 |
+| --- | --- |
+| `Draft` | 只有设计或部分 artifact，尚不能进入默认 profile 路由。 |
+| `Experimental` | 框架实现、测试或 smoke 证据存在，但缺少被接受的 profile 或 playable game-slice evidence。 |
+| `Supported` | Contract、Debug、Tests，以及至少一个 profile 或 game-slice evidence 全部存在。 |
+| `Deprecated` | 保留兼容，不建议新代码使用。 |
+
+`stable`、`migrated`、`bootstrap`、`active`、`experimental` 等 legacy status 只作为来源证据记录，不能自动映射为 `Supported`。
+
+当前首批决策：所有列出的 Capability 均为 `Experimental`，直到 `Survivor2D` profile 和 BrotatoLike playable-slice acceptance 提供明确 game-slice evidence。
+
+## 验证基线
+
+框架验证：
+
+```bash
+cd /home/slime/Code/SkilmeAI/SkilmeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+```
+
+当 Capability 触及 GodotBridge 时，BrotatoLike smoke 或 scene evidence 的参考命令：
+
+```bash
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+Tools/run-godot-smoke.sh
+Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+当前阶段暂不运行 Godot 场景验证。`Tools/run-godot-smoke.sh` 只能作为 bridge 和 smoke path 证据，不是 playable-slice 完成证据。
+
+## Capability 条目
+
+### Movement
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `movement` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Movement/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；`SkilmeAI.GameOS.ApiIndex.md` 中存在 `migrated/bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `movement-system` |
+| Contract / Debug | `Capabilities/Movement/Contract.md`；`Capabilities/Movement/Debug.md` |
+| Primary APIs | `MovementSystem`、`MovementDataKeys`、`MovementParams`、`IMovementStrategy`、`MovementStrategyRegistry`、`MovementCollisionPolicy` |
+| DataKeys | Position、Velocity、FacingDirection、IsMoving、MoveSpeed、Acceleration、InputDirection、AIMoveDirection、AIMoveSpeedMultiplier、CanMoveInput、LastMoveDirection、handler movement params、wave/orbit/boomerang/bezier/parabola/circular-arc params |
+| Events | `Movement.Started`、`Movement.Stopped`、`Movement.Collided` |
+| Selector owner | Movement 通过 `IMovementCollisionTargetQuery` 拥有 movement-collision target query 注入；玩法目标选择仍归 AI 或 Ability。 |
+| RuntimeSchedule boundary | 每帧 movement tick；调用方负责 schedule 注册和 delta 来源。 |
+| GodotBridge boundary | `GodotMovementDriver`、`GodotOrientationComponent`、`GodotPlayerInputComponent`、`GodotPhysicsMovementCollisionTargetQuery` 把 Node2D / input / physics 同步到 Runtime data。 |
+| Dependencies | Runtime Entity/Data/Event；Collision 用于过滤；GodotBridge 用于场景同步。 |
+| Validation commands | Framework build/tests；Godot movement bridge 参考 BrotatoLike smoke，但当前阶段暂不运行 Godot。 |
+| Game-slice evidence | BrotatoLike smoke 已覆盖 PlayerInput、AIControlled、轨迹、朝向和 physics broadphase；普通 playable-slice PASS/FAIL evidence 仍待补。 |
+| Gaps | 在普通 `Scenes/Main.tscn` 下记录 Survivor2D/BrotatoLike playable-slice acceptance 前，不标记为 `Supported`。 |
+
+### Collision
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `collision` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Collision/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap/migrated` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `collision-system` |
+| Contract / Debug | `Capabilities/Collision/Contract.md`；`Capabilities/Collision/Debug.md` |
+| Primary APIs | `CollisionDataKeys`、`CollisionLayers`、`CollisionFilterPolicy`、`CollisionSystem`、`CollisionContact` |
+| DataKeys | CollisionLayer、CollisionMask、Team、CollisionRadius |
+| Events | `Collision.Entered`、`Collision.Exited`、`Collision.Contact` |
+| Selector owner | Collision 拥有 layer/mask/team 过滤；目标意图仍归 AI、Ability 或 Projectile。 |
+| RuntimeSchedule boundary | Collision event 由 bridge/system 驱动；消费者不能绕过 Damage 或 Attack services。 |
+| GodotBridge boundary | `GodotAreaEntity2D`、`GodotCollisionBridge`、`GodotCollisionComponent`、`GodotHurtboxComponent`、`GodotContactDamageComponent`、collision isolation。 |
+| Dependencies | Runtime Entity/Data/Event；Movement 用于 movement-collision scans；Damage 用于 contact damage conversion。 |
+| Validation commands | Framework build/tests；hurtbox/contact damage 和 physics broadphase 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Smoke 曾覆盖 runtime collision events 和 Godot hurtbox/contact bridge；main-scene playable collision acceptance 待补。 |
+| Gaps | 需要 Observation selector/collision dump 和 playable-slice collision evidence 后才能考虑 `Supported`。 |
+
+### Damage
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `damage` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Damage/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `damage-system` |
+| Contract / Debug | `Capabilities/Damage/Contract.md`；`Capabilities/Damage/Debug.md` |
+| Primary APIs | `DamageService`、`HealService`、`DamageTool`、`DamageInfo`、`DamageResult`、`IDamageProcessor`、`DamageDataKeys` |
+| DataKeys | CurrentHp、MaxHp、IsDead、IsInvulnerable、Armor、DodgeChance、CritRate、CritDamage、DamageTakenMultiplier、LifeSteal、Shield、ContactDamage、ContactDamageInterval、total/wave damage、hit、crit、kill、healing、shield statistics |
+| Events | `Damage.Applied`、`Damage.Death`、`Damage.HealApplied`，以及 `GameEventType` 中的 runtime health/damage/killed/healed event names |
+| Selector owner | `None`；从 Attack、Ability、Projectile 或 contact bridge 接收明确 attacker/target 集合。 |
+| RuntimeSchedule boundary | Service call 和 timer-driven periodic damage；调用方负责调度。 |
+| GodotBridge boundary | `GodotContactDamageComponent` 把 hurtbox contacts 转为 `DamageService` 请求；bridge 不直接写 HP。 |
+| Dependencies | Runtime Entity/Data/Event/Timer；Collision 用于 contact filtering。 |
+| Validation commands | Framework build/tests；contact damage 和 projectile damage bridge 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 processor pipeline、healing、statistics、periodic/multi-target damage；smoke 曾覆盖 contact 和 projectile damage；main-scene death/cleanup evidence 待补。 |
+| Gaps | 需要 playable-slice evidence 覆盖 damage、death、cleanup、damage logs 或 damage numbers。 |
+
+### Unit
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `unit` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Unit/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | DataKeys 和 runtime metadata 归 `ecs-data`；HUD/UI-facing 后续工作使用 `ui-bind`。 |
+| Contract / Debug | `Capabilities/Unit/Contract.md`；`Capabilities/Unit/Debug.md` |
+| Primary APIs | `UnitDataKeys` |
+| DataKeys | Name、EntityType、DeathType、VisualScenePath、HealthBarHeight、IsShowHealthBar、PickupRange、ExpReward、DetectionRange、AvailableAnimations |
+| Events | `capability.json` 中无事件；动画请求使用 `GameEventType.Unit` bridge events。 |
+| Selector owner | `None`；Unit metadata 被其他系统消费。 |
+| RuntimeSchedule boundary | 首批没有独立 RuntimeSchedule system。 |
+| GodotBridge boundary | `GodotUnitAnimationComponent` 消费 Unit animation event requests 和 available animation metadata。 |
+| Dependencies | Runtime Data；GodotBridge 用于视觉动画；DataOS 用于 unit authoring records。 |
+| Validation commands | Framework build/tests；animation bridge 和 DataOS unit records 的 Godot 证据暂不运行。 |
+| Game-slice evidence | BrotatoLike smoke 曾覆盖 DataOS player/enemy unit records 和 animation bridge；HUD / health bar playable evidence 待补。 |
+| Gaps | Unit 暂无独立 owner skill；不要把游戏专属 unit visuals 或 HUD layout 当成框架默认。 |
+
+### Attack
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `attack` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Attack/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `attack-system` |
+| Contract / Debug | `Capabilities/Attack/Contract.md`；`Capabilities/Attack/Debug.md` |
+| Primary APIs | `AttackService`、`AttackDataKeys`、`AttackState`、`AttackTriggerReport`、`AttackTriggerResult` |
+| DataKeys | Damage、Range、Interval、WindUpTime、RecoveryTime、CanAttack、IsAttacking、State、CooldownRemaining |
+| Events | `Attack.Requested`、`Attack.CancelRequested`、`Attack.Started`、`Attack.Completed`、`Attack.Cancelled` |
+| Selector owner | `None`；target entity 或 point 必须先由 AI、input 或 game adapter 准备好。 |
+| RuntimeSchedule boundary | Event/service driven；windup、recovery 和 cooldown 使用 `TimerManager`。 |
+| GodotBridge boundary | `GodotAttackComponent`、legacy `AttackComponent`、`GodotUnitAnimationComponent` animation requests。 |
+| Dependencies | Damage 用于伤害结算；Timer；Unit animation events；AI/input 负责请求。 |
+| Validation commands | Framework build/tests；GodotAttackComponent 和 legacy wrapper 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 request consumption、range、cooldown、windup、recovery 和 damage；smoke 曾覆盖 Godot bridge 和 animation selection；普通 main-scene combat acceptance 待补。 |
+| Gaps | 需要 playable-slice evidence 覆盖敌人 / 玩家攻击循环和 cleanup。 |
+
+### AI
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `ai` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/AI/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `ai-system` |
+| Contract / Debug | `Capabilities/AI/Contract.md`；`Capabilities/AI/Debug.md` |
+| Primary APIs | `AIService`、`AIContext`、`BehaviorNode`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、target/action nodes |
+| DataKeys | IsEnabled、TargetEntity、TargetPosition、HasTargetPosition、IsAttackRequested、AttackRange、PatrolCenter、PatrolRadius、PatrolWaitTime、PatrolTargetPosition、HasPatrolTargetPosition、PatrolWaitRemaining、PatrolDirectionSign |
+| Events | `AI.TargetAcquired`、`AI.TargetLost`、`AI.PatrolStarted` |
+| Selector owner | AI 拥有行为树目标获取，用于 AI intent；Ability targeting 仍归 Ability。 |
+| RuntimeSchedule boundary | AI tick 由调用方调度；AI 只写 intent/request DataKeys 和 events，不直接移动或造成伤害。 |
+| GodotBridge boundary | `GodotAIComponent` 导出参数并 tick `AIService`；不直接移动 Godot nodes。 |
+| Dependencies | Movement 用于移动意图；Attack 用于攻击请求；Ability 用于 auto-trigger contexts；Damage 用于死亡门禁。 |
+| Validation commands | Framework build/tests；Godot AI bridge 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 target finding、patrol、melee behavior、attack request、ability auto-target context；smoke 曾覆盖 Godot AI bridge；main-scene enemy chase evidence 待补。 |
+| Gaps | 需要 playable-slice evidence 覆盖 wave enemy chase 和 attack behavior。 |
+
+### Ability
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `ability` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Ability/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `ability-system` |
+| Contract / Debug | `Capabilities/Ability/Contract.md`；`Capabilities/Ability/Debug.md` |
+| Primary APIs | `AbilityService`、`AbilityDataKeys`、`AbilityCastContext`、`AbilityTriggerReport`、`AbilityTargetingTool` |
+| DataKeys | Name、Type、TriggerMode、TargetSelection、AutoTargetRange、AutoTargetMaxTargets、AutoTargetIgnoreSameTeam、AutoTargetRequiresDamageable、FeatureHandlerId、FeatureGroupId、Description、IconPath、Level、MaxLevel、CostType、CostAmount、ChargeTime、CastRange、EffectRadius、chain fields、LineEffectScenePath、IsEnabled、IsActive、Cooldown、CooldownRemaining、charge fields、Damage、DamageInterval、DamageRepeatCount、ApplyImmediateDamage |
+| Events | `Ability.Executed`、`Ability.Failed`、`Ability.CooldownStarted`、`Ability.CooldownFinished` |
+| Selector owner | Ability 拥有 ability casts 的显式目标校验和 `AbilityTargetingTool` auto-target preparation。 |
+| RuntimeSchedule boundary | Manual/event/periodic trigger boundary；periodic auto-trigger tick 由调用方调度。 |
+| GodotBridge boundary | 暂无通用 Ability bridge；BrotatoLike game handlers 通过 `BrotatoLikeAbilityHandlers` 适配游戏侧技能。 |
+| Dependencies | Damage 用于 ability damage；Feature 用于 handler execution；Projectile/Effect/Movement 用于 game-side handler outputs；AI 可准备 auto-trigger contexts。 |
+| Validation commands | Framework build/tests；selected game-side ability handler paths 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 target semantics、cooldown、charges、periodic damage、periodic auto-trigger 和 auto-targeting；smoke 曾覆盖多个 BrotatoLike handlers，但至少两个旧技能的 playable-slice evidence 待补。 |
+| Gaps | 不把 BrotatoLike 专属 skill names 或 handler behavior 上提为 framework defaults。 |
+
+### Feature
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `feature` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Feature/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `feature-system` |
+| Contract / Debug | `Capabilities/Feature/Contract.md`；`Capabilities/Feature/Debug.md` |
+| Primary APIs | `FeatureService`、`FeatureDataKeys`、`FeatureDefinition`、`FeatureModifierEntry`、`IFeatureHandler`、`FeatureHandlerRegistry` |
+| DataKeys | FeatureId、HandlerId、Description、Category、ModifierTargetKey、ModifierType、ModifierValue、ModifierPriority、IsEnabled、IsActive、ActivationCount |
+| Events | `Feature.Activated`、`Feature.Deactivated`、`Feature.ModifierApplied`、`Feature.ModifierRemoved` |
+| Selector owner | 默认 `None`；具体 handler 可以消费 Ability 或 game adapter 提供的 target context。 |
+| RuntimeSchedule boundary | Service-driven lifecycle；handler 不应把长期状态隐藏在 Runtime data 或 services 之外。 |
+| GodotBridge boundary | 暂无通用 Feature bridge；game-specific handlers 先留在 game adapter code，直到可复用。 |
+| Dependencies | Runtime Data modifiers；Ability 可提供 activation context。 |
+| Validation commands | Framework build/tests；game-side handlers 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 grant/remove、handler lifecycle 和 AbilityService handler invocation；BrotatoLike smoke 曾覆盖 selected game-side handlers；playable-slice evidence 待补。 |
+| Gaps | 需要更严格的 source rollback evidence 后才能考虑 `Supported`。 |
+
+### Projectile
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `projectile` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Projectile/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `projectile-effect-system` |
+| Contract / Debug | `Capabilities/Projectile/Contract.md`；`Capabilities/Projectile/Debug.md` |
+| Primary APIs | `ProjectileTool`、`ProjectileDataKeys`、`ProjectileSpawnOptions`、`ProjectileMovementOptions` |
+| DataKeys | ScenePath、SourceEntity、AbilityEntity、TargetEntity、SpawnPosition、TargetPosition、Direction、Speed、MaxHitCount、HitCount、MaxLifeTime、Damage、DamageType、DamageTags |
+| Events | `Projectile.Spawned`、`Projectile.Hit`、`Projectile.LifeTimeExpired`、`Projectile.Destroyed` |
+| Selector owner | Projectile 拥有 movement-collision result 上的 hit lifecycle；初始目标选择归 Ability、AI、input 或 game adapter。 |
+| RuntimeSchedule boundary | Spawn 由 service/tool 驱动；movement 和 lifetime progression 依赖调用方持有的 MovementSystem / Timer ticks。 |
+| GodotBridge boundary | `GodotProjectileEffectSpawner` 根据 `ScenePath` 实例化视觉节点，并在 Runtime entity 销毁时清理；Runtime 不直接加载 Godot 资源。 |
+| Dependencies | Movement 用于飞行；Collision 用于过滤；Damage 用于命中伤害；handler 需要时可配合 Effect。 |
+| Validation commands | Framework build/tests；visual instantiation 和 hit lifecycle 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 spawn、movement hit、pierce、max hit count、lifetime destroy 和 damage；smoke 曾覆盖 visual spawn 和 cleanup；playable-slice old-skill projectile evidence 待补。 |
+| Gaps | 需要普通 main-scene skill evidence 覆盖 visual、hit behavior、target selection 和 cleanup。 |
+
+### Effect
+
+| 字段 | 内容 |
+| --- | --- |
+| Capability id | `effect` |
+| Metadata | `SkilmeAI/GameOS/Capabilities/Effect/capability.json` |
+| Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
+| Normalized status | `Experimental` |
+| Owner skill | `projectile-effect-system` |
+| Contract / Debug | `Capabilities/Effect/Contract.md`；`Capabilities/Effect/Debug.md` |
+| Primary APIs | `EffectTool`、`EffectDataKeys`、`EffectSpawnOptions`、`EffectSpawnResult` |
+| DataKeys | ScenePath、Name、AnimationName、SourceEntity、AbilityEntity、TargetEntity、Position、Duration |
+| Events | `Effect.Spawned`、`Effect.Completed`、`Effect.Cancelled` |
+| Selector owner | `None`；effects 消费调用方提供的 source/target/position。 |
+| RuntimeSchedule boundary | Spawn 由 service/tool 驱动；duration 和 visual lifecycle 第一批由 bridge 或调用方管理。 |
+| GodotBridge boundary | `GodotProjectileEffectSpawner` 实例化 effect scenes 并播放 `AnimatedSprite2D` animation names；Runtime 只保存 paths 和 data。 |
+| Dependencies | Runtime Entity/Data/Event；Movement 用于 position values；Projectile/Ability/Feature handlers 可生成 effects。 |
+| Validation commands | Framework build/tests；effect instantiation 和 animation playback 的 Godot 证据暂不运行。 |
+| Game-slice evidence | Runtime tests 覆盖 spawn data 和 animation name 写入；smoke 曾覆盖 Godot visual instantiation 和 animation playback；playable-slice skill visual evidence 待补。 |
+| Gaps | 需要 Observation 和 playable-slice artifacts 证明 visual lifecycle 和 cleanup。 |
+
+## 跨 Capability 路由备注
+
+- Ability trigger、cooldown、charge、target validation 和 `AbilityTriggerReport` 使用 `ability-system`。
+- 可复用 modifier 和 handler lifecycle 使用 `feature-system`。游戏专属 handler body 先放在 `Games/BrotatoLike`，除非单独 proposal 证明可复用。
+- `ProjectileTool`、`EffectTool`、projectile hit lifecycle、visual spawn bridge 和 effect animation playback 使用 `projectile-effect-system`。
+- 修改 GodotBridge component protocol 或 `IGodotComponent` 行为时使用 `ecs-component`。
+- 修改 DataOS schema、migration、generator、validator 或 DataKey authoring mapping 时使用 `data-authoring`。
+- 修改 validation、Observation、runner、artifact 或 log-analysis 时使用 `test-system`。
+
+## Supported 门禁清单
+
+Capability 只有在全部条件满足时，才能提议升级为 `Supported`：
+
+- Contract doc 存在且匹配 public API。
+- Debug doc 或 debug guide entry 存在。
+- Framework tests 覆盖核心 runtime 行为。
+- 至少一个已接受 Profile 或 game-slice artifact 引用该 Capability。
+- Validation commands 和最新证据已记录。
+- 游戏专属行为仍留在 framework contract 外，除非通过 OpenSpec 单独提升。
