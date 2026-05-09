@@ -223,6 +223,7 @@
 | `Tools/run-tests.sh` | script | active | 运行 DataOS schema 验证和 `SkilmeAI.GameOS.Tests` 行为测试。 |
 | `DataOS/Generators/generate-runtime-snapshot.sh` | script | active | 从 SQLite authoring DB 生成 Runtime JSON snapshot。 |
 | `DataOS/Validation/validate-dataos.sh` | script | active | 校验 DataOS authoring DB 的外键、空键、bool、资源分类和路径。 |
+| `GameOS/Observation/Contract.md` | document | draft | 定义 Schedule、EventBus、Relationship lifecycle、Capability selector、DataOS trace、Command playback 和 BrotatoLike scene PASS/FAIL artifact contract。 |
 | `Tests/SkilmeAI.GameOS.Tests` | console project | active | 覆盖 Event/Data/DataOS snapshot/Entity/Relationship/Schedule/Pool/Timer/Resource/Movement/MovementCollision、DamageService、HealService、DamageTool、AbilityService 点选目标语义、Ability 自动索敌、ProjectileTool 生成与命中生命周期、EffectTool 动画名写入、FeatureService、AttackService、AI 行为树、AI 巡逻、AI 行为树预制块、AI 攻击请求、AI 自动索敌施法上下文准备、Damage 处理器管线、目标查询注入和 OrientationParams 最小行为。 |
 | `Games/BrotatoLike/Src/Game/BrotatoLikeDataOSBootstrap.cs` | class | active | 游戏侧正式 DataOS snapshot 入口，可读取 `res://DataOS/Snapshots/runtime_snapshot.json`、注册资源并按记录生成 Runtime Entity。 |
 | `Games/BrotatoLike/Src/Game/Main.cs` | Godot scene script | active | 当前 headless smoke 覆盖 Movement、MovementCollision、Damage / ContactDamage / Attack、旧 AttackComponent 兼容包装、Attack 动画播放、Godot AI bridge、Ability 点选目标、Ability 自动索敌、Projectile / Effect Runtime 与 Godot 实例化、DataOS bootstrap 生成 Runtime Entity、Godot Physics broadphase、GodotMovementDriver、GodotOrientationComponent、GodotBridge 和 GodotNodePool 接入。 |

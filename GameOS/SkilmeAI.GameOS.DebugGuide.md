@@ -14,6 +14,13 @@ dotnet build GameOS/SkilmeAI.GameOS.csproj
 cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 ```
 
+## Observation
+
+- Observation artifact contract：`GameOS/Observation/Contract.md`。
+- BrotatoLike scene runner 日志目录：`.ai-temp/scene-tests/runs/<date>/<time>/`。
+- 结构化验收证据默认写入 `artifacts/`，截图写入 `screenshots/`。
+- 可玩切片必须看明确 PASS/FAIL marker 或 `scene-acceptance.json`，不能只看没有 `ERROR:`。
+
 ## 常见问题
 
 - 找不到 `Godot.NET.Sdk/4.6.2`：检查本机 NuGet 缓存或 Godot .NET SDK 安装。
