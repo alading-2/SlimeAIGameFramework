@@ -1,7 +1,7 @@
 {
   "id": "effect",
   "name": "Effect",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "ability-system",
   "description": "特效生成与管理，支持场景路径实例化、动画播放、生命周期管理和视觉节点清理。",
   "runtimeDependencies": ["Entity", "Data", "Event"],

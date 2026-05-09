@@ -1,7 +1,7 @@
 {
   "id": "damage",
   "name": "Damage",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "damage-system",
   "description": "伤害计算管线，支持护甲/闪避/暴击/吸血/护盾/承伤倍率等多级处理器，以及治疗和伤害统计。",
   "runtimeDependencies": ["Entity", "Data", "Event"],

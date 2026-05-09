@@ -1,7 +1,7 @@
 {
   "id": "feature",
   "name": "Feature",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "feature-system",
   "description": "通用能力生命周期系统，支持 FeatureDefinition 注册、Modifier 授予/回滚、Handler 生命周期管理和激活计数。",
   "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],

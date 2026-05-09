@@ -1,7 +1,7 @@
 {
   "id": "unit",
   "name": "Unit",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "ecs-entity",
   "description": "单位通用数据定义，包括名称、类型、死亡类型、视觉场景路径、血条高度、动画列表等。",
   "runtimeDependencies": ["Entity", "Data"],

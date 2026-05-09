@@ -13,7 +13,7 @@ M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17
 1. 继续扩大 DataOS 迁移范围：旧 DataNew 剩余字段、剩余 Feature actions，以及把尚未接线的 Ability / Movement handler authoring 参数接入真实 handler 执行路径。
 2. 继续把 BrotatoLike 真实主场景、UI 和 SpawnSystem 专项场景接入统一 Godot scene runner。
 3. 推进 DataOS snapshot 到真实主场景 / UI / 生成系统入口。
-4. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`。
+4. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SkilmeAI/Engine/Engine/godot-4.6.2-stable`。
 5. 将后续框架级计划按 `Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
 
 ## 风险

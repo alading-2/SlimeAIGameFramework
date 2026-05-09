@@ -1,7 +1,7 @@
 {
   "id": "movement",
   "name": "Movement",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "movement-system",
   "description": "实体移动策略系统，支持 Charge/SineWave/Orbit/Boomerang/BezierCurve/CircularArc/Parabola/AttachToHost/PlayerInput/AIControlled 等多种移动模式。",
   "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],

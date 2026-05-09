@@ -1,7 +1,7 @@
 {
   "id": "collision",
   "name": "Collision",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "collision-system",
   "description": "碰撞层管理和碰撞事件系统，支持 CollisionLayer/CollisionMask/Team 过滤和 ContactDamage 接触伤害。",
   "runtimeDependencies": ["Entity", "Data", "Event"],

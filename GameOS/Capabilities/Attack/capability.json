@@ -1,7 +1,7 @@
 {
   "id": "attack",
   "name": "Attack",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "ability-system",
   "description": "攻击请求与执行系统，支持前摇/后摇/冷却计时器、距离和死亡门禁，通过 DamageService 结算伤害。",
   "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],

@@ -1,7 +1,7 @@
 {
   "id": "ai",
   "name": "AI",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "ai-system",
   "description": "行为树 AI 系统，支持最近目标查询、追逐/巡逻/攻击行为块、范围内攻击请求和 Ability 自动索敌上下文准备。",
   "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],

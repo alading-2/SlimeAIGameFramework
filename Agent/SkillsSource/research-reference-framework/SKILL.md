@@ -14,7 +14,7 @@ description: 研究 Godot 底层、成熟开源框架、游戏项目或需要外
 
 ## 本地权威源码
 
-- Godot 引擎：`/home/slime/Code/SkilmeAI/Engine/godot-4.6.2-stable`
+- Godot 引擎：`/home/slime/Code/SkilmeAI/Engine/Engine/godot-4.6.2-stable`
 - 迁移输入仓库：`/home/slime/Code/Godot/Games/MyGames/brotato-my`
 - 框架仓库：`/home/slime/Code/SkilmeAI/SkilmeAI`
 - 游戏验证仓库：`/home/slime/Code/SkilmeAI/Games/BrotatoLike`
@@ -22,6 +22,6 @@ description: 研究 Godot 底层、成熟开源框架、游戏项目或需要外
 ## 规则
 
 - GitHub 源码分析优先 clone 到本地后用 `rg` / `find` 阅读。
-- Godot 底层问题先查本地 `Engine/godot-4.6.2-stable`。
+- Godot 底层问题先查本地 `Engine/Engine/godot-4.6.2-stable`。
 - 研究结论必须落成可执行决策：修改点、风险、验证命令。
 - 不把外部项目结构直接搬进 GameOS；只抽取适配本项目目标的机制。

@@ -1,7 +1,7 @@
 {
   "id": "ability",
   "name": "Ability",
-  "status": "stable",
+  "status": "experimental",
   "ownerSkill": "ability-system",
   "description": "技能触发与执行系统，支持 Manual/Periodic/Permanent 触发模式、点选/实体/无目标选择、自动索敌、冷却/充能管理和 FeatureHandler 委托。",
   "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],
