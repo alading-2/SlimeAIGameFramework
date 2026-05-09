@@ -1,0 +1,36 @@
+{
+  "id": "effect",
+  "name": "Effect",
+  "status": "stable",
+  "ownerSkill": "ability-system",
+  "description": "特效生成与管理，支持场景路径实例化、动画播放、生命周期管理和视觉节点清理。",
+  "runtimeDependencies": ["Entity", "Data", "Event"],
+  "capabilityDependencies": [],
+  "dataKeys": [
+    "Effect.ScenePath",
+    "Effect.Name",
+    "Effect.AnimationName",
+    "Effect.SourceEntity",
+    "Effect.AbilityEntity",
+    "Effect.TargetEntity",
+    "Effect.Position",
+    "Effect.Duration"
+  ],
+  "events": [
+    "Effect.Spawned",
+    "Effect.Completed",
+    "Effect.Cancelled"
+  ],
+  "components": [
+    "EffectTool",
+    "GodotProjectileEffectSpawner"
+  ],
+  "systems": [
+    "EffectTool"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

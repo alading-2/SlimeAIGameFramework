@@ -1,0 +1,43 @@
+{
+  "id": "projectile",
+  "name": "Projectile",
+  "status": "stable",
+  "ownerSkill": "ability-system",
+  "description": "投射物生成与生命周期管理，支持命中计数、穿透、最大存活时间、Movement 绑定和命中后销毁。",
+  "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],
+  "capabilityDependencies": ["Movement", "Damage", "Effect"],
+  "dataKeys": [
+    "Projectile.ScenePath",
+    "Projectile.SourceEntity",
+    "Projectile.AbilityEntity",
+    "Projectile.TargetEntity",
+    "Projectile.SpawnPosition",
+    "Projectile.TargetPosition",
+    "Projectile.Direction",
+    "Projectile.Speed",
+    "Projectile.MaxHitCount",
+    "Projectile.HitCount",
+    "Projectile.MaxLifeTime",
+    "Projectile.Damage",
+    "Projectile.DamageType",
+    "Projectile.DamageTags"
+  ],
+  "events": [
+    "Projectile.Spawned",
+    "Projectile.Hit",
+    "Projectile.LifeTimeExpired",
+    "Projectile.Destroyed"
+  ],
+  "components": [
+    "ProjectileTool",
+    "GodotProjectileEffectSpawner"
+  ],
+  "systems": [
+    "ProjectileTool"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

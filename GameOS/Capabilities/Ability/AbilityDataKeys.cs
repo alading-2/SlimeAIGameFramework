@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SkilmeAI.GameOS.Runtime.Data;
 
 namespace SkilmeAI.GameOS.Capabilities.Ability;
@@ -421,6 +422,29 @@ public static class AbilityDataKeys
         Description = "持续伤害是否在触发时立即造成第一次伤害。"
     });
 
+    /// <summary>当前选中的主动技能索引。</summary>
+    public static readonly DataMeta CurrentAbilityIndex = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.CurrentAbilityIndex",
+        DisplayName = "Current Ability Index",
+        Type = typeof(int),
+        Category = AbilityCategory.Runtime,
+        DefaultValue = 0,
+        MinValue = 0f,
+        Description = "玩家当前选中的主动技能在 OwnedAbilityIds 中的索引。"
+    });
+
+    /// <summary>拥有的技能 EntityId 列表。</summary>
+    public static readonly DataMeta OwnedAbilityIds = DataRegistry.Register(new DataMeta
+    {
+        Key = "Ability.OwnedAbilityIds",
+        DisplayName = "Owned Ability Ids",
+        Type = typeof(List<string>),
+        Category = AbilityCategory.Runtime,
+        DefaultValue = new List<string>(),
+        Description = "实体拥有的技能 EntityId 列表。"
+    });
+
     /// <summary>
     /// 显式触发静态 DataKey 注册。
     /// </summary>
@@ -461,5 +485,7 @@ public static class AbilityDataKeys
         _ = DamageInterval;
         _ = DamageRepeatCount;
         _ = ApplyImmediateDamage;
+        _ = CurrentAbilityIndex;
+        _ = OwnedAbilityIds;
     }
 }

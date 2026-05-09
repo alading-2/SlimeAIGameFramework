@@ -1,3 +1,4 @@
+using System;
 using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Entity;
 
@@ -55,7 +56,25 @@ internal static class InputDrivenMovement
         }
 
         data.Set(MovementDataKeys.LastMoveDirection, normalizedDirection);
-        var velocity = normalizedDirection * speed;
+
+        var acceleration = data.Get<float>(MovementDataKeys.Acceleration, 0f);
+        Vector2Value velocity;
+        if (acceleration > 0.001f)
+        {
+            // Lerp 平滑加速，帧率无关
+            var targetVelocity = normalizedDirection * speed;
+            var currentVelocity = data.Get<Vector2Value>(MovementDataKeys.Velocity, Vector2Value.Zero);
+            var t = 1.0f - MathF.Exp(-acceleration * delta);
+            velocity = new Vector2Value(
+                currentVelocity.X + (targetVelocity.X - currentVelocity.X) * t,
+                currentVelocity.Y + (targetVelocity.Y - currentVelocity.Y) * t);
+        }
+        else
+        {
+            // 无平滑，直接到达目标速度
+            velocity = normalizedDirection * speed;
+        }
+
         data.Set(MovementDataKeys.Velocity, velocity);
         return MovementUpdateResult.Continue(velocity.Length * delta, normalizedDirection);
     }

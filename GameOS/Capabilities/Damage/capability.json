@@ -1,0 +1,57 @@
+{
+  "id": "damage",
+  "name": "Damage",
+  "status": "stable",
+  "ownerSkill": "damage-system",
+  "description": "伤害计算管线，支持护甲/闪避/暴击/吸血/护盾/承伤倍率等多级处理器，以及治疗和伤害统计。",
+  "runtimeDependencies": ["Entity", "Data", "Event"],
+  "capabilityDependencies": [],
+  "dataKeys": [
+    "Damage.CurrentHp",
+    "Damage.MaxHp",
+    "Damage.IsDead",
+    "Damage.IsInvulnerable",
+    "Damage.Armor",
+    "Damage.DodgeChance",
+    "Damage.CritRate",
+    "Damage.CritDamage",
+    "Damage.DamageTakenMultiplier",
+    "Damage.LifeSteal",
+    "Damage.Shield",
+    "Damage.ContactDamage",
+    "Damage.ContactDamageInterval",
+    "Damage.TotalDamageDealt",
+    "Damage.TotalDamageTaken",
+    "Damage.WaveDamageDealt",
+    "Damage.WaveDamageTaken",
+    "Damage.HighestSingleDamage",
+    "Damage.TotalHits",
+    "Damage.WaveHits",
+    "Damage.TotalCriticalHits",
+    "Damage.WaveCriticalHits",
+    "Damage.TotalKills",
+    "Damage.WaveKills",
+    "Damage.TotalHealingDone",
+    "Damage.TotalHealingReceived",
+    "Damage.TotalShieldAbsorbed"
+  ],
+  "events": [
+    "Damage.Applied",
+    "Damage.Death",
+    "Damage.HealApplied"
+  ],
+  "components": [
+    "DamageService",
+    "DamageTool",
+    "HealService"
+  ],
+  "systems": [
+    "DamageService",
+    "HealService"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

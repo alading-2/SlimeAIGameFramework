@@ -1,0 +1,42 @@
+{
+  "id": "feature",
+  "name": "Feature",
+  "status": "stable",
+  "ownerSkill": "feature-system",
+  "description": "通用能力生命周期系统，支持 FeatureDefinition 注册、Modifier 授予/回滚、Handler 生命周期管理和激活计数。",
+  "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],
+  "capabilityDependencies": [],
+  "dataKeys": [
+    "Feature.FeatureId",
+    "Feature.HandlerId",
+    "Feature.Description",
+    "Feature.Category",
+    "Feature.ModifierTargetKey",
+    "Feature.ModifierType",
+    "Feature.ModifierValue",
+    "Feature.ModifierPriority",
+    "Feature.IsEnabled",
+    "Feature.IsActive",
+    "Feature.ActivationCount"
+  ],
+  "events": [
+    "Feature.Activated",
+    "Feature.Deactivated",
+    "Feature.ModifierApplied",
+    "Feature.ModifierRemoved"
+  ],
+  "components": [
+    "FeatureService",
+    "FeatureHandlerRegistry",
+    "IFeatureHandler"
+  ],
+  "systems": [
+    "FeatureService",
+    "FeatureHandlerRegistry"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

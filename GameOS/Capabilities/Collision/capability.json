@@ -1,0 +1,34 @@
+{
+  "id": "collision",
+  "name": "Collision",
+  "status": "stable",
+  "ownerSkill": "collision-system",
+  "description": "碰撞层管理和碰撞事件系统，支持 CollisionLayer/CollisionMask/Team 过滤和 ContactDamage 接触伤害。",
+  "runtimeDependencies": ["Entity", "Data", "Event"],
+  "capabilityDependencies": [],
+  "dataKeys": [
+    "Collision.CollisionLayer",
+    "Collision.CollisionMask",
+    "Collision.Team",
+    "Collision.CollisionRadius"
+  ],
+  "events": [
+    "Collision.Entered",
+    "Collision.Exited",
+    "Collision.Contact"
+  ],
+  "components": [
+    "CollisionSystem",
+    "GodotCollisionComponent",
+    "GodotHurtboxComponent",
+    "GodotContactDamageComponent"
+  ],
+  "systems": [
+    "CollisionSystem"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

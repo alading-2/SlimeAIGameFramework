@@ -1,0 +1,66 @@
+{
+  "id": "ability",
+  "name": "Ability",
+  "status": "stable",
+  "ownerSkill": "ability-system",
+  "description": "技能触发与执行系统，支持 Manual/Periodic/Permanent 触发模式、点选/实体/无目标选择、自动索敌、冷却/充能管理和 FeatureHandler 委托。",
+  "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],
+  "capabilityDependencies": ["Damage", "Feature"],
+  "dataKeys": [
+    "Ability.Name",
+    "Ability.Type",
+    "Ability.TriggerMode",
+    "Ability.TargetSelection",
+    "Ability.AutoTargetRange",
+    "Ability.AutoTargetMaxTargets",
+    "Ability.AutoTargetIgnoreSameTeam",
+    "Ability.AutoTargetRequiresDamageable",
+    "Ability.FeatureHandlerId",
+    "Ability.FeatureGroupId",
+    "Ability.Description",
+    "Ability.IconPath",
+    "Ability.Level",
+    "Ability.MaxLevel",
+    "Ability.CostType",
+    "Ability.CostAmount",
+    "Ability.ChargeTime",
+    "Ability.CastRange",
+    "Ability.EffectRadius",
+    "Ability.ChainCount",
+    "Ability.ChainRange",
+    "Ability.ChainDelay",
+    "Ability.ChainDamageDecay",
+    "Ability.LineEffectScenePath",
+    "Ability.IsEnabled",
+    "Ability.IsActive",
+    "Ability.Cooldown",
+    "Ability.CooldownRemaining",
+    "Ability.UsesCharges",
+    "Ability.MaxCharges",
+    "Ability.CurrentCharges",
+    "Ability.Damage",
+    "Ability.DamageInterval",
+    "Ability.DamageRepeatCount",
+    "Ability.ApplyImmediateDamage"
+  ],
+  "events": [
+    "Ability.Executed",
+    "Ability.Failed",
+    "Ability.CooldownStarted",
+    "Ability.CooldownFinished"
+  ],
+  "components": [
+    "AbilityService",
+    "AbilityTargetingTool",
+    "GodotAbilityComponent"
+  ],
+  "systems": [
+    "AbilityService",
+    "AbilityTargetingTool"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

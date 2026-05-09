@@ -1,0 +1,98 @@
+# Collision Capability Contract
+
+## 1. 解决什么问题
+
+提供碰撞层管理和碰撞事件分发：
+
+- CollisionLayer / CollisionMask 位掩码管理
+- Team（队伍）过滤
+- 碰撞半径配置
+- 碰撞进入/离开事件
+- ContactDamage 接触伤害触发
+
+## 2. 不是本能力职责的内容
+
+- **伤害计算** → Damage Capability（ContactDamage 触发 DamageService）
+- **物理模拟** → Godot Physics（本项目使用 Area2D 的监控机制）
+- **移动策略** → Movement Capability
+
+## 3. 需要的 Runtime 能力
+
+- Entity
+- Data
+- Event
+
+## 4. 需要哪些其他 Capability
+
+无。Collision 是基础 Capability，被 Damage（ContactDamage）依赖。
+
+## 5. 写入的 DataKey
+
+| DataKey | 类型 | 说明 |
+|---------|------|------|
+| Collision.CollisionLayer | int | 碰撞层 |
+| Collision.CollisionMask | int | 碰撞掩码 |
+| Collision.Team | int | 队伍 ID |
+| Collision.CollisionRadius | float | 碰撞半径 |
+
+## 6. 读取的 DataKey
+
+同写入。碰撞配置通常是双向读取（两个实体互相检查）。
+
+## 7. 发布的事件
+
+- `Collision.Entered` — 碰撞进入
+- `Collision.Exited` — 碰撞离开
+- `Collision.Contact` — 持续接触
+
+## 8. 订阅的事件
+
+无直接订阅。通过 Godot Area2D 信号桥接到 EventBus。
+
+## 9. 挂载的 Component
+
+- `CollisionSystem` — 碰撞事件管理
+- `GodotCollisionComponent`（GodotBridge）— Area2D 碰撞体
+- `GodotHurtboxComponent`（GodotBridge）— 受击区域
+- `GodotContactDamageComponent`（GodotBridge）— 接触伤害触发器
+
+## 10. 注册的 System / Strategy / Handler
+
+- `CollisionSystem` — 碰撞过滤和事件分发
+- `GodotCollisionIsolation` — 对象池碰撞隔离工具
+
+## 11. 如何启用和关闭
+
+启用：在 Entity 上写入 Collision DataKey，挂载 Godot 碰撞组件。
+
+关闭：禁用 Area2D 监控或移除碰撞组件。
+
+## 12. 如何测试
+
+```bash
+cd /home/slime/Code/SkilmeAI/SkilmeAI
+Tools/run-tests.sh
+```
+
+Godot smoke 验证 Area2D 进入/离开事件。
+
+## 13. 常见错误日志
+
+| 日志/症状 | 根因 |
+|-----------|------|
+| 碰撞不触发 | Layer/Mask 不匹配或 Team 相同被过滤 |
+| 对象池旧碰撞残留 | 回池时未正确脱树/禁用（见 GodotCollisionIsolation） |
+| ContactDamage 不生效 | `ContactDamageInterval` 未过或目标无敌 |
+
+## 14. AI 修改边界
+
+### 可以修改
+
+- 新增 CollisionLayer 枚举值
+- 调整 Team 过滤逻辑
+- 新增碰撞形状支持
+
+### 禁止修改
+
+- 不直接操作 Godot PhysicsServer2D RID
+- 碰撞隔离逻辑必须保留（对象池安全）

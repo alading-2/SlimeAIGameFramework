@@ -51,6 +51,18 @@ public static class MovementDataKeys
         Description = "MovementSystem 当前是否持有该实体的活动移动状态。"
     });
 
+    /// <summary>速度插值系数，越大响应越快；0 或不存在表示瞬时速度（无平滑）。</summary>
+    public static readonly DataMeta Acceleration = DataRegistry.Register(new DataMeta
+    {
+        Key = "Movement.Acceleration",
+        DisplayName = "Acceleration",
+        Type = typeof(float),
+        Category = MovementCategory.Config,
+        DefaultValue = 0f,
+        MinValue = 0f,
+        Description = "PlayerInput 策略的速度插值系数；0 表示无平滑直接到达目标速度。"
+    });
+
     /// <summary>默认移动速度，单位为像素/秒。</summary>
     public static readonly DataMeta MoveSpeed = DataRegistry.Register(new DataMeta
     {
@@ -409,6 +421,7 @@ public static class MovementDataKeys
         _ = FacingDirection;
         _ = IsMoving;
         _ = MoveSpeed;
+        _ = Acceleration;
         _ = InputDirection;
         _ = AIMoveDirection;
         _ = AIMoveSpeedMultiplier;

@@ -5,9 +5,15 @@
 ## 子域
 
 - `SkillsSource/`：通用 Skill 源头和模板。
-- `Protocols/`：AI 开发、Debug、迁移、数据生成等协议。
+- `Protocols/`：AI 开发、Debug、迁移、OpenSpec change、数据生成等协议。
 - `Templates/`：Capability、计划、ResearchBrief 等模板。
 - `DocsAI/`：Agent 侧索引和说明。
+
+## 计划协议
+
+- `Protocols/OpenSpecChangeProtocol.md`：框架级计划事实源和 change 生命周期协议。
+
+后续长期任务默认进入 `openspec/changes/<change>/`。`plan` / `ralplan` 只作为澄清、评审和风险收敛手段；需要落盘时写入 OpenSpec artifact。
 
 ## Skill 迁移状态
 

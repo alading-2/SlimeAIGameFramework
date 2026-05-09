@@ -1,0 +1,28 @@
+{
+  "id": "unit",
+  "name": "Unit",
+  "status": "stable",
+  "ownerSkill": "ecs-entity",
+  "description": "单位通用数据定义，包括名称、类型、死亡类型、视觉场景路径、血条高度、动画列表等。",
+  "runtimeDependencies": ["Entity", "Data"],
+  "capabilityDependencies": ["Damage", "Movement"],
+  "dataKeys": [
+    "Unit.Name",
+    "Unit.EntityType",
+    "Unit.DeathType",
+    "Unit.VisualScenePath",
+    "Unit.HealthBarHeight",
+    "Unit.IsShowHealthBar",
+    "Unit.PickupRange",
+    "Unit.ExpReward",
+    "Unit.DetectionRange",
+    "Unit.AvailableAnimations"
+  ],
+  "events": [],
+  "components": [],
+  "systems": [],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build"
+  ]
+}

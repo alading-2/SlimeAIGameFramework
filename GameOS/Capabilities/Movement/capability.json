@@ -1,0 +1,66 @@
+{
+  "id": "movement",
+  "name": "Movement",
+  "status": "stable",
+  "ownerSkill": "movement-system",
+  "description": "实体移动策略系统，支持 Charge/SineWave/Orbit/Boomerang/BezierCurve/CircularArc/Parabola/AttachToHost/PlayerInput/AIControlled 等多种移动模式。",
+  "runtimeDependencies": ["Entity", "Data", "Event", "Schedule"],
+  "capabilityDependencies": [],
+  "dataKeys": [
+    "Movement.Position",
+    "Movement.Velocity",
+    "Movement.FacingDirection",
+    "Movement.IsMoving",
+    "Movement.MoveSpeed",
+    "Movement.Acceleration",
+    "Movement.InputDirection",
+    "Movement.AIMoveDirection",
+    "Movement.AIMoveSpeedMultiplier",
+    "Movement.CanMoveInput",
+    "Movement.LastMoveDirection",
+    "Movement.Handler.MoveMode",
+    "Movement.Handler.MaxDistance",
+    "Movement.Handler.MinTravelDuration",
+    "Movement.Handler.MaxTravelDuration",
+    "Movement.Handler.ProjectileCount",
+    "Movement.WaveAmplitude",
+    "Movement.WaveFrequency",
+    "Movement.WavePhase",
+    "Movement.OrbitRadius",
+    "Movement.OrbitAngularSpeed",
+    "Movement.OrbitAngularAcceleration",
+    "Movement.OrbitTotalAngle",
+    "Movement.IsOrbitClockwise",
+    "Movement.BoomerangPauseTime",
+    "Movement.BoomerangReturnSpeedMultiplier",
+    "Movement.BoomerangArcHeight",
+    "Movement.BoomerangIsClockwise",
+    "Movement.BezierDegree",
+    "Movement.BezierPattern",
+    "Movement.ParabolaApexHeight",
+    "Movement.CircularArcRadiusScale",
+    "Movement.CircularArcRadiusMinOffset",
+    "Movement.CircularArcClockwise",
+    "Movement.BowWorldUp"
+  ],
+  "events": [
+    "Movement.Started",
+    "Movement.Stopped",
+    "Movement.Collided"
+  ],
+  "components": [
+    "MovementSystem",
+    "MovementStrategyRegistry",
+    "GodotMovementDriver",
+    "GodotOrientationComponent"
+  ],
+  "systems": [
+    "MovementSystem",
+    "MovementStrategyRegistry"
+  ],
+  "testScenes": [],
+  "validationCommands": [
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
+    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+  ]
+}

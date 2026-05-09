@@ -9,7 +9,8 @@ description: SkilmeAI 框架仓库导航入口。用于查找 GameOS、DataOS、
 
 - `DocsAI/INDEX.md`
 - `DocsAI/ProjectState.md`
-- `Plans/README.md`
+- `Agent/Protocols/OpenSpecChangeProtocol.md`
+- `Plans/README.md`（历史计划与方向索引）
 - `GameOS/SkilmeAI.GameOS.Contracts.md`
 - `GameOS/SkilmeAI.GameOS.ApiIndex.md`
 - `GameOS/SkilmeAI.GameOS.DebugGuide.md`
@@ -20,13 +21,14 @@ description: SkilmeAI 框架仓库导航入口。用于查找 GameOS、DataOS、
 - 找源码：查 `GameOS/Runtime/`、`GameOS/Capabilities/`、`GameOS/GodotBridge/`。
 - 找 DataOS：查 `DataOS/README.md`、`DataOS/Schema/`、`DataOS/Migrations/`、`DataOS/Generators/`、`DataOS/Validation/`。
 - 找测试：查 `Tests/SkilmeAI.GameOS.Tests/` 和 `Tools/run-tests.sh`。
+- 找计划源：新执行计划默认查 `openspec/changes/<change>/`，协议见 `Agent/Protocols/OpenSpecChangeProtocol.md`；`Plans/` 只作历史研究和方向背景。
 - 找迁移来源：旧输入仓库是 `/home/slime/Code/Godot/Games/MyGames/brotato-my`。
 - 找第一个游戏接入验证：游戏仓库是 `/home/slime/Code/SkilmeAI/Games/BrotatoLike`。
 
 ## 常用命令
 
 ```bash
-rg -n "<关键词>" DocsAI GameOS DataOS Tests Tools Plans
+rg -n "<关键词>" DocsAI GameOS DataOS Tests Tools Plans Agent/Protocols ../openspec
 find GameOS -maxdepth 4 -type f | sort
 Tools/run-build.sh
 Tools/run-tests.sh
