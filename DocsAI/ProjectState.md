@@ -1,6 +1,6 @@
 # SkilmeAI ProjectState
 
-> 更新日期：2026-05-08
+> 更新日期：2026-05-10
 
 ## 当前阶段
 
@@ -8,10 +8,12 @@ M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17
 
 计划系统已切换到 OpenSpec 口径：框架级功能、重构、架构调整、迁移账本和长期实施任务默认进入 `openspec/changes/<change>/`。`SkilmeAI/Plans/` 保留为历史研究、方向背景和长期参考；新的执行 checklist 不再默认写入 `Plans/` 或 `.omx/plans/`。
 
+GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 改为委托 repo 通用 `SkilmeAI/Tools/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。
+
 ## 下一步
 
 1. 继续扩大 DataOS 迁移范围：旧 DataNew 剩余字段、剩余 Feature actions，以及把尚未接线的 Ability / Movement handler authoring 参数接入真实 handler 执行路径。
-2. 继续把 BrotatoLike 真实主场景、UI 和 SpawnSystem 专项场景接入统一 Godot scene runner。
+2. 继续把 BrotatoLike 真实主场景、UI 和 SpawnSystem 专项场景接入统一 Godot scene runner 和 Observation artifact。
 3. 推进 DataOS snapshot 到真实主场景 / UI / 生成系统入口。
 4. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SkilmeAI/Engine/Engine/godot-4.6.2-stable`。
 5. 将后续框架级计划按 `Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
@@ -38,4 +40,4 @@ Tools/run-build.sh
 Tools/run-tests.sh
 ```
 
-结果：Runtime 行为测试全部 PASS，DataOS schema 验证 PASS。Godot smoke 已通过 BrotatoLike `BrotatoLikeDataOSBootstrap` 从 snapshot 生成敌人、TargetingIndicator、ChainLightning、系统配置、系统预设和 Spawn config Runtime Entity，并验证资源映射注册。
+结果：Runtime 行为测试全部 PASS，DataOS schema 验证 PASS；新增 Observation level filter、JSONL serialization、validation failure aggregation 测试通过。BrotatoLike Runtime Event validation、普通 `Scenes/Main.tscn` playable acceptance、`run-main-smoke` 均已通过新结构 runner 和 analyzer。

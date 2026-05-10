@@ -36,8 +36,15 @@ Tools/analyze-godot-scene-logs.sh
 - `scripts/analyze-logs.sh`
 - `scripts/godot-scene-runner.mjs`
 
+## 当前事实源
+
+- repo 通用 runner：`/home/slime/Code/SkilmeAI/SkilmeAI/Tools/godot-scene-runner.mjs`
+- repo 通用 analyzer：`/home/slime/Code/SkilmeAI/SkilmeAI/Tools/analyze-godot-scene-logs.sh`
+- BrotatoLike `Tools/run-godot-scene.sh` / `Tools/analyze-godot-scene-logs.sh` 是薄封装。
+- 新日志结构是 `.ai-temp/scene-tests/runs/<date>/<time>/index.json` 加 per-scene attempt 目录；bundled script 只作历史参考。
+
 ## 规则
 
 - 框架修改后如影响 GodotBridge / Capability bridge，必须回到 BrotatoLike 跑 headless smoke。
 - `Tools/run-godot-smoke.sh` 只是兼容入口，优先用统一 runner。
-- 日志和截图 artifacts 保持在 `.ai-temp/scene-tests/runs`。
+- 日志和截图 artifacts 保持在 `.ai-temp/scene-tests/runs`，优先读取 `index.json`、`result.json`、`combined.log` 和 `artifacts/logs/scene-log.jsonl`。

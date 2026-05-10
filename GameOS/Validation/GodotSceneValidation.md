@@ -46,6 +46,25 @@ Games/BrotatoLike/Src/SceneTests/Runtime/Event/RuntimeEventValidationScene.cs
 
 README 的人类说明可以使用中文；命令、路径、marker 和字段名保持原文。
 
+## Runner 输出结构
+
+统一 runner 由 repo 框架侧 `SkilmeAI/Tools/godot-scene-runner.mjs` 提供，BrotatoLike `Tools/run-godot-scene.sh` 只是薄封装。使用 `--log-dir .ai-temp/scene-tests/runs` 时输出：
+
+```text
+.ai-temp/scene-tests/runs/<date>/<time>/
+  index.json
+  001_<scene>_attempt1/
+    stdout.log
+    stderr.log
+    combined.log
+    result.json
+    screenshots/
+    artifacts/
+      logs/scene-log.jsonl
+```
+
+每个场景进程会收到 `GODOT_SCENE_TEST_RUN_DIR`、`GODOT_SCENE_TEST_SCENE_DIR`、`GODOT_SCENE_TEST_SCREENSHOT_DIR`、`GODOT_SCENE_TEST_ARTIFACT_DIR` 及对应 `_REL` 环境变量。
+
 ## Artifact 约定
 
 使用 scene runner 的 `GODOT_SCENE_TEST_ARTIFACT_DIR` 写入 JSON。缺失该环境变量时，场景可以退化写入当前目录下的 `.ai-temp/scene-tests/manual/artifacts`，但 CI 和验收命令必须使用 `--log-dir`。
@@ -58,6 +77,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
   "scene": "res://Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn",
   "layer": "Runtime/Event",
   "checks": [],
+  "logs": [],
   "failureReasons": [],
   "dependencies": [],
   "notes": []
@@ -70,9 +90,30 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 - `scene`: 当前运行的 `res://` 场景路径。
 - `layer`: 被验证的 GameOS 基础层。
 - `checks`: 每个检查项的结构化证据，至少包含 `name`、`status`、`category`。
+- `logs`: 与 stdout 同源的关键日志条目，至少包含 `level`、`context`、`message`。
 - `failureReasons`: 失败原因数组；PASS 时必须为空。
 - `dependencies`: 运行场景允许依赖的框架和游戏侧承载项。
 - `notes`: 非核心断言、跨层桥接或排查提示。
+
+## 日志约定
+
+场景验证必须同时产出人类可读日志和机器可读 artifact。日志不是 artifact 的替代品；它用于快速定位“跑到哪一步、哪一步失败、关键观测值是什么”。artifact 是 AI / CI 复验事实源。
+
+框架侧 `SceneValidationSession` 是默认 helper；场景脚本只声明检查项，helper 负责 check start、PASS/FAIL、失败聚合、JSONL 和 validation artifact。
+
+每个检查项必须至少输出：
+
+- 开始：`[INFO][<SceneName>] check <name> start`
+- 通过：`[PASS][<SceneName>] check <name> <summary>`
+- 失败：`[FAIL][<SceneName>] check <name> <reason>`
+
+日志规则：
+
+- stdout 日志使用 ASCII level 和 scene context，便于 `rg` 检索。
+- Godot 承载场景可以使用 `GD.PrintRich` 做颜色输出，但原始文本必须包含 `[INFO]`、`[PASS]`、`[FAIL]`、`[WARN]` 或 `[ERROR]`。
+- 失败日志必须和 artifact `failureReasons` 对应。
+- PASS/FAIL 总 marker 仍必须保留，不能只依赖逐项日志。
+- 低层验证不要把大量每帧日志作为默认输出；需要长 trace 时写入 artifact 或单独 trace 文件。
 
 ## PASS/FAIL Marker
 

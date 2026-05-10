@@ -184,6 +184,21 @@
 | `SkilmeAI.GameOS.Capabilities.AI.EnemyBehaviorBlocks` | static class | bootstrap | AI 可复用行为积木块：AttackBranch / ChaseBranch / PatrolBranch / AbilityAutoTriggerBranch。 |
 | `SkilmeAI.GameOS.Capabilities.AI.EnemyBehaviorTreeBuilder` | static class | bootstrap | AI 预制树工厂：BuildMeleeEnemyTree / BuildAbilityMeleeEnemyTree / BuildPatrolOnlyTree / BuildChaserTree。 |
 
+## Observation
+
+| API | 类型 | 状态 | 说明 |
+| --- | --- | --- | --- |
+| `SkilmeAI.GameOS.Observation.GameOSLogLevel` | enum | bootstrap | 通用日志等级：Trace / Debug / Info / Pass / Warn / Error / Fail。 |
+| `SkilmeAI.GameOS.Observation.GameOSLogEntry` | class | bootstrap | 单条结构化日志，支持 `[LEVEL][Context] message key=value` 格式化。 |
+| `SkilmeAI.GameOS.Observation.IGameOSLogSink` | interface | bootstrap | 日志 sink 协议。 |
+| `SkilmeAI.GameOS.Observation.GameOSLog` | static class | bootstrap | 全局日志配置、context logger 创建和 sink 注册入口。 |
+| `SkilmeAI.GameOS.Observation.GameOSContextLog` | class | bootstrap | context-bound logger，提供 Trace / Debug / Info / Pass / Warn / Error / Fail。 |
+| `SkilmeAI.GameOS.Observation.GameOSMemoryLogSink` | class | bootstrap | 测试和 artifact 聚合用内存 sink。 |
+| `SkilmeAI.GameOS.Observation.GameOSJsonlLogSink` | class | bootstrap | JSONL sink，默认用于 `artifacts/logs/scene-log.jsonl`。 |
+| `SkilmeAI.GameOS.Observation.GameOSObservationSession` | class | bootstrap | 读取 scene runner 环境变量并准备 artifact / JSONL 路径。 |
+| `SkilmeAI.GameOS.Observation.CheckResult` | record | bootstrap | validation check 返回值。 |
+| `SkilmeAI.GameOS.Observation.SceneValidationSession` | class | bootstrap | Godot validation scene 检查项日志、失败聚合和 artifact 写入 helper。 |
+
 ## GodotBridge
 
 | API | 类型 | 状态 | 说明 |

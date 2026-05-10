@@ -1,31 +1,58 @@
 # GameOS Observation Contract
 
-> 更新日期：2026-05-09  
-> 状态：contract draft  
+> 更新日期：2026-05-10  
+> 状态：implemented draft  
 > 适用范围：GameOS Runtime / Capability / DataOS / GodotBridge / BrotatoLike scene acceptance。
 
 ## 定位
 
 Observation 是调试和验收证据层，用来回答“为什么系统没有跑、事件没有到、目标没有选中、资源路径不可用、命令没有回放、场景没有通过”。它不是 gameplay hot path，不替代 Runtime API，不引入通用 world query DSL。
 
-第一版只定义 artifact contract。后续实现可以由 Runtime tests、debug helper、scene runner 或具体 game adapter 分阶段输出。
+第一版已实现通用日志 / session / validation helper 和 scene runner 结构。后续 Schedule trace、selector dump、DataOS trace 和 command playback 仍按本 contract 分阶段补齐。
+
+## 通用日志 API
+
+框架侧入口位于 `SkilmeAI.GameOS.Observation`：
+
+- `GameOSLog.For(string context)` 创建 context logger。
+- `GameOSLog.Configure(GameOSLogOptions options)` 配置最低等级、stdout 和 JSONL。
+- `GameOSLog.AddSink(IGameOSLogSink sink)` / `RemoveSink` 注册输出。
+- `GameOSObservationSession.FromEnvironment(scenePath, mode)` 读取 `GODOT_SCENE_TEST_*` 环境变量。
+- `SceneValidationSession` 负责检查项日志、失败聚合和 validation artifact。
+
+日志文本格式固定为：
+
+```text
+[LEVEL][Context] message key=value
+```
+
+等级：`Trace`、`Debug`、`Info`、`Pass`、`Warn`、`Error`、`Fail`。Godot / stdout sink 可以带颜色，但原始文本必须保留上述格式。启用 JSONL 时，默认写入：
+
+```text
+GODOT_SCENE_TEST_ARTIFACT_DIR/logs/scene-log.jsonl
+```
 
 ## 输出位置
 
-BrotatoLike Godot scene runner 使用：
+BrotatoLike Godot scene runner 使用新结构：
 
 ```text
 .ai-temp/scene-tests/runs/<date>/<time>/
-  stdout.log
-  stderr.log
-  screenshots/
-  artifacts/
+  index.json
+  001_<scene>_attempt1/
+    stdout.log
+    stderr.log
+    combined.log
+    result.json
+    screenshots/
+    artifacts/
+      logs/scene-log.jsonl
 ```
 
 结构化 Observation JSON 默认写入：
 
 ```text
-.ai-temp/scene-tests/runs/<date>/<time>/artifacts/
+.ai-temp/scene-tests/runs/<date>/<time>/<scene-attempt>/artifacts/
 ```
 
 框架纯 runtime tests 可以把同形状 JSON 写到测试输出目录，但不得写入源码目录。
@@ -368,26 +395,21 @@ stdout marker 建议：
 
 `Tools/analyze-godot-scene-logs.sh` 当前检查：
 
-- `BrotatoLike GameOS smoke PASS`
-- `PASS`
-- `[PASS]`
-- `ERROR:`
-- `[ERROR]`
-- `[FAIL]`
-- `FAIL:`
-- `Exception`
-- `Cannot instantiate`
-- `Failed to load`
-- `scene not found`
+- 新结构 `index.json` 和每个场景的 `result.json`。
+- Artifact `status`，包含 `scene-acceptance.json` 和 validation artifact。
+- stdout / combined log 明确 PASS/FAIL marker。
+- `ERROR:`、`[ERROR]`、`[FAIL]`、`FAIL:`、`Exception`、`Cannot instantiate`、`Failed to load`、`scene not found` 等复查信号。
 
-后续增强日志分析时，判定顺序 MUST 是：
+判定顺序 MUST 是：
 
 1. Godot 进程 exit code。
-2. `scene-acceptance.json` 的 `status`。
+2. artifact 的 `status`。
 3. stdout 明确 `[PASS]` 或 `[FAIL]` marker。
 4. error markers 作为复查信号。
 
 没有 error marker 不能单独视为通过；有 generic `ERROR:` 也必须结合 exit code、结构化 artifact 和明确 PASS/FAIL 判断。
+
+旧 flat run directory（`runs/<date>/<time>/stdout.log`）只作为 analyzer 迁移期兼容格式，新运行不再生成该结构。
 
 ## R07 使用要求
 

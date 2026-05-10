@@ -97,6 +97,12 @@
 - `SkilmeAI.GameOS.Capabilities.Effect.EffectDataKeys`
 - `SkilmeAI.GameOS.Capabilities.Effect.EffectTool`
 - `SkilmeAI.GameOS.Capabilities.Unit.UnitDataKeys`
+- `SkilmeAI.GameOS.Observation.GameOSLog`
+- `SkilmeAI.GameOS.Observation.GameOSContextLog`
+- `SkilmeAI.GameOS.Observation.GameOSLogEntry`
+- `SkilmeAI.GameOS.Observation.IGameOSLogSink`
+- `SkilmeAI.GameOS.Observation.GameOSObservationSession`
+- `SkilmeAI.GameOS.Observation.SceneValidationSession`
 
 ## Runtime Data 契约
 
@@ -156,6 +162,14 @@
 - `TimerManager` 是纯 C# 计时器调度器，由外部 `Tick(delta, unscaledDelta)` 驱动。
 - `GameTimer` 支持 `Delay / Loop / Repeat / Countdown`、Tag、Pause、Cancel、Complete。
 - Godot 项目通过 `GameOSTimerDriver._Process` 桥接 `TimerManager.Instance.Tick`。
+
+## Observation 契约
+
+- `GameOSLog.For(context)` 是通用日志入口，输出格式固定为 `[LEVEL][Context] message key=value`。
+- `GameOSLogLevel` 覆盖 `Trace / Debug / Info / Pass / Warn / Error / Fail`，`GameOSLogOptions.MinimumLevel` 控制全局过滤。
+- `IGameOSLogSink` 是日志输出协议，当前提供默认 Godot/stdout sink、memory sink 和 JSONL sink。
+- `GameOSObservationSession.FromEnvironment(scenePath, mode)` 读取 `GODOT_SCENE_TEST_RUN_DIR / SCENE_DIR / SCREENSHOT_DIR / ARTIFACT_DIR` 及 `_REL` 变量，并在 artifact 目录下准备 `logs/scene-log.jsonl`。
+- `SceneValidationSession` 负责 Godot validation scene 的 check start、PASS/FAIL、失败原因聚合和 validation artifact 写入；scene script 只声明检查项和最终 stdout marker。
 
 ## Movement Capability 契约
 
