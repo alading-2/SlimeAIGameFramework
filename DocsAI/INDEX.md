@@ -24,7 +24,8 @@ SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路
 - Capability 索引：`GameOS/Capabilities/CapabilityIndex.md`
 - DataOS：`DataOS/Overview.md`
 - Agent 协议：`Agent/Overview.md`
-- 测试入口：`Tests/GodotSceneTesting.md`
+- Runtime 测试入口：`Tests/RuntimeTests.md`
+- Godot 场景测试入口：`Tests/GodotSceneTesting.md`
 
 ## 按任务路由
 
@@ -33,6 +34,7 @@ SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路
 | 框架方向、边界、是否该做 | `Framework/Overview.md`、`Framework/Principles.md` | `DocsAI/Agent/Protocols/FrameworkVsGameBoundary.md` |
 | Runtime / Data / Event / Entity / Schedule | `GameOS/Contracts.md`、`GameOS/ApiIndex.md` | `project-index`、`ecs-*`、`tools` skills |
 | Capability 修改 | `GameOS/Capabilities/CapabilityIndex.md` | 对应 `GameOS/Capabilities/<Name>/Contract.md`、`Debug.md` 和 owner skill |
+| Runtime 纯逻辑测试 | `Tests/RuntimeTests.md` | `Tests/SkilmeAI.GameOS.Tests/`、`Tools/run-tests.sh`；不启动 Godot |
 | GodotBridge / 场景验证 | `Tests/GodotSceneTesting.md` | `godot-scene-test` skill、BrotatoLike Tools wrapper |
 | DataOS schema / snapshot / validator | `DataOS/Overview.md`、`DataOS/SnapshotManifest.md` | `data-authoring` skill |
 | Agent 协议 / 长任务 / 完成汇报 | `Agent/Overview.md` | `DocsAI/Agent/Protocols/*.md` |

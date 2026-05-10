@@ -7,6 +7,7 @@
 - `GameOS/`：Godot AI Game OS，包含 Runtime、Capabilities、Validation、Observation 和 GodotBridge。
 - `DataOS/`：AI 原生数据层，包含 schema、迁移、生成器、snapshot 和分析。
 - `Agent/`：通用 AI 协议文档。
+- `Tests/`：GameOS 纯 C# Runtime 行为测试。
 - `Packages/`：本地 NuGet、构建输出和发布说明。
 - `DocsAI/`：AI 执行入口。
 - `../openspec/`：框架级 change 的计划事实源和规范基线，承载 active change 与 `specs/`。

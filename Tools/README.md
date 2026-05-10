@@ -5,9 +5,15 @@
 当前入口：
 
 - `run-build.sh`：框架构建。
-- `run-tests.sh`：框架测试。
+- `run-tests.sh`：框架测试，先跑 DataOS 验证，再跑 `Tests/SkilmeAI.GameOS.Tests` Runtime 行为测试。
 - `run-dataos-validate.sh`：DataOS schema / seed 验证。
 - `run-pack.sh`：本地包构建。
+
+Runtime 测试说明见：
+
+```text
+../DocsAI/Tests/RuntimeTests.md
+```
 
 Godot 场景测试 runner/analyzer 不在本目录维护。事实源是：
 
