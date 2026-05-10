@@ -16,7 +16,7 @@ cd /home/slime/Code/SkilmeAI/Games/BrotatoLike && Tools/run-godot-smoke.sh
 
 ## Observation
 
-- Observation artifact contract：`GameOS/Observation/Contract.md`。
+- Observation artifact contract：`DocsAI/GameOS/Observation.md`。
 - BrotatoLike scene runner 日志目录：`.ai-temp/scene-tests/runs/<date>/<time>/index.json` 加 per-scene attempt 目录。
 - 结构化验收证据默认写入 `<scene-attempt>/artifacts/`，JSONL 写入 `artifacts/logs/scene-log.jsonl`，截图写入 `screenshots/`。
 - 可玩切片必须看明确 PASS/FAIL marker 或 `scene-acceptance.json`，不能只看没有 `ERROR:`。

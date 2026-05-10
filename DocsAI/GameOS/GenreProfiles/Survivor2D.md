@@ -14,7 +14,7 @@ BrotatoLike 是第一验证游戏，不是 profile 默认内容来源。
 
 ## 默认能力候选
 
-根据 `SkilmeAI/GameOS/Capabilities/CapabilityIndex.md`，首批能力当前均为 `Experimental`。它们可以作为 `Survivor2D` 默认能力候选，但不能标记为 `Supported`。
+根据 `SkilmeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`，首批能力当前均为 `Experimental`。它们可以作为 `Survivor2D` 默认能力候选，但不能标记为 `Supported`。
 
 | Capability | Profile role | 当前状态 | 说明 |
 | --- | --- | --- | --- |

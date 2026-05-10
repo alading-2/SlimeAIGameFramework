@@ -54,10 +54,10 @@ Tools/analyze-godot-scene-logs.sh
 | --- | --- |
 | Capability id | `movement` |
 | Metadata | `SkilmeAI/GameOS/Capabilities/Movement/capability.json` |
-| Legacy status source | `capability.json` 中为 `experimental`；`SkilmeAI.GameOS.ApiIndex.md` 中存在 `migrated/bootstrap` 行 |
+| Legacy status source | `capability.json` 中为 `experimental`；`ApiIndex.md` 中存在 `migrated/bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `movement-system` |
-| Contract / Debug | `Capabilities/Movement/Contract.md`；`Capabilities/Movement/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Movement/Contract.md`；`GameOS/Capabilities/Movement/Debug.md` |
 | Primary APIs | `MovementSystem`、`MovementDataKeys`、`MovementParams`、`IMovementStrategy`、`MovementStrategyRegistry`、`MovementCollisionPolicy` |
 | DataKeys | Position、Velocity、FacingDirection、IsMoving、MoveSpeed、Acceleration、InputDirection、AIMoveDirection、AIMoveSpeedMultiplier、CanMoveInput、LastMoveDirection、handler movement params、wave/orbit/boomerang/bezier/parabola/circular-arc params |
 | Events | `Movement.Started`、`Movement.Stopped`、`Movement.Collided` |
@@ -78,7 +78,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap/migrated` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `collision-system` |
-| Contract / Debug | `Capabilities/Collision/Contract.md`；`Capabilities/Collision/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Collision/Contract.md`；`GameOS/Capabilities/Collision/Debug.md` |
 | Primary APIs | `CollisionDataKeys`、`CollisionLayers`、`CollisionFilterPolicy`、`CollisionSystem`、`CollisionContact` |
 | DataKeys | CollisionLayer、CollisionMask、Team、CollisionRadius |
 | Events | `Collision.Entered`、`Collision.Exited`、`Collision.Contact` |
@@ -99,7 +99,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `damage-system` |
-| Contract / Debug | `Capabilities/Damage/Contract.md`；`Capabilities/Damage/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Damage/Contract.md`；`GameOS/Capabilities/Damage/Debug.md` |
 | Primary APIs | `DamageService`、`HealService`、`DamageTool`、`DamageInfo`、`DamageResult`、`IDamageProcessor`、`DamageDataKeys` |
 | DataKeys | CurrentHp、MaxHp、IsDead、IsInvulnerable、Armor、DodgeChance、CritRate、CritDamage、DamageTakenMultiplier、LifeSteal、Shield、ContactDamage、ContactDamageInterval、total/wave damage、hit、crit、kill、healing、shield statistics |
 | Events | `Damage.Applied`、`Damage.Death`、`Damage.HealApplied`，以及 `GameEventType` 中的 runtime health/damage/killed/healed event names |
@@ -120,7 +120,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | DataKeys 和 runtime metadata 归 `ecs-data`；HUD/UI-facing 后续工作使用 `ui-bind`。 |
-| Contract / Debug | `Capabilities/Unit/Contract.md`；`Capabilities/Unit/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Unit/Contract.md`；`GameOS/Capabilities/Unit/Debug.md` |
 | Primary APIs | `UnitDataKeys` |
 | DataKeys | Name、EntityType、DeathType、VisualScenePath、HealthBarHeight、IsShowHealthBar、PickupRange、ExpReward、DetectionRange、AvailableAnimations |
 | Events | `capability.json` 中无事件；动画请求使用 `GameEventType.Unit` bridge events。 |
@@ -141,7 +141,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `attack-system` |
-| Contract / Debug | `Capabilities/Attack/Contract.md`；`Capabilities/Attack/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Attack/Contract.md`；`GameOS/Capabilities/Attack/Debug.md` |
 | Primary APIs | `AttackService`、`AttackDataKeys`、`AttackState`、`AttackTriggerReport`、`AttackTriggerResult` |
 | DataKeys | Damage、Range、Interval、WindUpTime、RecoveryTime、CanAttack、IsAttacking、State、CooldownRemaining |
 | Events | `Attack.Requested`、`Attack.CancelRequested`、`Attack.Started`、`Attack.Completed`、`Attack.Cancelled` |
@@ -162,7 +162,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `ai-system` |
-| Contract / Debug | `Capabilities/AI/Contract.md`；`Capabilities/AI/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/AI/Contract.md`；`GameOS/Capabilities/AI/Debug.md` |
 | Primary APIs | `AIService`、`AIContext`、`BehaviorNode`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、target/action nodes |
 | DataKeys | IsEnabled、TargetEntity、TargetPosition、HasTargetPosition、IsAttackRequested、AttackRange、PatrolCenter、PatrolRadius、PatrolWaitTime、PatrolTargetPosition、HasPatrolTargetPosition、PatrolWaitRemaining、PatrolDirectionSign |
 | Events | `AI.TargetAcquired`、`AI.TargetLost`、`AI.PatrolStarted` |
@@ -183,7 +183,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `ability-system` |
-| Contract / Debug | `Capabilities/Ability/Contract.md`；`Capabilities/Ability/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Ability/Contract.md`；`GameOS/Capabilities/Ability/Debug.md` |
 | Primary APIs | `AbilityService`、`AbilityDataKeys`、`AbilityCastContext`、`AbilityTriggerReport`、`AbilityTargetingTool` |
 | DataKeys | Name、Type、TriggerMode、TargetSelection、AutoTargetRange、AutoTargetMaxTargets、AutoTargetIgnoreSameTeam、AutoTargetRequiresDamageable、FeatureHandlerId、FeatureGroupId、Description、IconPath、Level、MaxLevel、CostType、CostAmount、ChargeTime、CastRange、EffectRadius、chain fields、LineEffectScenePath、IsEnabled、IsActive、Cooldown、CooldownRemaining、charge fields、Damage、DamageInterval、DamageRepeatCount、ApplyImmediateDamage |
 | Events | `Ability.Executed`、`Ability.Failed`、`Ability.CooldownStarted`、`Ability.CooldownFinished` |
@@ -204,7 +204,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `feature-system` |
-| Contract / Debug | `Capabilities/Feature/Contract.md`；`Capabilities/Feature/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Feature/Contract.md`；`GameOS/Capabilities/Feature/Debug.md` |
 | Primary APIs | `FeatureService`、`FeatureDataKeys`、`FeatureDefinition`、`FeatureModifierEntry`、`IFeatureHandler`、`FeatureHandlerRegistry` |
 | DataKeys | FeatureId、HandlerId、Description、Category、ModifierTargetKey、ModifierType、ModifierValue、ModifierPriority、IsEnabled、IsActive、ActivationCount |
 | Events | `Feature.Activated`、`Feature.Deactivated`、`Feature.ModifierApplied`、`Feature.ModifierRemoved` |
@@ -225,7 +225,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `projectile-effect-system` |
-| Contract / Debug | `Capabilities/Projectile/Contract.md`；`Capabilities/Projectile/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Projectile/Contract.md`；`GameOS/Capabilities/Projectile/Debug.md` |
 | Primary APIs | `ProjectileTool`、`ProjectileDataKeys`、`ProjectileSpawnOptions`、`ProjectileMovementOptions` |
 | DataKeys | ScenePath、SourceEntity、AbilityEntity、TargetEntity、SpawnPosition、TargetPosition、Direction、Speed、MaxHitCount、HitCount、MaxLifeTime、Damage、DamageType、DamageTags |
 | Events | `Projectile.Spawned`、`Projectile.Hit`、`Projectile.LifeTimeExpired`、`Projectile.Destroyed` |
@@ -246,7 +246,7 @@ Tools/analyze-godot-scene-logs.sh
 | Legacy status source | `capability.json` 中为 `experimental`；API index 中存在 `bootstrap` 行 |
 | Normalized status | `Experimental` |
 | Owner skill | `projectile-effect-system` |
-| Contract / Debug | `Capabilities/Effect/Contract.md`；`Capabilities/Effect/Debug.md` |
+| Contract / Debug | `GameOS/Capabilities/Effect/Contract.md`；`GameOS/Capabilities/Effect/Debug.md` |
 | Primary APIs | `EffectTool`、`EffectDataKeys`、`EffectSpawnOptions`、`EffectSpawnResult` |
 | DataKeys | ScenePath、Name、AnimationName、SourceEntity、AbilityEntity、TargetEntity、Position、Duration |
 | Events | `Effect.Spawned`、`Effect.Completed`、`Effect.Cancelled` |

@@ -31,7 +31,7 @@ Tools/run-build.sh
 
 ## 契约
 
-- `SkilmeAI.GameOS.Contracts.md`
-- `SkilmeAI.GameOS.ApiIndex.md`
-- `SkilmeAI.GameOS.DebugGuide.md`
+- `Contracts.md`
+- `ApiIndex.md`
+- `DebugGuide.md`
 - `SkilmeAI.GameOS.Migration.md`

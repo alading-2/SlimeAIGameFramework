@@ -302,6 +302,6 @@
 
 ## 修改门禁
 
-- Runtime API 改动必须同步本文件和 `SkilmeAI.GameOS.ApiIndex.md`。
+- Runtime API 改动必须同步本文件和 `ApiIndex.md`。
 - Capability 新增必须带 manifest、`Contract.md`、测试和 Debug 文档。
 - 发布包前必须通过 `Tools/run-build.sh` 和 `Tools/run-tests.sh`。

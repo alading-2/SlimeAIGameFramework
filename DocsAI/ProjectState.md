@@ -6,9 +6,11 @@
 
 M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17 的 GodotBridge、Movement、Collision、Damage、Ability、Projectile、Effect、Feature、AI、Attack 和 DataOS 最小闭环已完成。M18 DataOS 扩大迁移与正式生成入口切片已完成：框架新增 `ScheduleDataKeys`，扩展 Unit / Ability / Feature DataMeta；后续已补 `MovementDataKeys` 中 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc / AttachToHost 的 handler authoring 参数；BrotatoLike seed 覆盖 TargetingIndicator、ChainAbility、Feature definition / modifier、System config / preset、Spawn config、更多旧 ResourcePaths 和 Ability handler-specific 参数第三段；游戏侧新增 `BrotatoLikeDataOSBootstrap` 和 `BrotatoLikeAbilityHandlers`，正式代码可从 generated snapshot 生成 Runtime Entity 并注册 ResourceCatalog，且 SineWave / Boomerang / BezierCurve / CircularArc / Orbit / AttachToHost、Dash、ChainLightning、Slam、TargetPoint、CircleDamage 和 AuraShield 已通过游戏侧 Feature handler 执行闭环。
 
-计划系统已切换到 OpenSpec 口径：框架级功能、重构、架构调整、迁移账本和长期实施任务默认进入 `openspec/changes/<change>/`。`SkilmeAI/Plans/` 保留为历史研究、方向背景和长期参考；新的执行 checklist 不再默认写入 `Plans/` 或 `.omx/plans/`。
+计划系统已切换到 OpenSpec 口径：框架级功能、重构、架构调整、迁移账本和长期实施任务默认进入 `openspec/changes/<change>/`。`Plans/` 保留为历史研究、方向背景和长期参考；新的执行 checklist 不再默认写入 `Plans/` 或 `.omx/plans/`。
 
-GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 改为委托 repo 通用 `SkilmeAI/Tools/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。
+DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、Agent Protocol、Observation 和 Godot 场景测试文档集中在 `SkilmeAI/DocsAI/`；源码目录只保留允许例外和操作指针。
+
+GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。
 
 ## 下一步
 
@@ -16,7 +18,7 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 2. 继续把 BrotatoLike 真实主场景、UI 和 SpawnSystem 专项场景接入统一 Godot scene runner 和 Observation artifact。
 3. 推进 DataOS snapshot 到真实主场景 / UI / 生成系统入口。
 4. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SkilmeAI/Engine/Engine/godot-4.6.2-stable`。
-5. 将后续框架级计划按 `Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
+5. 将后续框架级计划按 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
 
 ## 风险
 

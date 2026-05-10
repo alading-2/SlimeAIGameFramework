@@ -48,7 +48,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 
 ## Runner 输出结构
 
-统一 runner 由 repo 框架侧 `SkilmeAI/Tools/godot-scene-runner.mjs` 提供，BrotatoLike `Tools/run-godot-scene.sh` 只是薄封装。使用 `--log-dir .ai-temp/scene-tests/runs` 时输出：
+统一 runner 由 skill `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs` 提供，BrotatoLike `Tools/run-godot-scene.sh` 只是薄封装。使用 `--log-dir .ai-temp/scene-tests/runs` 时输出：
 
 ```text
 .ai-temp/scene-tests/runs/<date>/<time>/
