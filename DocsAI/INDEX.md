@@ -46,10 +46,10 @@ SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路
 openspec/changes/<change>/
 ```
 
-`Plans/` 保留为历史研究、方向背景和长期参考，不再作为新任务 checklist 的默认位置。OpenSpec archive 保留历史事实，不要求随当前路径治理反写。
+当前可执行计划只使用 OpenSpec active change；完成后的要求合入 `openspec/specs/` 作为基线，不保留旧执行 checklist 或 archive 历史作为 AI 入口。
 
 ## 文档事实源
 
 - 框架长期知识只写入 `SkilmeAI/DocsAI/`。
-- 源码目录中的 `.md` 只允许是 `AGENTS.md`、skill 文档、包/工具操作指针，或 OpenSpec/Plans/Engine/游戏侧文档。
-- `.codex/skills` 和 `SkilmeAI/Agent/SkillsSource` 只保存技能路由和命令入口，长期说明链接回 DocsAI。
+- 源码目录中的 `.md` 只允许是 `AGENTS.md`、skill 文档、包/工具操作指针，或 OpenSpec/Engine/游戏侧文档。
+- `.codex/skills` 是唯一 skill 源，只保存技能路由和命令入口，长期说明链接回 DocsAI。

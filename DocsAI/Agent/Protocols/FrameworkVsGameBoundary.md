@@ -25,7 +25,6 @@ Kernel / Capability / GenreProfile / GameAdapter / GameContent / DataOS / GodotB
 
 通用必读：
 
-- `Plans/README.md`
 - `SkilmeAI/DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`
 - `SkilmeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
 - 当前 OpenSpec change 的 `proposal.md`、`design.md`、`specs/**/*.md`、`tasks.md`
@@ -35,13 +34,12 @@ Kernel / Capability / GenreProfile / GameAdapter / GameContent / DataOS / GodotB
 - `SkilmeAI/DocsAI/GameOS/Contracts.md`
 - `SkilmeAI/DocsAI/GameOS/ApiIndex.md`
 - 相关 Capability 的 `Contract.md` / `Debug.md`
-- 相关 `.codex/skills/*/SKILL.md` 或 `SkilmeAI/Agent/SkillsSource/*/SKILL.md`
+- 相关 `.codex/skills/*/SKILL.md`
 
 游戏任务再读：
 
 - `Games/BrotatoLike/DocsAI/GameProjectState.md`
-- `Games/BrotatoLike/Plans/README.md`
-- 当前迁移 ledger 或对应 OpenSpec change
+- `Games/BrotatoLike/DocsAI/MigrationLedger.md` 或对应 OpenSpec change
 - 旧行为来源：`Else/brotato-my/` 或已复制到游戏仓库的 migration input
 
 ## 所有权判断

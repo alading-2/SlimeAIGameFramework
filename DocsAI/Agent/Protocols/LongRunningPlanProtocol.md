@@ -21,7 +21,6 @@
 - `SkilmeAI/DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`
 - 当前 roadmap change 的 `README.md`、`proposal.md`、`design.md`、`specs/**/*.md`、`tasks.md`
 - 当前 child change 的全部 OpenSpec artifacts
-- `Plans/README.md`
 - 受影响模块的协议文档，例如 `CapabilityChangeProtocol.md` 或 `FrameworkVsGameBoundary.md`
 
 如果涉及游戏迁移，再读：
@@ -32,7 +31,7 @@
 
 ## 计划维护规则
 
-- OpenSpec 是事实源；不要新增孤立执行 checklist 到 `Plans/`。
+- OpenSpec 是事实源；不要新增孤立执行 checklist。
 - 每完成一个明确任务，立即更新对应 `tasks.md` checkbox。
 - child change 创建后，roadmap tasks 应记录对应阶段进度。
 - 如果任务被阻塞，写明 blocker、证据、失败命令和下一步。

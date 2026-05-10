@@ -36,8 +36,7 @@
     GameOS/GodotBridge/        # Godot 适配层
     GameOS/Validation/         # 测试与回归门禁
     DataOS/                    # SQLite authoring + snapshot
-    Agent/                     # AI Skill 源头
-    Plans/                     # 执行计划
+    Agent/                     # AI 协议文档
     DocsAI/                    # 架构文档
 
   Engine/                      # Godot 源码目录
@@ -166,7 +165,7 @@ Games/BrotatoLike/
 **游戏仓库 `.codex/skills`**（约 5 个）：
 - `project-index`、`game-development`、`gameos-reference`、`data-authoring`、`godot-scene-test`
 
-**框架仓库 `Agent/SkillsSource/`**：Skill 源头和模板，供维护者修改。
+**框架仓库 `.codex/skills/`**：唯一 skill 源头和脚本入口，供 AI 路由、验证和维护。
 
 ---
 
@@ -223,11 +222,11 @@ Phase 11：AI 生成 Demo 验证（待开始）
 
 ```text
 brotato-my/
-  Plans/Architecture/          # 迁移计划（本文档的原始来源）
+  HistoricalArchitectureNotes/ # 旧迁移计划材料（本文档的原始来源）
   Src/ECS/                     # 旧代码（已大部分迁移完成）
   Data/                        # 旧数据（已迁入 DataOS）
   Docs/                        # 旧文档
-  .claude/skills/              # 旧 Skill（已重写为入口型）
+  legacy-agent-skills/         # 旧 Skill 来源（已迁入根 .codex/skills）
 ```
 
 **不再做的事情**：
@@ -248,7 +247,7 @@ brotato-my/
 
 - 删除 SkilmeAI 仓库中的 `MigrationInput/` 旧文件
 - 建立旧结构归档清单和最终验证门禁
-- 旧仓库 `brotato-my` 只保留 Plans 和 README 作为迁移历史
+- 旧仓库 `brotato-my` 只作为迁移输入和历史对照
 
 ### 5.2 中期（Phase 11 + M6-M9）
 
@@ -288,7 +287,7 @@ Tools/run-dataos-snapshot.sh    # 生成 runtime snapshot
 
 ## 7. 参考
 
-- 旧仓库迁移计划：`/home/slime/Code/Godot/Games/MyGames/brotato-my/Plans/Architecture/Godot_AI_Game_OS_Migration/`
-- 旧仓库多仓库计划：`/home/slime/Code/Godot/Games/MyGames/brotato-my/Plans/Architecture/SkilmeAI_多仓库彻底迁移/`
-- 框架当前计划：`/home/slime/Code/SkilmeAI/SkilmeAI/Plans/README.md`
+- 旧仓库迁移计划材料：旧 `brotato-my` 历史架构记录。
+- 框架当前计划入口：`/home/slime/Code/SkilmeAI/openspec/changes/<change>/`
+- 框架当前规范基线：`/home/slime/Code/SkilmeAI/openspec/specs/`
 - 框架项目状态：`/home/slime/Code/SkilmeAI/SkilmeAI/DocsAI/ProjectState.md`

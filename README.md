@@ -6,11 +6,10 @@
 
 - `GameOS/`：Godot AI Game OS，包含 Runtime、Capabilities、Validation、Observation 和 GodotBridge。
 - `DataOS/`：AI 原生数据层，包含 schema、迁移、生成器、snapshot 和分析。
-- `Agent/`：通用 AI 协议、Skill 源头和模板。
+- `Agent/`：通用 AI 协议文档。
 - `Packages/`：本地 NuGet、构建输出和发布说明。
 - `DocsAI/`：AI 执行入口。
-- `../Plans/`：历史研究、方向背景和长期参考。
-- `../openspec/`：框架级 change 的计划事实源，承载 proposal、design、specs 和 tasks。
+- `../openspec/`：框架级 change 的计划事实源和规范基线，承载 active change 与 `specs/`。
 
 ## 计划与执行
 
@@ -22,7 +21,7 @@ openspec status --change "<change>" --json
 openspec instructions apply --change "<change>" --json
 ```
 
-`Plans/` 不再默认新增执行清单；需要长期实施的工作应创建 `openspec/changes/<change>/`。详细规则见 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`。
+需要长期实施的工作应创建 `openspec/changes/<change>/`；完成后把要求合入 `openspec/specs/`。详细规则见 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`。
 
 ## 构建
 

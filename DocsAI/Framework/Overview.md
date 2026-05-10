@@ -30,8 +30,7 @@ Small Runtime Kernel
 
 - 长期文档：`SkilmeAI/DocsAI/`
 - 实施计划：`openspec/changes/<change>/`
-- Skill 源头：`SkilmeAI/Agent/SkillsSource/`
-- 安装后 skill：`.codex/skills/`
+- Skill 源头：`.codex/skills/`
 - 游戏侧文档：`Games/BrotatoLike/DocsAI/`
 
 ## 非目标
@@ -40,4 +39,3 @@ Small Runtime Kernel
 - 不复制 ECS/GAS/DOTS/QFramework 公共 API。
 - 不让 runtime hot path 查询 DataOS authoring SQLite。
 - 不把 BrotatoLike 技能、波次、UI、资产路径当成框架契约。
-

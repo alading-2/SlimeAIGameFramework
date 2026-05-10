@@ -19,7 +19,6 @@
 
 - `SkilmeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
 - 对应 `.codex/skills/<owner>/SKILL.md`
-- `SkilmeAI/Agent/SkillsSource/<owner>/SKILL.md`，如果存在
 - 对应 Capability 的 `capability.json`
 - 对应 Capability 的 `Contract.md`
 - 对应 Capability 的 `Debug.md`
