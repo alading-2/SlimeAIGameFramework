@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace SkilmeAI.GameOS.Observation;
 
 /// <summary>
-/// Reusable helper for Godot scene validation checks and artifacts.
+/// Godot validation scene 的检查项与 artifact helper。
 /// </summary>
 public sealed class SceneValidationSession : IDisposable
 {
@@ -134,6 +134,27 @@ public sealed class SceneValidationSession : IDisposable
     public void Dispose()
     {
         GameOSLog.RemoveSink(memorySink);
+    }
+}
+
+/// <summary>
+/// validation check 的返回值。
+/// </summary>
+public sealed record CheckResult(bool Success, string Message, IReadOnlyDictionary<string, object?> Details)
+{
+    public static CheckResult Pass(string message, IReadOnlyDictionary<string, object?>? details = null)
+    {
+        return new CheckResult(true, message, details ?? new Dictionary<string, object?>());
+    }
+
+    public static CheckResult Fail(string message, IReadOnlyDictionary<string, object?>? details = null)
+    {
+        return new CheckResult(false, message, details ?? new Dictionary<string, object?>());
+    }
+
+    public static CheckResult From(bool success, string message, IReadOnlyDictionary<string, object?>? details = null)
+    {
+        return success ? Pass(message, details) : Fail(message, details);
     }
 }
 

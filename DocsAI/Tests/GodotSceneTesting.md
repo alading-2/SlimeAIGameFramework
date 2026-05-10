@@ -24,6 +24,7 @@ BrotatoLike 保留薄封装：
 cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh list
+Tools/run-godot-scene.sh run res://Scenes/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
@@ -53,6 +54,8 @@ Tools/analyze-godot-scene-logs.sh
 - `combined.log`
 - `artifacts/logs/scene-log.jsonl`
 
+需要看 Godot 打印记录时，优先打开 analyzer 输出的 `combinedLog`；原始 stdout 在同一 attempt 目录的 `stdout.log`。Observation 日志验证场景还会写 `artifacts/observation-log-validation.json`。
+
 ## 判定规则
 
 - PASS 需要 Godot 进程 exit code 为 `0`，并且场景 artifact 或日志 marker 明确 PASS。
@@ -62,4 +65,3 @@ Tools/analyze-godot-scene-logs.sh
 ## 规格入口
 
 底层验证场景命名、README、artifact 字段和 PASS/FAIL marker 规则见 `Tests/GodotSceneValidation.md`。
-

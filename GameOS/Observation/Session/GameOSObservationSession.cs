@@ -1,7 +1,7 @@
 namespace SkilmeAI.GameOS.Observation;
 
 /// <summary>
-/// Captures scene runner environment paths for a single observation run.
+/// 捕获单次 scene runner 注入的观测路径。
 /// </summary>
 public sealed class GameOSObservationSession : IDisposable
 {

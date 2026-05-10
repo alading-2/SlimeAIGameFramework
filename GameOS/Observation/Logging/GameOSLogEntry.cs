@@ -4,7 +4,7 @@ using System.Text;
 namespace SkilmeAI.GameOS.Observation;
 
 /// <summary>
-/// A single structured GameOS observation log entry.
+/// 单条结构化 GameOS 观测日志。
 /// </summary>
 public sealed class GameOSLogEntry
 {

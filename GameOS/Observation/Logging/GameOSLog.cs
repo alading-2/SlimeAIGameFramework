@@ -1,7 +1,7 @@
 namespace SkilmeAI.GameOS.Observation;
 
 /// <summary>
-/// Global entry point for GameOS observation logging.
+/// GameOS 观测日志的全局入口。
 /// </summary>
 public static class GameOSLog
 {
@@ -110,4 +110,64 @@ public static class GameOSLog
             defaultSinkConfigured = true;
         }
     }
+}
+
+/// <summary>
+/// 绑定 context 的日志器。
+/// </summary>
+public sealed class GameOSContextLog
+{
+    internal GameOSContextLog(string context)
+    {
+        Context = string.IsNullOrWhiteSpace(context) ? "GameOS" : context;
+    }
+
+    public string Context { get; }
+
+    public void Trace(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Trace, message, values);
+
+    public void Debug(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Debug, message, values);
+
+    public void Info(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Info, message, values);
+
+    public void Pass(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Pass, message, values);
+
+    public void Warn(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Warn, message, values);
+
+    public void Error(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Error, message, values);
+
+    public void Fail(string message, IReadOnlyDictionary<string, object?>? values = null) => Emit(GameOSLogLevel.Fail, message, values);
+
+    public void Emit(GameOSLogLevel level, string message, IReadOnlyDictionary<string, object?>? values = null)
+    {
+        GameOSLog.Emit(new GameOSLogEntry(level, Context, message, values));
+    }
+}
+
+/// <summary>
+/// GameOS 观测日志等级。
+/// </summary>
+public enum GameOSLogLevel
+{
+    Trace = 0,
+    Debug = 1,
+    Info = 2,
+    Pass = 3,
+    Warn = 4,
+    Error = 5,
+    Fail = 6
+}
+
+/// <summary>
+/// GameOS 观测日志全局配置。
+/// </summary>
+public sealed class GameOSLogOptions
+{
+    public GameOSLogLevel MinimumLevel { get; init; } = GameOSLogLevel.Trace;
+
+    public bool EnableStdout { get; init; } = true;
+
+    public bool EnableJsonl { get; init; } = true;
+
+    public bool EnableGodotRichText { get; init; } = true;
 }
