@@ -18,6 +18,12 @@ public static partial class GameEventType
         /// <summary>碰撞离开事件。</summary>
         public const string Exited = "collision:exited";
 
+        /// <summary>旧 Collision 进入事件名兼容常量。</summary>
+        public const string CollisionEntered = "collision:collision_entered";
+
+        /// <summary>旧 Collision 离开事件名兼容常量。</summary>
+        public const string CollisionExited = "collision:collision_exited";
+
         /// <summary>受击区进入事件。</summary>
         public const string HurtboxEntered = "collision:hurtbox_entered";
 

@@ -43,4 +43,7 @@ public static class RelationshipType
 
     /// <summary>实体与 UI 关系，保留旧 BrotatoLike HUD 迁移入口。</summary>
     public const string EntityToUi = "relationship.entity.ui";
+
+    /// <summary>父关系生命周期数据键。</summary>
+    public const string ParentDestroyPolicyDataKey = "parent_destroy_policy";
 }

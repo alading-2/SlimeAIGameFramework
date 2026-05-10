@@ -10,7 +10,7 @@ public static partial class GameEventType
     /// <summary>
     /// Ability 运行时事件。
     /// </summary>
-    public static class Ability
+    public static partial class Ability
     {
         /// <summary>技能已激活。</summary>
         public const string Activated = "ability:activated";

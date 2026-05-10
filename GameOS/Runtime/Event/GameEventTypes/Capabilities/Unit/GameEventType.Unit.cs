@@ -10,7 +10,7 @@ public static partial class GameEventType
     /// <summary>
     /// Unit 表现层事件。
     /// </summary>
-    public static class Unit
+    public static partial class Unit
     {
         /// <summary>请求播放动画。</summary>
         public const string PlayAnimationRequested = "unit:play_animation_requested";

@@ -7,8 +7,6 @@ namespace SkilmeAI.GameOS.Runtime.Relationship;
 /// </summary>
 public static class RelationshipLifecycle
 {
-    private const string ParentDestroyPolicyDataKey = "parent_destroy_policy";
-
     /// <summary>
     /// 创建 PARENT 关系上的生命周期数据。
     /// </summary>
@@ -17,7 +15,7 @@ public static class RelationshipLifecycle
     {
         return new Dictionary<string, object>(1)
         {
-            [ParentDestroyPolicyDataKey] = (int)parentDestroyPolicy
+            [RelationshipType.ParentDestroyPolicyDataKey] = (int)parentDestroyPolicy
         };
     }
 
@@ -34,7 +32,7 @@ public static class RelationshipLifecycle
             return ParentDestroyPolicy.DestroyRecursively;
         }
 
-        if (relationData.TryGetValue(ParentDestroyPolicyDataKey, out var rawValue) &&
+        if (relationData.TryGetValue(RelationshipType.ParentDestroyPolicyDataKey, out var rawValue) &&
             rawValue is int intValue &&
             intValue >= (int)ParentDestroyPolicy.DestroyRecursively &&
             intValue <= (int)ParentDestroyPolicy.Detach)

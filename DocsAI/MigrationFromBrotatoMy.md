@@ -134,7 +134,7 @@ Games/BrotatoLike/
     BrotatoLikeEnemySpawnSystem.cs     # 波次敌人生成
     BrotatoLikeSpawnCatalog.cs         # 生成规则目录
     BrotatoLikeAbilityHandlers.cs      # 游戏侧 Feature handler 注册
-    BrotatoLikeGameEventType.cs        # 游戏特定事件
+    Event/BrotatoLikeGameEventType.cs  # 游戏特定事件
     GodotActiveSkillInputComponent.cs  # 玩家技能输入组件
     Main.cs                             # 启动场景 + smoke probe
   DataOS/

@@ -1,6 +1,7 @@
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Runtime.Entity;
+using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.GodotBridge;
 
@@ -61,15 +62,6 @@ public partial class GodotPlayerInputComponent : Node, IGodotComponent
     /// <summary>下一个技能按钮是否在本帧刚按下。</summary>
     public bool NextSkillJustPressed { get; private set; }
 
-    /// <summary>输入组件发射的技能按钮事件名：释放当前技能。</summary>
-    public const string UseSkillEvent = "input:use_skill";
-
-    /// <summary>输入组件发射的技能按钮事件名：切换到上一个技能。</summary>
-    public const string PreviousSkillEvent = "input:previous_skill";
-
-    /// <summary>输入组件发射的技能按钮事件名：切换到下一个技能。</summary>
-    public const string NextSkillEvent = "input:next_skill";
-
     /// <inheritdoc />
     public void OnComponentRegistered(IEntity entity, Node entityNode)
     {
@@ -121,29 +113,17 @@ public partial class GodotPlayerInputComponent : Node, IGodotComponent
 
         if (UseSkillJustPressed)
         {
-            entity.Events.Emit(UseSkillEvent, new UseSkillEventData(entity));
+            entity.Events.Emit(GameEventType.Input.UseSkill, new GameEventType.Input.UseSkillEventData(entity));
         }
 
         if (PreviousSkillJustPressed)
         {
-            entity.Events.Emit(PreviousSkillEvent, new PreviousSkillEventData(entity));
+            entity.Events.Emit(GameEventType.Input.PreviousSkill, new GameEventType.Input.PreviousSkillEventData(entity));
         }
 
         if (NextSkillJustPressed)
         {
-            entity.Events.Emit(NextSkillEvent, new NextSkillEventData(entity));
+            entity.Events.Emit(GameEventType.Input.NextSkill, new GameEventType.Input.NextSkillEventData(entity));
         }
     }
-
-    /// <summary>释放当前技能事件 payload。</summary>
-    /// <param name="Entity">触发输入的实体。</param>
-    public readonly record struct UseSkillEventData(IEntity Entity);
-
-    /// <summary>切换到上一个技能事件 payload。</summary>
-    /// <param name="Entity">触发输入的实体。</param>
-    public readonly record struct PreviousSkillEventData(IEntity Entity);
-
-    /// <summary>切换到下一个技能事件 payload。</summary>
-    /// <param name="Entity">触发输入的实体。</param>
-    public readonly record struct NextSkillEventData(IEntity Entity);
 }
