@@ -1,6 +1,3 @@
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Event;
-
 namespace SkilmeAI.GameOS.Runtime.Entity;
 
 /// <summary>
@@ -21,5 +18,5 @@ public interface IEntity
     /// <summary>
     /// 实体局部事件总线，用于组件式通信。
     /// </summary>
-    EventBus Events { get; }
+    SkilmeAI.GameOS.Runtime.Event.IEventBus Events { get; }
 }

@@ -149,19 +149,17 @@ GameOS Runtime Event validation FAIL
 
 - EventBus 核心断言只依赖 `SkilmeAI.GameOS.Runtime.Event`。
 - 使用 `RuntimeEntity` 或 `Data.Set` 的检查必须标注为跨层桥接检查。
-- `GlobalEventBus.Global` 使用前后必须清理，避免污染同进程后续场景。
+- `WorldEvents.World` 使用前后必须 Clear，避免污染同进程后续场景。
 - 游戏侧代码只能作为 Godot 承载和 runner 接入，不应引入 BrotatoLike 玩法行为作为基础层通过条件。
 
 ## Runtime/Event 第一轮覆盖
 
 `RuntimeEventValidation` 必须验证：
 
-- typed handler 和 parameterless handler 触发。
-- priority 顺序。
-- `Once` 只执行一次。
-- `Off` 移除 handler。
-- handler exception 被 `HandlerException` 捕获，后续 handler 继续执行。
-- 同事件重入被阻止，并记录尝试次数和实际执行次数。
-- `EventContext.StopPropagation()` 阻断低优先级 handler。
-- entity-local `EventBus` 与 `GlobalEventBus.Global` 不混淆。
-- `RuntimeEntity + Data.Set` 触发 `GameEventType.Data.PropertyChanged`，并标注为 Data-to-Event 跨层桥接检查。
+- 注册顺序即派发顺序。
+- `IDisposable.Dispose()` 退订后不再派发。
+- handler exception 被 `EventBusObservation` 捕获，后续 handler 继续执行。
+- 同类型嵌套 Publish 被 per-bus reentry guard 阻断，并记录尝试次数和实际执行次数。
+- `IEntityEvent` 被 `WorldEventBus.Publish` 时 log Error + return，不派发。
+- `IBroadcastEvent` 在 entity bus 一次 Publish MUST 同时派发到 entity bus 和 world bus。
+- `RuntimeEntity + Data.Set` 触发 `Runtime.Events.Core.DataPropertyChanged`，并标注为 Data-to-Event 跨层桥接检查。

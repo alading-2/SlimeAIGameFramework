@@ -1,5 +1,5 @@
 using System;
-using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Capabilities.Damage.Events;
 
 namespace SkilmeAI.GameOS.Capabilities.Damage;
 
@@ -34,13 +34,8 @@ public sealed class HealthExecutionProcessor : IDamageProcessor
 
         info.Victim.Data.Set(DamageDataKeys.CurrentHp, newHp);
 
-        var healthChanged = new GameEventType.Damage.HealthChangedEventData(info.Victim, oldHp, newHp);
-        info.Victim.Events.Emit(GameEventType.Damage.HealthChanged, healthChanged);
-        GlobalEventBus.Global.Emit(GameEventType.Damage.HealthChanged, healthChanged);
-
-        var damaged = new GameEventType.Damage.DamagedEventData(info);
-        info.Victim.Events.Emit(GameEventType.Damage.Damaged, damaged);
-        GlobalEventBus.Global.Emit(GameEventType.Damage.Damaged, damaged);
+        info.Victim.Events.Publish(new HealthChanged(info.Victim, oldHp, newHp));
+        info.Victim.Events.Publish(new Damaged(info));
 
         if (!info.IsFatal)
         {
@@ -48,8 +43,6 @@ public sealed class HealthExecutionProcessor : IDamageProcessor
         }
 
         info.Victim.Data.Set(DamageDataKeys.IsDead, true);
-        var killed = new GameEventType.Damage.KilledEventData(info.Victim, info.Attacker, info);
-        info.Victim.Events.Emit(GameEventType.Damage.Killed, killed);
-        GlobalEventBus.Global.Emit(GameEventType.Damage.Killed, killed);
+        info.Victim.Events.Publish(new Killed(info.Victim, info.Attacker, info));
     }
 }

@@ -13,7 +13,7 @@
 Runtime 测试会手动搭建最小对象和服务调用链，例如：
 
 - 创建 `RuntimeEntity`，读写 Runtime data。
-- 订阅和触发 `EventBus` / `GlobalEventBus`。
+- 订阅和派发 `EntityEventBus` / `WorldEventBus`（通过 `Publish<T> / Subscribe<T> → IDisposable`）。
 - 调用 `MovementSystem.Tick(delta)` 推进位置和碰撞事件。
 - 调用 `DamageService`、`HealService`、`DamageTool` 检查伤害结算。
 - 调用 `AbilityService.TryTrigger` 检查目标、冷却、充能和 Feature handler 接入。

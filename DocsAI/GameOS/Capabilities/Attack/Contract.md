@@ -26,6 +26,8 @@
 - Schedule
 - Timer
 
+事件目录：`SkilmeAI/GameOS/Capabilities/Attack/Events/`
+
 ## 4. 需要哪些其他 Capability
 
 - Damage（伤害结算）
@@ -49,33 +51,22 @@
 | Attack.RecoveryTime | 后摇时间 |
 | Attack.CanAttack | 是否可攻击 |
 
-## 7. 发布的事件
-
-- `Attack.Started` — 攻击开始（前摇结束）
-- `Attack.Completed` — 攻击完成
-- `Attack.Cancelled` — 攻击取消
-
-## 8. 订阅的事件
-
-- `Attack.Requested` — 攻击请求
-- `Attack.CancelRequested` — 取消请求
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `AttackService` — 全局攻击服务
 - `GodotAttackComponent`（GodotBridge）— 参数导出和动画事件转发
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 - `AttackService` — Schedule Update 阶段 Tick
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
-启用：调用 `AttackDataKeys.RegisterAll()`，订阅 `Attack.Requested` 事件。
+启用：调用 `AttackDataKeys.RegisterAll()`，通过 `AttackService.Register(entity)` 订阅实体攻击请求事件。
 
-关闭：设置 `Attack.CanAttack = false` 或取消事件订阅。
+关闭：设置 `Attack.CanAttack = false` 或调用 `AttackService.Unregister(entity)`。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -84,7 +75,7 @@ Tools/run-tests.sh
 
 覆盖攻击请求、前摇/后摇、冷却、距离门禁、伤害结算。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -93,7 +84,7 @@ Tools/run-tests.sh
 | 攻击无伤害 | `Attack.Damage` 为 0 或 DamageService 未初始化 |
 | 攻击状态卡住 | Timer 未正确启动或取消 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

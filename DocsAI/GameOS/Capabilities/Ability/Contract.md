@@ -28,6 +28,8 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 - Event
 - Schedule
 
+事件目录：`SkilmeAI/GameOS/Capabilities/Ability/Events/`
+
 ## 4. 需要哪些其他 Capability
 
 - Damage（死亡判定、伤害门禁）
@@ -55,33 +57,24 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 | Ability.IsEnabled | 是否启用 |
 | Ability.Damage | 技能伤害 |
 
-## 7. 发布的事件
-
-- `Ability.Executed` — 技能成功触发
-- `Ability.Failed` — 技能触发失败（带原因）
-
-## 8. 订阅的事件
-
-无直接订阅。通过 `AbilityService.TryTrigger()` 和 `TickAutoTriggers()` 被动调用。
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `AbilityService` — 全局技能服务
 - `AbilityTargetingTool` — 自动索敌工具
 - `GodotAbilityComponent`（GodotBridge）— UI 参数导出
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 - `AbilityService` — Schedule Update 阶段 Tick
 - `AbilityTargetingTool` — 目标查询和筛选
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
 启用：调用 `AbilityDataKeys.RegisterAll()`，在 Entity 上写入 Ability 相关 Data。
 
 关闭：设置 `Ability.IsEnabled = false` 或移除 Ability Data。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -90,7 +83,7 @@ Tools/run-tests.sh
 
 覆盖点选目标、Periodic 自动触发、自动索敌过滤。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -100,7 +93,7 @@ Tools/run-tests.sh
 | 自动索敌不工作 | `AutoTargetRange` 为 -1 或范围内无有效目标 |
 | Permanent 技能不触发 | Permanent 在 Feature 层处理，Ability 只负责启用 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

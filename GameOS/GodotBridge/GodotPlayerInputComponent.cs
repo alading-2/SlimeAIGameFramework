@@ -1,7 +1,7 @@
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Runtime.Events.Core;
 
 namespace SkilmeAI.GameOS.GodotBridge;
 
@@ -106,24 +106,23 @@ public partial class GodotPlayerInputComponent : Node, IGodotComponent
         LastInputDirection = new Vector2Value(input.X, input.Y);
         entity.Data.Set(MovementDataKeys.InputDirection, LastInputDirection);
 
-        // 技能按钮：每帧检测并发射事件
         UseSkillJustPressed = Input.IsActionJustPressed(UseSkillAction);
         PreviousSkillJustPressed = Input.IsActionJustPressed(PreviousSkillAction);
         NextSkillJustPressed = Input.IsActionJustPressed(NextSkillAction);
 
         if (UseSkillJustPressed)
         {
-            entity.Events.Emit(GameEventType.Input.UseSkill, new GameEventType.Input.UseSkillEventData(entity));
+            entity.Events.Publish(new InputUseSkill(entity));
         }
 
         if (PreviousSkillJustPressed)
         {
-            entity.Events.Emit(GameEventType.Input.PreviousSkill, new GameEventType.Input.PreviousSkillEventData(entity));
+            entity.Events.Publish(new InputPreviousSkill(entity));
         }
 
         if (NextSkillJustPressed)
         {
-            entity.Events.Emit(GameEventType.Input.NextSkill, new GameEventType.Input.NextSkillEventData(entity));
+            entity.Events.Publish(new InputNextSkill(entity));
         }
     }
 }

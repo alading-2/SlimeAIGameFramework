@@ -1,6 +1,6 @@
+using SkilmeAI.GameOS.Capabilities.Attack.Events;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.Capabilities.AI;
 
@@ -28,9 +28,7 @@ public sealed class RequestAttackAction : BehaviorNode
         context.Entity.Data.Set(MovementDataKeys.AIMoveDirection, faceDirection);
         context.Entity.Data.Set(MovementDataKeys.AIMoveSpeedMultiplier, 0f);
         context.Entity.Data.Set(AIDataKeys.IsAttackRequested, true);
-        context.Entity.Events.Emit(
-            GameEventType.Attack.Requested,
-            new GameEventType.Attack.RequestedEventData(context.Entity, target, targetPosition));
+        context.Entity.Events.Publish(new Requested(context.Entity, target, targetPosition));
         return AIState.Running;
     }
 

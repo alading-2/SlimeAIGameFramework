@@ -17,6 +17,8 @@ SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路
 - 当前事实状态：`ProjectState.md`
 - 框架总览：`Framework/Overview.md`
 - 框架原则：`Framework/Principles.md`
+- Godot C# 约束：`Framework/GodotCSharpConstraints.md`
+- 多游戏架构：`Framework/MultiGameLayout.md`
 - GameOS 总览：`GameOS/Overview.md`
 - GameOS 契约：`GameOS/Contracts.md`
 - GameOS API：`GameOS/ApiIndex.md`
@@ -32,6 +34,8 @@ SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路
 | 任务 | 先读 | 再读 / 使用 |
 | --- | --- | --- |
 | 框架方向、边界、是否该做 | `Framework/Overview.md`、`Framework/Principles.md` | `DocsAI/Agent/Protocols/FrameworkVsGameBoundary.md` |
+| Godot C# 场景/脚本约束、NuGet 限制 | `Framework/GodotCSharpConstraints.md` | 引擎源码 `Engine/Engine/godot-4.6.2-stable/modules/mono/` |
+| 多游戏架构、submodule 工作流 | `Framework/MultiGameLayout.md` | 游戏仓 `.gitmodules`、`BrotatoLike.csproj` |
 | Runtime / Data / Event / Entity / Schedule | `GameOS/Contracts.md`、`GameOS/ApiIndex.md` | `project-index`、`ecs-*`、`tools` skills |
 | Capability 修改 | `GameOS/Capabilities/CapabilityIndex.md` | 对应 `GameOS/Capabilities/<Name>/Contract.md`、`Debug.md` 和 owner skill |
 | Runtime 纯逻辑测试 | `Tests/RuntimeTests.md` | `Tests/SkilmeAI.GameOS.Tests/`、`Tools/run-tests.sh`；不启动 Godot |

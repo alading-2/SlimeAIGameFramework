@@ -116,7 +116,7 @@
 | GodotTimerDriver | `_Process` 驱动 TimerManager.Tick |
 | GodotNodePool<T> | 对象池：延迟激活、回池泊车、CollisionObject2D 脱树、碰撞隔离 |
 | GodotPlayerInputComponent | Input Map → `MovementDataKeys.InputDirection` 桥接 |
-| GodotCollisionBridge | Area2D 碰撞事件 → `GameEventType.Collision` |
+| GodotCollisionBridge | Area2D 碰撞事件 → `Capabilities.Collision.Events` |
 | GodotProjectileEffectSpawner | 监听 Projectile/Effect 生成事件，实例化 Godot 节点 |
 | GodotContactDamageComponent | 碰撞接触 → DamageService |
 | GodotAttackComponent | 攻击请求 → AttackService + 动画桥 |
@@ -134,7 +134,7 @@ Games/BrotatoLike/
     BrotatoLikeEnemySpawnSystem.cs     # 波次敌人生成
     BrotatoLikeSpawnCatalog.cs         # 生成规则目录
     BrotatoLikeAbilityHandlers.cs      # 游戏侧 Feature handler 注册
-    Event/BrotatoLikeGameEventType.cs  # 游戏特定事件
+    Events/                             # 游戏特定事件 payload（按 Capability 或 Runtime/Events/Global 组织）
     GodotActiveSkillInputComponent.cs  # 玩家技能输入组件
     Main.cs                             # 启动场景 + smoke probe
   DataOS/

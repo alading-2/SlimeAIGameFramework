@@ -22,12 +22,16 @@
 | `SkilmeAI.GameOS.Runtime.Data.RuntimeDataRecord` | class | bootstrap | DataOS snapshot 中的一条数据记录。 |
 | `SkilmeAI.GameOS.Runtime.Data.RuntimeDataField` | class | bootstrap | DataOS snapshot 字段值，支持 string / int / float / double / bool 转 CLR 值。 |
 | `SkilmeAI.GameOS.Runtime.Data.RuntimeResourceEntry` | class | bootstrap | DataOS snapshot 资源映射条目。 |
-| `SkilmeAI.GameOS.Runtime.Event.EventPriority` | enum | migrated | EventBus 订阅优先级。 |
-| `SkilmeAI.GameOS.Runtime.Event.EventBus` | class | migrated | 局部或全局事件总线。 |
-| `SkilmeAI.GameOS.Runtime.Event.EventContext` | class | migrated | 请求-响应事件上下文。 |
-| `SkilmeAI.GameOS.Runtime.Event.GlobalEventBus` | static class | migrated | 全局事件总线入口。 |
-| `SkilmeAI.GameOS.Runtime.Event.GameEventType` | static class | migrated | GameOS 内置事件名和 payload。 |
-| `SkilmeAI.GameOS.Runtime.Event.EventDataChangeSink` | class | migrated | Data 变更到 EventBus 的桥。 |
+| `SkilmeAI.GameOS.Runtime.Event.IEvent` | marker interface | migrated | 所有事件 payload 的基础标记接口。 |
+| `SkilmeAI.GameOS.Runtime.Event.IEntityEvent` | marker interface | migrated | 仅派发到目标 entity bus 的事件。 |
+| `SkilmeAI.GameOS.Runtime.Event.IGlobalEvent` | marker interface | migrated | 仅派发到 world bus 的事件。 |
+| `SkilmeAI.GameOS.Runtime.Event.IBroadcastEvent` | marker interface | migrated | entity bus Publish 后自动转发到 world bus。 |
+| `SkilmeAI.GameOS.Runtime.Event.IEventBus` | interface | migrated | `Publish<T>(in T) / Subscribe<T>(Action<T>) → IDisposable / ExportObservation(path)`。 |
+| `SkilmeAI.GameOS.Runtime.Event.EntityEventBus` | class | migrated | 实体级事件总线，支持 IBroadcastEvent 自动转发。 |
+| `SkilmeAI.GameOS.Runtime.Event.WorldEventBus` | class | migrated | 进程级事件总线，替换旧 `GlobalEventBus`。 |
+| `SkilmeAI.GameOS.Runtime.Event.WorldEvents` | static class | migrated | `WorldEvents.World` 是进程级 world bus 静态访问点。 |
+| `SkilmeAI.GameOS.Runtime.Event.EventBusObservation` | class | migrated | 订阅、发布计数、reentry 阻断、handler 异常和 dump 导出。 |
+| `SkilmeAI.GameOS.Runtime.Event.EventDataChangeSink` | class | migrated | Data 变更到 IEventBus 的桥，发布 `Runtime.Events.Core.DataPropertyChanged`。 |
 | `SkilmeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | 最小 Entity 契约。 |
 | `SkilmeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity。 |
 | `SkilmeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数。 |
@@ -62,11 +66,13 @@
 | `SkilmeAI.GameOS.Runtime.Pool.ObjectPoolManager` | static class | migrated | 全局对象池注册和归还入口。 |
 | `SkilmeAI.GameOS.Runtime.Timer.GameTimer` | class | migrated | 可池化运行时计时器。 |
 | `SkilmeAI.GameOS.Runtime.Timer.TimerManager` | class | migrated | 由外部 Tick 驱动的计时器管理器。 |
-| `SkilmeAI.GameOS.Runtime.Event.GameEventType.Movement` | static class | migrated | Movement Capability 事件名和 payload。 |
-| `SkilmeAI.GameOS.Runtime.Event.GameEventType.Collision` | static class | bootstrap | Collision Capability 事件名和 payload。 |
-| `SkilmeAI.GameOS.Runtime.Event.GameEventType.Attack` | static class | bootstrap | Attack Runtime 请求 / 开始 / 完成 / 取消事件名和 payload，payload 使用纯 Runtime `IEntity` 与 `Vector2Value`。 |
-| `SkilmeAI.GameOS.Runtime.Event.GameEventType.Unit` | static class | bootstrap | Unit 表现层动画请求 / 停止 / 完成事件名和 payload。 |
-| `SkilmeAI.GameOS.Runtime.Event.GameEventType.Feature` | static class | bootstrap | Feature Capability 生命周期事件名和 payload。 |
+| `SkilmeAI.GameOS.Runtime.Events.Core` | namespace | migrated | Runtime 基础事件 payload：`EntitySpawned / EntityDestroyed / DataPropertyChanged / RelationshipAdded / RelationshipRemoved / InputUseSkill / InputNextSkill / InputPreviousSkill`。 |
+| `SkilmeAI.GameOS.Runtime.Events.Global` | namespace | migrated | 全局低频事件 payload：`WaveStarted / WaveCompleted / GameStart / GamePause / GameResume / GameOver / MouseSelection*`。 |
+| `SkilmeAI.GameOS.Capabilities.Movement.Events` | namespace | migrated | Movement Capability 事件 payload：`Started / Stopped / Collision`。 |
+| `SkilmeAI.GameOS.Capabilities.Collision.Events` | namespace | bootstrap | Collision Capability 事件 payload：`Entered / Exited / HurtboxEntered / HurtboxExited`。 |
+| `SkilmeAI.GameOS.Capabilities.Attack.Events` | namespace | bootstrap | Attack Capability 事件 payload：`Requested / Started / Finished / Cancelled / CancelRequested`。 |
+| `SkilmeAI.GameOS.Capabilities.Unit.Events` | namespace | bootstrap | Unit 表现层动画事件 payload：`PlayAnimationRequested / StopAnimationRequested / AnimationFinished`。 |
+| `SkilmeAI.GameOS.Capabilities.Feature.Events` | namespace | bootstrap | Feature Capability 生命周期事件 payload：`Granted / Removed / Enabled / Disabled / Activated / Executed / Ended`。 |
 
 ## Capabilities
 
@@ -165,7 +171,7 @@
 | `SkilmeAI.GameOS.Capabilities.Attack.AttackCancelReason` | enum | bootstrap | 攻击流程取消原因。 |
 | `SkilmeAI.GameOS.Capabilities.Attack.AttackTriggerResult` | enum | bootstrap | 普通攻击请求结果和失败原因。 |
 | `SkilmeAI.GameOS.Capabilities.Attack.AttackTriggerReport` | record struct | bootstrap | 普通攻击请求报告。 |
-| `SkilmeAI.GameOS.Capabilities.Attack.AttackService` | class | bootstrap | 普通攻击最小 Runtime 服务，消费 `GameEventType.Attack.Requested`，处理前摇 / 后摇 / 冷却并通过 `DamageService` 结算 `DamageTags.Attack` 伤害。 |
+| `SkilmeAI.GameOS.Capabilities.Attack.AttackService` | class | bootstrap | 普通攻击最小 Runtime 服务，消费 `Capabilities.Attack.Events.Requested`，处理前摇 / 后摇 / 冷却并通过 `DamageService` 结算 `DamageTags.Attack` 伤害。 |
 | `SkilmeAI.GameOS.Capabilities.Unit.UnitDataKeys` | static class | bootstrap | Unit 运行时 DataKey：Name / EntityType / DeathType / VisualScenePath / HealthBarHeight / IsShowHealthBar / PickupRange / ExpReward / DetectionRange / AvailableAnimations。 |
 | `SkilmeAI.GameOS.Capabilities.AI.AIDataKeys` | static class | bootstrap | AI 运行时 DataKey：IsEnabled / TargetEntity / TargetPosition / HasTargetPosition / IsAttackRequested / AttackRange / PatrolCenter / PatrolRadius / PatrolWaitTime / PatrolTargetPosition / HasPatrolTargetPosition / PatrolWaitRemaining / PatrolDirectionSign。 |
 | `SkilmeAI.GameOS.Capabilities.AI.AIContext` | class | bootstrap | AI 行为树 Tick 上下文，承载实体、delta、AbilityService、自动施法上下文和可选自动索敌技能集合。 |
@@ -177,7 +183,7 @@
 | `SkilmeAI.GameOS.Capabilities.AI.FindNearestTargetAction` | class | bootstrap | 从 Runtime Entity 快照中查找最近目标并写入 AI 目标 Data。 |
 | `SkilmeAI.GameOS.Capabilities.AI.MoveToTargetAction` | class | bootstrap | 向目标写入 Movement AI 移动意图。 |
 | `SkilmeAI.GameOS.Capabilities.AI.IsTargetInRangeCondition` | class | bootstrap | 检查当前目标实体或目标点是否在固定范围或 DataKey 范围内。 |
-| `SkilmeAI.GameOS.Capabilities.AI.RequestAttackAction` | class | bootstrap | 行为树中发出 `GameEventType.Attack.Requested`，并写入停步和面向目标意图。 |
+| `SkilmeAI.GameOS.Capabilities.AI.RequestAttackAction` | class | bootstrap | 行为树中发出 `Capabilities.Attack.Events.Requested`，并写入停步和面向目标意图。 |
 | `SkilmeAI.GameOS.Capabilities.AI.PrepareAbilityAutoTargetContextsAction` | class | bootstrap | 行为树中把 `AutoTargetAbilities` 转换为带自动索敌结果的 `AbilityContexts`。 |
 | `SkilmeAI.GameOS.Capabilities.AI.TickAbilityAutoTriggersAction` | class | bootstrap | 行为树中调用 AbilityService 推进 Periodic 自动施法。 |
 | `SkilmeAI.GameOS.Capabilities.AI.PatrolAction` | class | bootstrap | 确定性巡逻动作，写入 Movement AI 移动意图并维护巡逻等待倒计时。 |
@@ -212,11 +218,11 @@
 | `SkilmeAI.GameOS.GodotBridge.GameOSTimerDriver` | Node | migrated | 用 `_Process` 驱动 `TimerManager.Instance.Tick`。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotMovementDriver` | Node | migrated | 用 `_Process` 驱动 `MovementSystem.Tick` 并同步 Runtime Position 到 Node2D。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotOrientationComponent` | Node | bootstrap | 消费 `MovementDataKeys.FacingDirection` / `MovementParams.Orientation`，输出 `RotationDegrees` 或 `AnimatedSprite2D.FlipH`。 |
-| `SkilmeAI.GameOS.GodotBridge.GodotUnitAnimationComponent` | Node | bootstrap | 消费 `GameEventType.Unit` 动画事件并驱动 `AnimatedSprite2D`，缓存可用动画，支持一次性动画完成事件和待机回退。 |
+| `SkilmeAI.GameOS.GodotBridge.GodotUnitAnimationComponent` | Node | bootstrap | 消费 `Capabilities.Unit.Events` 动画事件并驱动 `AnimatedSprite2D`，缓存可用动画，支持一次性动画完成事件和待机回退。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotPhysicsMovementCollisionTargetQuery` | class | bootstrap | 用 Godot Physics 2D `IntersectShape` 收集 Movement 碰撞 broadphase 候选，并回退 Runtime Entity 扫描。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotCollisionBridge` | static class | bootstrap | Godot `CollisionObject2D` / Node 到 Collision Runtime 的实体解析、Data 同步和事件桥。 |
-| `SkilmeAI.GameOS.GodotBridge.GodotCollisionComponent` | Node | bootstrap | 桥接 Entity 根 `Area2D` 进入 / 离开信号到 `GameEventType.Collision`。 |
-| `SkilmeAI.GameOS.GodotBridge.GodotHurtboxComponent` | Area2D | bootstrap | 桥接 Hurtbox `Area2D` 进入 / 离开信号到 `GameEventType.Collision.Hurtbox*`。 |
+| `SkilmeAI.GameOS.GodotBridge.GodotCollisionComponent` | Node | bootstrap | 桥接 Entity 根 `Area2D` 进入 / 离开信号到 `Capabilities.Collision.Events.Entered / Exited`。 |
+| `SkilmeAI.GameOS.GodotBridge.GodotHurtboxComponent` | Area2D | bootstrap | 桥接 Hurtbox `Area2D` 进入 / 离开信号到 `Capabilities.Collision.Events.HurtboxEntered / HurtboxExited`。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotContactDamageComponent` | Node | bootstrap | 消费 Hurtbox 事件并通过 `DamageService` 结算接触伤害。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotAttackComponent` | Node | bootstrap | 注册默认 `AttackService`，把导出攻击参数写入 Runtime Data，把 Godot 节点目标解析为 Runtime 攻击请求，并可选把 Attack 事件转为 Unit 动画请求；配置动画不存在时可从 `attack*` 可用动画中回退选择，可选择保留注册前已有 Attack Data。 |
 | `SkilmeAI.GameOS.GodotBridge.AttackComponent` | Node | bootstrap | 旧项目 `AttackComponent` 类名 / 场景名兼容包装，默认保留已有 Attack Data。 |

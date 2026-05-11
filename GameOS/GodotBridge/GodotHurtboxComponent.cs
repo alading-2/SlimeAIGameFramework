@@ -5,7 +5,7 @@ using SkilmeAI.GameOS.Runtime.Entity;
 namespace SkilmeAI.GameOS.GodotBridge;
 
 /// <summary>
-/// 桥接独立 `Area2D` Hurtbox 节点到 `GameEventType.Collision.Hurtbox*`。
+/// 桥接独立 `Area2D` Hurtbox 节点到 `Collision.Events.HurtboxEntered` / `HurtboxExited`。
 /// </summary>
 public partial class GodotHurtboxComponent : Area2D, IGodotComponent
 {

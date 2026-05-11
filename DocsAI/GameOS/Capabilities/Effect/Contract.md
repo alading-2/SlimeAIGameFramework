@@ -24,6 +24,8 @@
 - Event
 - Pool
 
+事件目录：`SkilmeAI/GameOS/Capabilities/Effect/Events/`
+
 ## 4. 需要哪些其他 Capability
 
 无。Effect 是基础表现 Capability，被 Ability/Projectile 依赖。
@@ -46,32 +48,22 @@
 | Effect.TargetEntity | 目标实体 |
 | Effect.Duration | 持续时间（-1 表示不自动销毁） |
 
-## 7. 发布的事件
-
-- `Effect.Spawned` — 特效生成
-- `Effect.Completed` — 动画/持续时间完成
-- `Effect.Cancelled` — 特效被取消
-
-## 8. 订阅的事件
-
-无直接订阅。通过 `EffectTool.Spawn()` 被动调用。
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `EffectTool` — 特效生成工具
 - `GodotProjectileEffectSpawner`（GodotBridge，共享）— 场景实例化
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 - `EffectTool` — 生成和生命周期管理
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
 启用：调用 `EffectDataKeys.RegisterAll()`。
 
 关闭：停止生成或取消已生成的特效。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -80,7 +72,7 @@ Tools/run-tests.sh
 
 覆盖生成、动画播放、Duration 销毁、节点清理。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -89,7 +81,7 @@ Tools/run-tests.sh
 | 特效不销毁 | `Duration` 为 -1 且未手动清理 |
 | 节点残留 | 回池流程异常 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

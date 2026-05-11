@@ -1,8 +1,8 @@
 using System;
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Movement;
+using SkilmeAI.GameOS.Capabilities.Movement.Events;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.GodotBridge;
 
@@ -14,8 +14,8 @@ public partial class GodotOrientationComponent : Node, IGodotComponent
     private IEntity? entity;
     private Node2D? ownerNode;
     private AnimatedSprite2D? visualSprite;
-    private Action<GameEventType.Movement.StartedEventData>? movementStartedHandler;
-    private Action<GameEventType.Movement.StoppedEventData>? movementStoppedHandler;
+    private IDisposable? movementStartedToken;
+    private IDisposable? movementStoppedToken;
     private OrientationMode activeMode = OrientationMode.FollowMovement;
     private float baseAngle;
     private float currentAngularSpeed;
@@ -65,28 +65,18 @@ public partial class GodotOrientationComponent : Node, IGodotComponent
         this.entity = entity;
         ownerNode = node;
         visualSprite = ResolveVisualSprite(node);
-        movementStartedHandler = OnMovementStarted;
-        movementStoppedHandler = OnMovementStopped;
-        entity.Events.On(GameEventType.Movement.Started, movementStartedHandler);
-        entity.Events.On(GameEventType.Movement.Stopped, movementStoppedHandler);
+        movementStartedToken = entity.Events.Subscribe<Started>(OnMovementStarted);
+        movementStoppedToken = entity.Events.Subscribe<Stopped>(OnMovementStopped);
         ApplyOrientation(ReadExportedParams());
     }
 
     /// <inheritdoc />
     public void OnComponentUnregistered(IEntity? entity, Node? entityNode)
     {
-        if (this.entity != null && movementStartedHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Movement.Started, movementStartedHandler);
-        }
-
-        if (this.entity != null && movementStoppedHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Movement.Stopped, movementStoppedHandler);
-        }
-
-        movementStartedHandler = null;
-        movementStoppedHandler = null;
+        movementStartedToken?.Dispose();
+        movementStoppedToken?.Dispose();
+        movementStartedToken = null;
+        movementStoppedToken = null;
         visualSprite = null;
         ownerNode = null;
         this.entity = null;
@@ -104,12 +94,12 @@ public partial class GodotOrientationComponent : Node, IGodotComponent
         ApplyOutput(finalAngle);
     }
 
-    private void OnMovementStarted(GameEventType.Movement.StartedEventData data)
+    private void OnMovementStarted(Started data)
     {
         ApplyOrientation(data.Params.Orientation ?? ReadExportedParams());
     }
 
-    private void OnMovementStopped(GameEventType.Movement.StoppedEventData data)
+    private void OnMovementStopped(Stopped data)
     {
         if (activeMode == OrientationMode.SpinOnly || totalAngle >= 0f)
         {

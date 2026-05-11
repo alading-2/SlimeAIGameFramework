@@ -22,6 +22,8 @@
 - Data
 - Event
 
+事件目录：`SkilmeAI/GameOS/Capabilities/Collision/Events/`
+
 ## 4. 需要哪些其他 Capability
 
 无。Collision 是基础 Capability，被 Damage（ContactDamage）依赖。
@@ -39,35 +41,25 @@
 
 同写入。碰撞配置通常是双向读取（两个实体互相检查）。
 
-## 7. 发布的事件
-
-- `Collision.Entered` — 碰撞进入
-- `Collision.Exited` — 碰撞离开
-- `Collision.Contact` — 持续接触
-
-## 8. 订阅的事件
-
-无直接订阅。通过 Godot Area2D 信号桥接到 EventBus。
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `CollisionSystem` — 碰撞事件管理
 - `GodotCollisionComponent`（GodotBridge）— Area2D 碰撞体
 - `GodotHurtboxComponent`（GodotBridge）— 受击区域
 - `GodotContactDamageComponent`（GodotBridge）— 接触伤害触发器
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 - `CollisionSystem` — 碰撞过滤和事件分发
 - `GodotCollisionIsolation` — 对象池碰撞隔离工具
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
 启用：在 Entity 上写入 Collision DataKey，挂载 Godot 碰撞组件。
 
 关闭：禁用 Area2D 监控或移除碰撞组件。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -76,7 +68,7 @@ Tools/run-tests.sh
 
 Godot smoke 验证 Area2D 进入/离开事件。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -84,7 +76,7 @@ Godot smoke 验证 Area2D 进入/离开事件。
 | 对象池旧碰撞残留 | 回池时未正确脱树/禁用（见 GodotCollisionIsolation） |
 | ContactDamage 不生效 | `ContactDamageInterval` 未过或目标无敌 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

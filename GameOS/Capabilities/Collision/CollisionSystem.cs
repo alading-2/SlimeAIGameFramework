@@ -1,6 +1,6 @@
 using System;
+using SkilmeAI.GameOS.Capabilities.Collision.Events;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.Capabilities.Collision;
 
@@ -66,7 +66,7 @@ public sealed class CollisionSystem
         }
 
         var contact = CreateContact(source, target);
-        source.Events.Emit(GameEventType.Collision.Entered, new GameEventType.Collision.EnteredEventData(contact));
+        source.Events.Publish(new Entered(contact));
         return true;
     }
 
@@ -81,7 +81,7 @@ public sealed class CollisionSystem
         }
 
         var contact = CreateContact(source, target);
-        source.Events.Emit(GameEventType.Collision.Exited, new GameEventType.Collision.ExitedEventData(contact));
+        source.Events.Publish(new Exited(contact));
         return true;
     }
 

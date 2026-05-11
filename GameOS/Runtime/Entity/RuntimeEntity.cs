@@ -15,7 +15,7 @@ public sealed class RuntimeEntity : IEntity
     public RuntimeEntity(string entityId)
     {
         EntityId = entityId;
-        Events = new EventBus();
+        Events = new EntityEventBus($"entity:{entityId}", WorldEvents.World);
         Data = new Data.Data(new EventDataChangeSink(Events));
     }
 
@@ -26,5 +26,5 @@ public sealed class RuntimeEntity : IEntity
     public Data.Data Data { get; }
 
     /// <inheritdoc />
-    public EventBus Events { get; }
+    public IEventBus Events { get; }
 }

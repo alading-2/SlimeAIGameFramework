@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using SkilmeAI.GameOS.Capabilities.Attack.Events;
 using SkilmeAI.GameOS.Capabilities.Damage;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Timer;
 
 namespace SkilmeAI.GameOS.Capabilities.Attack;
@@ -45,11 +45,9 @@ public sealed class AttackService
             return;
         }
 
-        void OnRequested(GameEventType.Attack.RequestedEventData data) => TryRequest(data);
-        void OnCancelRequested(GameEventType.Attack.CancelRequestedEventData data) => Cancel(data.Attacker, data.Reason);
-        entity.Events.On<GameEventType.Attack.RequestedEventData>(GameEventType.Attack.Requested, OnRequested);
-        entity.Events.On<GameEventType.Attack.CancelRequestedEventData>(GameEventType.Attack.CancelRequested, OnCancelRequested);
-        subscriptions[entity.EntityId] = new Subscription(entity, OnRequested, OnCancelRequested);
+        var requestedToken = entity.Events.Subscribe<Requested>(request => TryRequest(request));
+        var cancelToken = entity.Events.Subscribe<CancelRequested>(data => Cancel(data.Attacker, data.Reason));
+        subscriptions[entity.EntityId] = new Subscription(entity, requestedToken, cancelToken);
     }
 
     /// <summary>
@@ -64,8 +62,8 @@ public sealed class AttackService
             return;
         }
 
-        subscription.Entity.Events.Off(GameEventType.Attack.Requested, subscription.OnRequested);
-        subscription.Entity.Events.Off(GameEventType.Attack.CancelRequested, subscription.OnCancelRequested);
+        subscription.RequestedToken.Dispose();
+        subscription.CancelToken.Dispose();
     }
 
     /// <summary>
@@ -75,8 +73,8 @@ public sealed class AttackService
     {
         foreach (var subscription in subscriptions.Values)
         {
-            subscription.Entity.Events.Off(GameEventType.Attack.Requested, subscription.OnRequested);
-            subscription.Entity.Events.Off(GameEventType.Attack.CancelRequested, subscription.OnCancelRequested);
+            subscription.RequestedToken.Dispose();
+            subscription.CancelToken.Dispose();
         }
 
         subscriptions.Clear();
@@ -86,7 +84,7 @@ public sealed class AttackService
     /// 尝试处理一次攻击请求。
     /// </summary>
     /// <param name="request">攻击请求 payload。</param>
-    public AttackTriggerReport TryRequest(GameEventType.Attack.RequestedEventData request)
+    public AttackTriggerReport TryRequest(Requested request)
     {
         var validation = Validate(request);
         if (validation.Result != AttackTriggerResult.Success)
@@ -110,16 +108,16 @@ public sealed class AttackService
         timerManager.CancelByTag(GetTimerTag(attacker));
         SetIdle(attacker);
         attacker.Data.Set(AttackDataKeys.CooldownRemaining, 0f);
-        attacker.Events.Emit(GameEventType.Attack.Cancelled, new GameEventType.Attack.CancelledEventData(attacker, reason));
+        attacker.Events.Publish(new Cancelled(attacker, reason));
     }
 
-    private void StartAttack(GameEventType.Attack.RequestedEventData request)
+    private void StartAttack(Requested request)
     {
         var attacker = request.Attacker;
         timerManager.CancelByTag(GetTimerTag(attacker));
         attacker.Data.Set(AttackDataKeys.IsAttacking, true);
         attacker.Data.Set(AttackDataKeys.State, AttackState.WindUp);
-        attacker.Events.Emit(GameEventType.Attack.Started, new GameEventType.Attack.StartedEventData(attacker, request.Target));
+        attacker.Events.Publish(new Started(attacker, request.Target));
         StartCooldown(attacker);
 
         var windUpTime = attacker.Data.Get<float>(AttackDataKeys.WindUpTime, 0f);
@@ -134,7 +132,7 @@ public sealed class AttackService
         ResolveHit(request);
     }
 
-    private void ResolveHit(GameEventType.Attack.RequestedEventData request)
+    private void ResolveHit(Requested request)
     {
         var attacker = request.Attacker;
         var target = request.Target;
@@ -159,9 +157,7 @@ public sealed class AttackService
             Type = DamageType.Physical,
             Tags = DamageTags.Attack
         });
-        attacker.Events.Emit(
-            GameEventType.Attack.Finished,
-            new GameEventType.Attack.FinishedEventData(attacker, target, result.Applied));
+        attacker.Events.Publish(new Finished(attacker, target, result.Applied));
         StartRecovery(attacker);
     }
 
@@ -196,7 +192,7 @@ public sealed class AttackService
             .OnComplete(() => attacker.Data.Set(AttackDataKeys.CooldownRemaining, 0f));
     }
 
-    private AttackTriggerReport Validate(GameEventType.Attack.RequestedEventData request)
+    private AttackTriggerReport Validate(Requested request)
     {
         var attacker = request.Attacker;
         var target = request.Target;
@@ -247,7 +243,7 @@ public sealed class AttackService
         return new AttackTriggerReport(result, null, message);
     }
 
-    private static void EmitCancelledForValidation(GameEventType.Attack.RequestedEventData request, AttackTriggerResult result)
+    private static void EmitCancelledForValidation(Requested request, AttackTriggerResult result)
     {
         var reason = result switch
         {
@@ -260,9 +256,7 @@ public sealed class AttackService
         };
         if (reason.HasValue)
         {
-            request.Attacker.Events.Emit(
-                GameEventType.Attack.Cancelled,
-                new GameEventType.Attack.CancelledEventData(request.Attacker, reason.Value));
+            request.Attacker.Events.Publish(new Cancelled(request.Attacker, reason.Value));
         }
     }
 
@@ -279,6 +273,6 @@ public sealed class AttackService
 
     private sealed record Subscription(
         IEntity Entity,
-        Action<GameEventType.Attack.RequestedEventData> OnRequested,
-        Action<GameEventType.Attack.CancelRequestedEventData> OnCancelRequested);
+        IDisposable RequestedToken,
+        IDisposable CancelToken);
 }

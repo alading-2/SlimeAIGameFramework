@@ -1,4 +1,4 @@
-using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Capabilities.Damage.Events;
 
 namespace SkilmeAI.GameOS.Capabilities.Damage;
 
@@ -34,8 +34,6 @@ public sealed class DodgeProcessor : IDamageProcessor
             return;
         }
 
-        var dodged = new GameEventType.Damage.DodgedEventData(info.Victim, info.Attacker, info);
-        info.Victim.Events.Emit(GameEventType.Damage.Dodged, dodged);
-        GlobalEventBus.Global.Emit(GameEventType.Damage.Dodged, dodged);
+        info.Victim.Events.Publish(new Dodged(info.Victim, info.Attacker, info));
     }
 }

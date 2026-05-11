@@ -26,6 +26,8 @@
 - Schedule
 - Relationship（目标查询）
 
+事件目录：`SkilmeAI/GameOS/Capabilities/AI/Events/`（本 Capability 不发布独立事件，直接写入 AI DataKey 并向目标 Entity 发布 `Attack.Requested`；目录可缺省）
+
 ## 4. 需要哪些其他 Capability
 
 - Movement（AI 写入移动意图）
@@ -56,23 +58,13 @@
 | AI.PatrolRadius | 巡逻半径 |
 | AI.PatrolWaitTime | 巡逻等待时间 |
 
-## 7. 发布的事件
-
-- `AI.TargetAcquired` — 获得新目标
-- `AI.TargetLost` — 目标丢失
-- `Attack.Requested` — 请求攻击（通过行为树 Action）
-
-## 8. 订阅的事件
-
-无直接订阅。通过 `AIService.Tick()` 每帧驱动行为树。
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `AIService` — 全局 AI 服务
 - `EnemyBehaviorTreeBuilder` — 敌人行为树构建器
 - `GodotAIComponent`（GodotBridge）— 参数导出
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 ### BehaviorNode 类型
 
@@ -86,13 +78,13 @@
 - `TickAbilityAutoTriggersAction` — Tick Ability 自动触发
 - `IsTargetInRangeCondition` — 目标是否在范围内
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
 启用：在 Entity 上写入 AI DataKey，调用 `AIService.Register(entity, behaviorTree)`。
 
 关闭：设置 `AI.IsEnabled = false` 或取消注册。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -101,7 +93,7 @@ Tools/run-tests.sh
 
 覆盖最近目标查询、巡逻、攻击请求、Ability 自动触发。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -110,7 +102,7 @@ Tools/run-tests.sh
 | 巡逻范围异常 | `PatrolRadius` 为 0 或负值 |
 | 目标闪烁切换 | 多个目标距离相近，每帧切换 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

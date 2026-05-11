@@ -1,7 +1,7 @@
 using System;
+using SkilmeAI.GameOS.Capabilities.Effect.Events;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Relationship;
 
 namespace SkilmeAI.GameOS.Capabilities.Effect;
@@ -52,9 +52,7 @@ public static class EffectTool
         effect.Data.Set(EffectDataKeys.Duration, options.Duration);
         effect.Data.Set(MovementDataKeys.Position, position);
 
-        var data = new GameEventType.Effect.SpawnedEventData(effect, options.Source, options.Ability, options.Target);
-        effect.Events.Emit(GameEventType.Effect.Spawned, data);
-        GlobalEventBus.Global.Emit(GameEventType.Effect.Spawned, data);
+        effect.Events.Publish(new Spawned(effect, options.Source, options.Ability, options.Target));
         return new EffectSpawnResult(effect, true);
     }
 }

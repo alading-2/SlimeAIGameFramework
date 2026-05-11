@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Attack;
+using SkilmeAI.GameOS.Capabilities.Attack.Events;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Capabilities.Unit;
+using SkilmeAI.GameOS.Capabilities.Unit.Events;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.GodotBridge;
 
@@ -15,8 +16,8 @@ namespace SkilmeAI.GameOS.GodotBridge;
 public partial class GodotAttackComponent : Node, IGodotComponent
 {
     private IEntity? entity;
-    private Action<GameEventType.Attack.StartedEventData>? attackStartedHandler;
-    private Action<GameEventType.Attack.CancelledEventData>? attackCancelledHandler;
+    private IDisposable? attackStartedToken;
+    private IDisposable? attackCancelledToken;
 
     /// <summary>是否在组件注册时自动注册到默认 AttackService。</summary>
     [Export]
@@ -83,10 +84,8 @@ public partial class GodotAttackComponent : Node, IGodotComponent
 
         if (RequestAnimationEvents)
         {
-            attackStartedHandler = OnAttackStarted;
-            attackCancelledHandler = OnAttackCancelled;
-            entity.Events.On(GameEventType.Attack.Started, attackStartedHandler);
-            entity.Events.On(GameEventType.Attack.Cancelled, attackCancelledHandler);
+            attackStartedToken = entity.Events.Subscribe<Started>(OnAttackStarted);
+            attackCancelledToken = entity.Events.Subscribe<Cancelled>(OnAttackCancelled);
         }
     }
 
@@ -103,18 +102,10 @@ public partial class GodotAttackComponent : Node, IGodotComponent
             AttackService.Instance.Unregister(this.entity);
         }
 
-        if (this.entity != null && attackStartedHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Attack.Started, attackStartedHandler);
-        }
-
-        if (this.entity != null && attackCancelledHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Attack.Cancelled, attackCancelledHandler);
-        }
-
-        attackStartedHandler = null;
-        attackCancelledHandler = null;
+        attackStartedToken?.Dispose();
+        attackCancelledToken?.Dispose();
+        attackStartedToken = null;
+        attackCancelledToken = null;
         this.entity = null;
     }
 
@@ -150,8 +141,7 @@ public partial class GodotAttackComponent : Node, IGodotComponent
         }
 
         var targetPosition = target.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
-        return AttackService.Instance.TryRequest(
-            new GameEventType.Attack.RequestedEventData(entity, target, targetPosition));
+        return AttackService.Instance.TryRequest(new Requested(entity, target, targetPosition));
     }
 
     /// <summary>
@@ -165,9 +155,7 @@ public partial class GodotAttackComponent : Node, IGodotComponent
             return;
         }
 
-        entity.Events.Emit(
-            GameEventType.Attack.CancelRequested,
-            new GameEventType.Attack.CancelRequestedEventData(entity, reason));
+        entity.Events.Publish(new CancelRequested(entity, reason));
     }
 
     private void ApplyExportedData(IEntity entity)
@@ -197,7 +185,7 @@ public partial class GodotAttackComponent : Node, IGodotComponent
             || entity.Data.Get<float>(AttackDataKeys.CooldownRemaining, 0f) > 0f;
     }
 
-    private void OnAttackStarted(GameEventType.Attack.StartedEventData data)
+    private void OnAttackStarted(Started data)
     {
         if (entity == null || data.Attacker.EntityId != entity.EntityId)
         {
@@ -205,25 +193,21 @@ public partial class GodotAttackComponent : Node, IGodotComponent
         }
 
         var duration = entity.Data.Get<float>(AttackDataKeys.Interval, -1f);
-        entity.Events.Emit(
-            GameEventType.Unit.PlayAnimationRequested,
-            new GameEventType.Unit.PlayAnimationRequestedEventData(
-                entity,
-                ResolveAttackAnimation(entity),
-                ForceRestart: true,
-                Duration: duration));
+        entity.Events.Publish(new PlayAnimationRequested(
+            entity,
+            ResolveAttackAnimation(entity),
+            ForceRestart: true,
+            Duration: duration));
     }
 
-    private void OnAttackCancelled(GameEventType.Attack.CancelledEventData data)
+    private void OnAttackCancelled(Cancelled data)
     {
         if (entity == null || data.Attacker.EntityId != entity.EntityId)
         {
             return;
         }
 
-        entity.Events.Emit(
-            GameEventType.Unit.StopAnimationRequested,
-            new GameEventType.Unit.StopAnimationRequestedEventData(entity));
+        entity.Events.Publish(new StopAnimationRequested(entity));
     }
 
     private string ResolveAttackAnimation(IEntity entity)

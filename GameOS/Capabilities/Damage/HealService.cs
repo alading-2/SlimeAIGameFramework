@@ -1,6 +1,5 @@
 using System;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Capabilities.Damage.Events;
 
 namespace SkilmeAI.GameOS.Capabilities.Damage;
 
@@ -83,12 +82,7 @@ public sealed class HealService
         info.Target.Data.Add(DamageDataKeys.TotalHealingReceived, info.FinalAmount);
         info.Healer?.Data.Add(DamageDataKeys.TotalHealingDone, info.FinalAmount);
 
-        var healthChanged = new GameEventType.Damage.HealthChangedEventData(info.Target, info.OldHp, info.NewHp);
-        info.Target.Events.Emit(GameEventType.Damage.HealthChanged, healthChanged);
-        GlobalEventBus.Global.Emit(GameEventType.Damage.HealthChanged, healthChanged);
-
-        var healed = new GameEventType.Damage.HealedEventData(info.Target, info.FinalAmount, info);
-        info.Target.Events.Emit(GameEventType.Damage.Healed, healed);
-        GlobalEventBus.Global.Emit(GameEventType.Damage.Healed, healed);
+        info.Target.Events.Publish(new HealthChanged(info.Target, info.OldHp, info.NewHp));
+        info.Target.Events.Publish(new Healed(info.Target, info.FinalAmount, info));
     }
 }

@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Effect;
+using SkilmeAI.GameOS.Capabilities.Effect.Events;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Capabilities.Projectile;
+using ProjectileSpawned = SkilmeAI.GameOS.Capabilities.Projectile.Events.Spawned;
+using EffectSpawned = SkilmeAI.GameOS.Capabilities.Effect.Events.Spawned;
 using SkilmeAI.GameOS.Runtime.Entity;
 using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Runtime.Events.Core;
 using SkilmeAI.GameOS.Runtime.Resource;
 
 namespace SkilmeAI.GameOS.GodotBridge;
@@ -15,22 +19,10 @@ namespace SkilmeAI.GameOS.GodotBridge;
 /// </summary>
 public partial class GodotProjectileEffectSpawner : Node
 {
-    private readonly Action<GameEventType.Projectile.SpawnedEventData> projectileSpawnedHandler;
-    private readonly Action<GameEventType.Effect.SpawnedEventData> effectSpawnedHandler;
-    private readonly Action<GameEventType.Entity.LifecycleEventData> entityDestroyedHandler;
+    private IDisposable? projectileSpawnedToken;
+    private IDisposable? effectSpawnedToken;
+    private IDisposable? entityDestroyedToken;
     private readonly HashSet<string> spawnedVisualEntityIds = new(StringComparer.Ordinal);
-
-    private bool isSubscribed;
-
-    /// <summary>
-    /// 创建 Projectile / Effect Godot 实例化桥。
-    /// </summary>
-    public GodotProjectileEffectSpawner()
-    {
-        projectileSpawnedHandler = OnProjectileSpawned;
-        effectSpawnedHandler = OnEffectSpawned;
-        entityDestroyedHandler = OnEntityDestroyed;
-    }
 
     /// <summary>
     /// 是否进入 SceneTree 后自动订阅 Runtime 事件。
@@ -70,15 +62,14 @@ public partial class GodotProjectileEffectSpawner : Node
     /// </summary>
     public void Subscribe()
     {
-        if (isSubscribed)
+        if (projectileSpawnedToken != null)
         {
             return;
         }
 
-        GlobalEventBus.Global.On(GameEventType.Projectile.Spawned, projectileSpawnedHandler);
-        GlobalEventBus.Global.On(GameEventType.Effect.Spawned, effectSpawnedHandler);
-        GlobalEventBus.Global.On(GameEventType.Entity.Destroyed, entityDestroyedHandler);
-        isSubscribed = true;
+        projectileSpawnedToken = WorldEvents.World.Subscribe<ProjectileSpawned>(OnProjectileSpawned);
+        effectSpawnedToken = WorldEvents.World.Subscribe<EffectSpawned>(OnEffectSpawned);
+        entityDestroyedToken = WorldEvents.World.Subscribe<EntityDestroyed>(OnEntityDestroyed);
     }
 
     /// <summary>
@@ -86,25 +77,22 @@ public partial class GodotProjectileEffectSpawner : Node
     /// </summary>
     public void Unsubscribe()
     {
-        if (!isSubscribed)
-        {
-            return;
-        }
-
-        GlobalEventBus.Global.Off(GameEventType.Projectile.Spawned, projectileSpawnedHandler);
-        GlobalEventBus.Global.Off(GameEventType.Effect.Spawned, effectSpawnedHandler);
-        GlobalEventBus.Global.Off(GameEventType.Entity.Destroyed, entityDestroyedHandler);
-        isSubscribed = false;
+        projectileSpawnedToken?.Dispose();
+        effectSpawnedToken?.Dispose();
+        entityDestroyedToken?.Dispose();
+        projectileSpawnedToken = null;
+        effectSpawnedToken = null;
+        entityDestroyedToken = null;
     }
 
-    private void OnProjectileSpawned(GameEventType.Projectile.SpawnedEventData data)
+    private void OnProjectileSpawned(ProjectileSpawned data)
     {
         var scenePath = data.Projectile.Data.Get<string>(ProjectileDataKeys.ScenePath, string.Empty);
         var position = data.Projectile.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
         InstantiateVisual(data.Projectile, scenePath, position, ResolveParent(ProjectileParentPath), "Projectile");
     }
 
-    private void OnEffectSpawned(GameEventType.Effect.SpawnedEventData data)
+    private void OnEffectSpawned(EffectSpawned data)
     {
         var scenePath = data.Effect.Data.Get<string>(EffectDataKeys.ScenePath, string.Empty);
         var position = data.Effect.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
@@ -115,7 +103,7 @@ public partial class GodotProjectileEffectSpawner : Node
         }
     }
 
-    private void OnEntityDestroyed(GameEventType.Entity.LifecycleEventData data)
+    private void OnEntityDestroyed(EntityDestroyed data)
     {
         if (!spawnedVisualEntityIds.Remove(data.Entity.EntityId))
         {

@@ -46,6 +46,15 @@ Tools/analyze-godot-scene-logs.sh
 
 当前阶段暂不运行 Godot 场景验证。`Tools/run-godot-smoke.sh` 只能作为 bridge 和 smoke path 证据，不是 playable-slice 完成证据。
 
+## Capability 必含文件
+
+每个 Capability 目录（`SkilmeAI/GameOS/Capabilities/<Cap>/`）MUST 包含：
+
+- `capability.json`：Capability metadata。
+- `Contract.md`（放在 `DocsAI/GameOS/Capabilities/<Cap>/`）：Capability 契约，含事件目录指针。
+- `Debug.md`、`Tests.md`：调试和测试入口。
+- `Events/`：事件 payload 目录（一文件一 `readonly record struct`，实现 `IEntityEvent / IGlobalEvent / IBroadcastEvent`）。Capability 无事件时允许不建。
+
 ## Capability 条目
 
 ### Movement
@@ -102,7 +111,7 @@ Tools/analyze-godot-scene-logs.sh
 | Contract / Debug | `GameOS/Capabilities/Damage/Contract.md`；`GameOS/Capabilities/Damage/Debug.md` |
 | Primary APIs | `DamageService`、`HealService`、`DamageTool`、`DamageInfo`、`DamageResult`、`IDamageProcessor`、`DamageDataKeys` |
 | DataKeys | CurrentHp、MaxHp、IsDead、IsInvulnerable、Armor、DodgeChance、CritRate、CritDamage、DamageTakenMultiplier、LifeSteal、Shield、ContactDamage、ContactDamageInterval、total/wave damage、hit、crit、kill、healing、shield statistics |
-| Events | `Damage.Applied`、`Damage.Death`、`Damage.HealApplied`，以及 `GameEventType` 中的 runtime health/damage/killed/healed event names |
+| Events | 事件目录 `SkilmeAI/GameOS/Capabilities/Damage/Events/`：`Damaged / Dodged / Healed / HealthChanged / Killed`（全部 `IBroadcastEvent`）。 |
 | Selector owner | `None`；从 Attack、Ability、Projectile 或 contact bridge 接收明确 attacker/target 集合。 |
 | RuntimeSchedule boundary | Service call 和 timer-driven periodic damage；调用方负责调度。 |
 | GodotBridge boundary | `GodotContactDamageComponent` 把 hurtbox contacts 转为 `DamageService` 请求；bridge 不直接写 HP。 |
@@ -123,7 +132,7 @@ Tools/analyze-godot-scene-logs.sh
 | Contract / Debug | `GameOS/Capabilities/Unit/Contract.md`；`GameOS/Capabilities/Unit/Debug.md` |
 | Primary APIs | `UnitDataKeys` |
 | DataKeys | Name、EntityType、DeathType、VisualScenePath、HealthBarHeight、IsShowHealthBar、PickupRange、ExpReward、DetectionRange、AvailableAnimations |
-| Events | `capability.json` 中无事件；动画请求使用 `GameEventType.Unit` bridge events。 |
+| Events | Unit 自身无主动事件；动画请求/完成使用 `Capabilities.Unit.Events.PlayAnimationRequested / StopAnimationRequested / AnimationFinished`（`IEntityEvent`）。 |
 | Selector owner | `None`；Unit metadata 被其他系统消费。 |
 | RuntimeSchedule boundary | 首批没有独立 RuntimeSchedule system。 |
 | GodotBridge boundary | `GodotUnitAnimationComponent` 消费 Unit animation event requests 和 available animation metadata。 |

@@ -10,13 +10,14 @@ namespace SkilmeAI.GameOS.GodotBridge;
 /// </summary>
 public partial class GodotEntity : Node, IEntity
 {
-    private readonly EventBus events = new();
+    private readonly EntityEventBus events;
 
     /// <summary>
     /// 创建带局部 Data 和 EventBus 的 Godot Entity。
     /// </summary>
     public GodotEntity()
     {
+        events = new EntityEventBus($"entity:{GodotNodeRegistry.GetNodeInstanceId(this)}", WorldEvents.World);
         Data = new Data(new EventDataChangeSink(events));
     }
 
@@ -41,7 +42,7 @@ public partial class GodotEntity : Node, IEntity
     public Data Data { get; }
 
     /// <inheritdoc />
-    public EventBus Events => events;
+    public IEventBus Events => events;
 
     /// <inheritdoc />
     public override void _EnterTree()

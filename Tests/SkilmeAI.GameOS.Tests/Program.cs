@@ -11,15 +11,23 @@ using SkilmeAI.GameOS.Observation;
 using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Entity;
 using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Runtime.Events.Core;
 using SkilmeAI.GameOS.Runtime.Pool;
 using SkilmeAI.GameOS.Runtime.Relationship;
 using SkilmeAI.GameOS.Runtime.Resource;
 using SkilmeAI.GameOS.Runtime.Schedule;
 using SkilmeAI.GameOS.Runtime.Timer;
+using AbilityEvents = SkilmeAI.GameOS.Capabilities.Ability.Events;
+using AttackEvents = SkilmeAI.GameOS.Capabilities.Attack.Events;
+using CollisionEvents = SkilmeAI.GameOS.Capabilities.Collision.Events;
+using DamageEvents = SkilmeAI.GameOS.Capabilities.Damage.Events;
+using EffectEvents = SkilmeAI.GameOS.Capabilities.Effect.Events;
+using MovementEvents = SkilmeAI.GameOS.Capabilities.Movement.Events;
+using ProjectileEvents = SkilmeAI.GameOS.Capabilities.Projectile.Events;
 
 var tests = new (string Name, Action Run)[]
 {
-    ("EventBus priority and once", TestEventBus),
+    ("EventBus subscribe publish and dispose", TestEventBus),
     ("Entity Data event bridge", TestEntityDataBridge),
     ("Entity lifecycle", TestEntityLifecycle),
     ("Relationship graph", TestRelationshipGraph),
@@ -108,28 +116,30 @@ if (failed > 0)
 
 static void TestEventBus()
 {
-    var bus = new EventBus();
+    var bus = new EntityEventBus("entity:test");
     var order = new List<int>();
-    var onceCount = 0;
 
-    bus.On("runtime:test", () => order.Add(1), priority: (int)EventPriority.Low);
-    bus.On("runtime:test", () => order.Add(2), priority: (int)EventPriority.High);
-    bus.Once("runtime:test", () => onceCount++);
+    bus.Subscribe<RuntimeTestEvent>(_ => order.Add(1));
+    bus.Subscribe<RuntimeTestEvent>(_ => order.Add(2));
+    IDisposable? third = null;
+    third = bus.Subscribe<RuntimeTestEvent>(_ =>
+    {
+        order.Add(3);
+        third?.Dispose();
+    });
 
-    bus.Emit("runtime:test");
-    bus.Emit("runtime:test");
+    bus.Publish(new RuntimeTestEvent(7));
+    bus.Publish(new RuntimeTestEvent(8));
 
-    AssertEqual("priority first emit", "2,1", string.Join(",", order.Take(2)));
-    AssertEqual("once count", 1, onceCount);
+    AssertEqual("registration order first emit", "1,2,3", string.Join(",", order.Take(3)));
+    AssertEqual("dispose unsubscribes", "1,2,3,1,2", string.Join(",", order));
 }
 
 static void TestEntityDataBridge()
 {
     var entity = new RuntimeEntity("entity-data");
     DataChangedEventData? received = null;
-    entity.Events.On<GameEventType.Data.PropertyChangedEventData>(
-        GameEventType.Data.PropertyChanged,
-        data => received = data.Change);
+    entity.Events.Subscribe<DataPropertyChanged>(data => received = data.Change);
 
     entity.Data.Set("CurrentHp", 10);
 
@@ -142,8 +152,8 @@ static void TestEntityLifecycle()
     EntityManager.Clear();
     var spawned = 0;
     var destroyed = 0;
-    GlobalEventBus.Global.On<GameEventType.Entity.LifecycleEventData>(GameEventType.Entity.Spawned, _ => spawned++);
-    GlobalEventBus.Global.On<GameEventType.Entity.LifecycleEventData>(GameEventType.Entity.Destroyed, _ => destroyed++);
+    var spawnSub = WorldEvents.World.Subscribe<EntitySpawned>(_ => spawned++);
+    var destroySub = WorldEvents.World.Subscribe<EntityDestroyed>(_ => destroyed++);
 
     var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "entity-life" });
 
@@ -152,29 +162,26 @@ static void TestEntityLifecycle()
     AssertEqual("destroy result", true, EntityManager.Destroy(entity));
     AssertEqual("destroyed event", 1, destroyed);
 
-    GlobalEventBus.Global.Clear();
+    spawnSub.Dispose();
+    destroySub.Dispose();
     EntityManager.Clear();
 }
 
 static void TestRelationshipGraph()
 {
     RelationshipManager.Clear();
-    GlobalEventBus.Global.Clear();
+    WorldEvents.World.Clear();
 
     var added = 0;
     var removed = 0;
-    GlobalEventBus.Global.On<GameEventType.Relationship.ChangedEventData>(
-        GameEventType.Relationship.Added,
-        data =>
+    var addSub = WorldEvents.World.Subscribe<RelationshipAdded>(data =>
+    {
+        if (data.RelationType == RelationshipType.EntityToAbility)
         {
-            if (data.RelationType == RelationshipType.EntityToAbility)
-            {
-                added++;
-            }
-        });
-    GlobalEventBus.Global.On<GameEventType.Relationship.ChangedEventData>(
-        GameEventType.Relationship.Removed,
-        _ => removed++);
+            added++;
+        }
+    });
+    var removeSub = WorldEvents.World.Subscribe<RelationshipRemoved>(_ => removed++);
 
     var ok = RelationshipManager.AddRelationship(
         "player",
@@ -194,7 +201,9 @@ static void TestRelationshipGraph()
     RelationshipManager.RemoveRelationship("player", "ability-a", RelationshipType.EntityToAbility);
     AssertEqual("relationship event remove", 1, removed);
 
-    GlobalEventBus.Global.Clear();
+    addSub.Dispose();
+    removeSub.Dispose();
+    WorldEvents.World.Clear();
     RelationshipManager.Clear();
 }
 
@@ -388,16 +397,12 @@ static void TestCollisionLayerMaskEvent()
     var entered = 0;
     var exited = 0;
     CollisionContact? received = null;
-    source.Events.On<GameEventType.Collision.EnteredEventData>(
-        GameEventType.Collision.Entered,
-        data =>
-        {
-            entered++;
-            received = data.Contact;
-        });
-    source.Events.On<GameEventType.Collision.ExitedEventData>(
-        GameEventType.Collision.Exited,
-        _ => exited++);
+    source.Events.Subscribe<CollisionEvents.Entered>(data =>
+    {
+        entered++;
+        received = data.Contact;
+    });
+    source.Events.Subscribe<CollisionEvents.Exited>(_ => exited++);
 
     var collision = new CollisionSystem();
     AssertEqual("collision can collide", true, collision.CanCollide(source, target));
@@ -423,21 +428,17 @@ static void TestDamageServiceAppliesHealth()
 
     var damagedEvents = 0;
     var healthEvents = 0;
-    victim.Events.On<GameEventType.Damage.DamagedEventData>(
-        GameEventType.Damage.Damaged,
-        data =>
-        {
-            damagedEvents++;
-            AssertEqual("damaged attacker", attacker.EntityId, data.Info.Attacker?.EntityId);
-        });
-    victim.Events.On<GameEventType.Damage.HealthChangedEventData>(
-        GameEventType.Damage.HealthChanged,
-        data =>
-        {
-            healthEvents++;
-            AssertNear("health old", 20f, data.OldHp);
-            AssertNear("health new", 13f, data.NewHp);
-        });
+    victim.Events.Subscribe<DamageEvents.Damaged>(data =>
+    {
+        damagedEvents++;
+        AssertEqual("damaged attacker", attacker.EntityId, data.Info.Attacker?.EntityId);
+    });
+    victim.Events.Subscribe<DamageEvents.HealthChanged>(data =>
+    {
+        healthEvents++;
+        AssertNear("health old", 20f, data.OldHp);
+        AssertNear("health new", 13f, data.NewHp);
+    });
 
     var result = DamageService.Instance.Process(new DamageInfo
     {
@@ -468,13 +469,11 @@ static void TestDamageServiceKilledEvent()
     victim.Data.Set(DamageDataKeys.CurrentHp, 5f);
 
     var killedEvents = 0;
-    victim.Events.On<GameEventType.Damage.KilledEventData>(
-        GameEventType.Damage.Killed,
-        data =>
-        {
-            killedEvents++;
-            AssertEqual("killed killer", attacker.EntityId, data.Killer?.EntityId);
-        });
+    victim.Events.Subscribe<DamageEvents.Killed>(data =>
+    {
+        killedEvents++;
+        AssertEqual("killed killer", attacker.EntityId, data.Killer?.EntityId);
+    });
 
     var result = DamageService.Instance.Process(new DamageInfo
     {
@@ -504,16 +503,12 @@ static void TestDamagePipelineDodge()
 
     var damagedEvents = 0;
     var dodgedEvents = 0;
-    victim.Events.On<GameEventType.Damage.DamagedEventData>(
-        GameEventType.Damage.Damaged,
-        _ => damagedEvents++);
-    victim.Events.On<GameEventType.Damage.DodgedEventData>(
-        GameEventType.Damage.Dodged,
-        data =>
-        {
-            dodgedEvents++;
-            AssertEqual("dodged attacker", attacker.EntityId, data.Attacker?.EntityId);
-        });
+    victim.Events.Subscribe<DamageEvents.Damaged>(_ => damagedEvents++);
+    victim.Events.Subscribe<DamageEvents.Dodged>(data =>
+    {
+        dodgedEvents++;
+        AssertEqual("dodged attacker", attacker.EntityId, data.Attacker?.EntityId);
+    });
 
     var result = DamageService.Instance.Process(new DamageInfo
     {
@@ -605,13 +600,11 @@ static void TestDamagePipelineLifesteal()
     victim.Data.Set(DamageDataKeys.CurrentHp, 40f);
 
     var healedEvents = 0;
-    attacker.Events.On<GameEventType.Damage.HealedEventData>(
-        GameEventType.Damage.Healed,
-        data =>
-        {
-            healedEvents++;
-            AssertNear("lifesteal event amount", 10f, data.Amount);
-        });
+    attacker.Events.Subscribe<DamageEvents.Healed>(data =>
+    {
+        healedEvents++;
+        AssertNear("lifesteal event amount", 10f, data.Amount);
+    });
 
     var result = DamageService.Instance.Process(new DamageInfo
     {
@@ -682,14 +675,12 @@ static void TestHealServiceAppliesAndClamps()
     target.Data.Set(DamageDataKeys.CurrentHp, 10f);
 
     var healedEvents = 0;
-    target.Events.On<GameEventType.Damage.HealedEventData>(
-        GameEventType.Damage.Healed,
-        data =>
-        {
-            healedEvents++;
-            AssertEqual("heal event source", HealSource.Direct, data.Info.Source);
-            AssertNear("heal event amount", 10f, data.Amount);
-        });
+    target.Events.Subscribe<DamageEvents.Healed>(data =>
+    {
+        healedEvents++;
+        AssertEqual("heal event source", HealSource.Direct, data.Info.Source);
+        AssertNear("heal event amount", 10f, data.Amount);
+    });
 
     var result = HealService.Instance.Process(new HealInfo
     {
@@ -779,13 +770,11 @@ static void TestAbilityServiceInstantDamageCooldownAndCharge()
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var executedEvents = 0;
-    ability.Events.On<GameEventType.Ability.ExecutedEventData>(
-        GameEventType.Ability.Executed,
-        data =>
-        {
-            executedEvents++;
-            AssertEqual("ability event targets", 1, data.Result.TargetsHit);
-        });
+    ability.Events.Subscribe<AbilityEvents.Executed>(data =>
+    {
+        executedEvents++;
+        AssertEqual("ability event targets", 1, data.Result.TargetsHit);
+    });
 
     var service = new AbilityService(new TimerManager("ability-test-timers"));
     var first = service.TryTrigger(new AbilityCastContext
@@ -834,13 +823,11 @@ static void TestAbilityServiceRequiresTarget()
     ability.Data.Set(AbilityDataKeys.Damage, 5f);
 
     var failedEvents = 0;
-    ability.Events.On<GameEventType.Ability.FailedEventData>(
-        GameEventType.Ability.Failed,
-        data =>
-        {
-            failedEvents++;
-            AssertEqual("ability fail reason", AbilityTriggerResult.FailNoTarget, data.Result);
-        });
+    ability.Events.Subscribe<AbilityEvents.Failed>(data =>
+    {
+        failedEvents++;
+        AssertEqual("ability fail reason", AbilityTriggerResult.FailNoTarget, data.Result);
+    });
 
     var report = AbilityService.Instance.TryTrigger(new AbilityCastContext
     {
@@ -1061,21 +1048,19 @@ static void TestAbilityTargetingToolFindsNearestEntity()
 static void TestProjectileToolSpawnsRuntimeEntity()
 {
     EntityManager.Clear();
-    GlobalEventBus.Global.Clear();
+    WorldEvents.World.Clear();
     var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-source" });
     var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-ability" });
     var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-target" });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
 
     var spawnedEvents = 0;
-    GlobalEventBus.Global.On<GameEventType.Projectile.SpawnedEventData>(
-        GameEventType.Projectile.Spawned,
-        data =>
-        {
-            spawnedEvents++;
-            AssertEqual("projectile event source", source.EntityId, data.Source.EntityId);
-            AssertEqual("projectile event target", target.EntityId, data.Target?.EntityId);
-        });
+    var spawnSub = WorldEvents.World.Subscribe<ProjectileEvents.Spawned>(data =>
+    {
+        spawnedEvents++;
+        AssertEqual("projectile event source", source.EntityId, data.Source.EntityId);
+        AssertEqual("projectile event target", target.EntityId, data.Target?.EntityId);
+    });
 
     var result = ProjectileTool.Spawn(new ProjectileSpawnOptions
     {
@@ -1106,14 +1091,15 @@ static void TestProjectileToolSpawnsRuntimeEntity()
     AssertNear("projectile damage", 4f, result.Projectile.Data.Get<float>(ProjectileDataKeys.Damage));
     AssertEqual("projectile events", 1, spawnedEvents);
 
-    GlobalEventBus.Global.Clear();
+    spawnSub.Dispose();
+    WorldEvents.World.Clear();
     EntityManager.Clear();
 }
 
 static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
 {
     EntityManager.Clear();
-    GlobalEventBus.Global.Clear();
+    WorldEvents.World.Clear();
     var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-pierce-source" });
     source.Data.Set(CollisionDataKeys.Team, 1);
 
@@ -1138,15 +1124,13 @@ static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
     projectile.Projectile.Data.Set(CollisionDataKeys.Team, 1);
 
     var hitTargets = new List<string>();
-    GlobalEventBus.Global.On<GameEventType.Projectile.HitEventData>(
-        GameEventType.Projectile.Hit,
-        data =>
+    var hitSub = WorldEvents.World.Subscribe<ProjectileEvents.Hit>(data =>
+    {
+        if (data.Projectile.EntityId == projectile.Projectile.EntityId)
         {
-            if (data.Projectile.EntityId == projectile.Projectile.EntityId)
-            {
-                hitTargets.Add(data.Target.EntityId);
-            }
-        });
+            hitTargets.Add(data.Target.EntityId);
+        }
+    });
 
     var movement = new MovementSystem();
     var started = ProjectileTool.StartMovement(projectile.Projectile, movement);
@@ -1163,7 +1147,8 @@ static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
     AssertEqual("projectile pierce destroyed", null, EntityManager.Get(projectile.Projectile.EntityId));
     AssertEqual("projectile pierce movement stopped", false, movement.IsMoving(projectile.Projectile));
 
-    GlobalEventBus.Global.Clear();
+    hitSub.Dispose();
+    WorldEvents.World.Clear();
     EntityManager.Clear();
 }
 
@@ -1209,7 +1194,7 @@ static IEntity CreateProjectileTarget(string entityId, Vector2Value position)
 static void TestProjectileMovementHitDamagesAndDestroys()
 {
     EntityManager.Clear();
-    GlobalEventBus.Global.Clear();
+    WorldEvents.World.Clear();
     var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-hit-source" });
     source.Data.Set(CollisionDataKeys.Team, 1);
 
@@ -1237,15 +1222,13 @@ static void TestProjectileMovementHitDamagesAndDestroys()
     projectile.Projectile.Data.Set(CollisionDataKeys.Team, 1);
 
     var hitEvents = 0;
-    GlobalEventBus.Global.On<GameEventType.Projectile.HitEventData>(
-        GameEventType.Projectile.Hit,
-        data =>
-        {
-            hitEvents++;
-            AssertEqual("projectile hit source", source.EntityId, data.Source.EntityId);
-            AssertEqual("projectile hit target", target.EntityId, data.Target.EntityId);
-            AssertEqual("projectile hit damage applied", true, data.Damage.Applied);
-        });
+    var hitSub = WorldEvents.World.Subscribe<ProjectileEvents.Hit>(data =>
+    {
+        hitEvents++;
+        AssertEqual("projectile hit source", source.EntityId, data.Source.EntityId);
+        AssertEqual("projectile hit target", target.EntityId, data.Target.EntityId);
+        AssertEqual("projectile hit damage applied", true, data.Damage.Applied);
+    });
 
     var movement = new MovementSystem();
     var started = ProjectileTool.StartMovement(projectile.Projectile, movement);
@@ -1258,28 +1241,27 @@ static void TestProjectileMovementHitDamagesAndDestroys()
     AssertEqual("projectile destroyed", null, EntityManager.Get(projectile.Projectile.EntityId));
     AssertEqual("projectile movement stopped after destroy", false, movement.IsMoving(projectile.Projectile));
 
-    GlobalEventBus.Global.Clear();
+    hitSub.Dispose();
+    WorldEvents.World.Clear();
     EntityManager.Clear();
 }
 
 static void TestEffectToolSpawnsRuntimeEntity()
 {
     EntityManager.Clear();
-    GlobalEventBus.Global.Clear();
+    WorldEvents.World.Clear();
     var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "effect-source" });
     var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "effect-ability" });
     var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "effect-target" });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(2f, 3f));
 
     var spawnedEvents = 0;
-    GlobalEventBus.Global.On<GameEventType.Effect.SpawnedEventData>(
-        GameEventType.Effect.Spawned,
-        data =>
-        {
-            spawnedEvents++;
-            AssertEqual("effect event source", source.EntityId, data.Source.EntityId);
-            AssertEqual("effect event target", target.EntityId, data.Target?.EntityId);
-        });
+    var spawnSub = WorldEvents.World.Subscribe<EffectEvents.Spawned>(data =>
+    {
+        spawnedEvents++;
+        AssertEqual("effect event source", source.EntityId, data.Source.EntityId);
+        AssertEqual("effect event target", target.EntityId, data.Target?.EntityId);
+    });
 
     var result = EffectTool.Spawn(new EffectSpawnOptions
     {
@@ -1305,7 +1287,8 @@ static void TestEffectToolSpawnsRuntimeEntity()
     AssertNear("effect duration", 0.75f, result.Effect.Data.Get<float>(EffectDataKeys.Duration));
     AssertEqual("effect events", 1, spawnedEvents);
 
-    GlobalEventBus.Global.Clear();
+    spawnSub.Dispose();
+    WorldEvents.World.Clear();
     EntityManager.Clear();
 }
 
@@ -1537,9 +1520,7 @@ static void TestAIBehaviorTreeBuilderMeleeAttackPriority()
     target.Data.Set(CollisionDataKeys.Team, 2);
 
     var requested = 0;
-    agent.Events.On<GameEventType.Attack.RequestedEventData>(
-        GameEventType.Attack.Requested,
-        _ => requested++);
+    agent.Events.Subscribe<AttackEvents.Requested>(_ => requested++);
 
     var context = new AIContext { Entity = agent, Delta = 0.1f };
     var root = EnemyBehaviorTreeBuilder.BuildMeleeEnemyTree(targetSearchRange: 20f, defaultAttackRange: 1f);
@@ -1592,14 +1573,12 @@ static void TestAIServiceRequestsAttackInRange()
     agent.Data.Set(AIDataKeys.TargetEntity, target);
 
     var requested = 0;
-    GameEventType.Attack.RequestedEventData? payload = null;
-    agent.Events.On<GameEventType.Attack.RequestedEventData>(
-        GameEventType.Attack.Requested,
-        data =>
-        {
-            requested++;
-            payload = data;
-        });
+    AttackEvents.Requested? payload = null;
+    agent.Events.Subscribe<AttackEvents.Requested>(data =>
+    {
+        requested++;
+        payload = data;
+    });
 
     var context = new AIContext { Entity = agent, Delta = 0.1f };
     var attackBranch = new SequenceNode("AI Attack")
@@ -1745,19 +1724,18 @@ static void TestAttackServiceConsumesRequestAndDamages()
     var started = 0;
     var finished = 0;
     var didHit = false;
-    attacker.Events.On<GameEventType.Attack.StartedEventData>(GameEventType.Attack.Started, _ => started++);
-    attacker.Events.On<GameEventType.Attack.FinishedEventData>(
-        GameEventType.Attack.Finished,
-        data =>
-        {
-            finished++;
-            didHit = data.DidHit;
-        });
+    attacker.Events.Subscribe<AttackEvents.Started>(_ => started++);
+    attacker.Events.Subscribe<AttackEvents.Finished>(data =>
+    {
+        finished++;
+        didHit = data.DidHit;
+    });
     service.Register(attacker);
 
-    attacker.Events.Emit(
-        GameEventType.Attack.Requested,
-        new GameEventType.Attack.RequestedEventData(attacker, target, target.Data.Get<Vector2Value>(MovementDataKeys.Position)));
+    attacker.Events.Publish(new AttackEvents.Requested(
+        attacker,
+        target,
+        target.Data.Get<Vector2Value>(MovementDataKeys.Position)));
 
     AssertEqual("attack service started", 1, started);
     AssertEqual("attack service finished", 1, finished);
@@ -1788,15 +1766,13 @@ static void TestAttackServiceGatesRangeAndCooldown()
 
     var cancelled = 0;
     AttackCancelReason? reason = null;
-    attacker.Events.On<GameEventType.Attack.CancelledEventData>(
-        GameEventType.Attack.Cancelled,
-        data =>
-        {
-            cancelled++;
-            reason = data.Reason;
-        });
+    attacker.Events.Subscribe<AttackEvents.Cancelled>(data =>
+    {
+        cancelled++;
+        reason = data.Reason;
+    });
 
-    var request = new GameEventType.Attack.RequestedEventData(attacker, target, target.Data.Get<Vector2Value>(MovementDataKeys.Position));
+    var request = new AttackEvents.Requested(attacker, target, target.Data.Get<Vector2Value>(MovementDataKeys.Position));
     var outOfRange = service.TryRequest(request);
     AssertEqual("attack out of range result", AttackTriggerResult.FailOutOfRange, outOfRange.Result);
     AssertEqual("attack out of range cancel event", 1, cancelled);
@@ -1835,8 +1811,8 @@ static void TestAttackServiceWindupAndRecoveryTimers()
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var finished = 0;
-    attacker.Events.On<GameEventType.Attack.FinishedEventData>(GameEventType.Attack.Finished, _ => finished++);
-    var request = new GameEventType.Attack.RequestedEventData(attacker, target, target.Data.Get<Vector2Value>(MovementDataKeys.Position));
+    attacker.Events.Subscribe<AttackEvents.Finished>(_ => finished++);
+    var request = new AttackEvents.Requested(attacker, target, target.Data.Get<Vector2Value>(MovementDataKeys.Position));
     var accepted = service.TryRequest(request);
 
     AssertEqual("attack windup accepted", AttackTriggerResult.Success, accepted.Result);
@@ -1898,13 +1874,11 @@ static void TestMovementTargetStopEvent()
 
     var stopped = 0;
     MovementStopReason? reason = null;
-    entity.Events.On<GameEventType.Movement.StoppedEventData>(
-        GameEventType.Movement.Stopped,
-        data =>
-        {
-            stopped++;
-            reason = data.Context.Reason;
-        });
+    entity.Events.Subscribe<MovementEvents.Stopped>(data =>
+    {
+        stopped++;
+        reason = data.Context.Reason;
+    });
 
     var movement = new MovementSystem();
     movement.Start(entity, new MovementParams
@@ -2196,20 +2170,16 @@ static void TestMovementCollisionStopTick()
     var stoppedEvents = 0;
     MovementCollisionContext? receivedCollision = null;
     MovementStopReason? stopReason = null;
-    projectile.Events.On<GameEventType.Movement.CollisionEventData>(
-        GameEventType.Movement.Collision,
-        data =>
-        {
-            collisionEvents++;
-            receivedCollision = data.Context;
-        });
-    projectile.Events.On<GameEventType.Movement.StoppedEventData>(
-        GameEventType.Movement.Stopped,
-        data =>
-        {
-            stoppedEvents++;
-            stopReason = data.Context.Reason;
-        });
+    projectile.Events.Subscribe<MovementEvents.Collision>(data =>
+    {
+        collisionEvents++;
+        receivedCollision = data.Context;
+    });
+    projectile.Events.Subscribe<MovementEvents.Stopped>(data =>
+    {
+        stoppedEvents++;
+        stopReason = data.Context.Reason;
+    });
 
     var movement = new MovementSystem();
     movement.Start(projectile, new MovementParams
@@ -2263,9 +2233,7 @@ static void TestMovementCollisionNotifyWithoutStop()
     target.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
 
     var collisionEvents = 0;
-    projectile.Events.On<GameEventType.Movement.CollisionEventData>(
-        GameEventType.Movement.Collision,
-        _ => collisionEvents++);
+    projectile.Events.Subscribe<MovementEvents.Collision>(_ => collisionEvents++);
 
     var movement = new MovementSystem();
     movement.Start(projectile, new MovementParams
@@ -2540,3 +2508,5 @@ sealed class ScheduleProbeSystem : IRuntimeSystem, IRuntimeCommandHandler<int, i
         return request + 1;
     }
 }
+
+readonly record struct RuntimeTestEvent(int Value) : IEntityEvent;

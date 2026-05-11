@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using SkilmeAI.GameOS.Capabilities.Ability.Events;
 using SkilmeAI.GameOS.Capabilities.Damage;
 using SkilmeAI.GameOS.Capabilities.Feature;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Timer;
 
 namespace SkilmeAI.GameOS.Capabilities.Ability;
@@ -46,12 +46,11 @@ public sealed class AbilityService
         ConsumeCharges(context.Ability);
         StartCooldown(context.Ability);
         context.Ability.Data.Set(AbilityDataKeys.IsActive, true);
-        context.Ability.Events.Emit(GameEventType.Ability.Activated, new GameEventType.Ability.ActivatedEventData(context));
+        context.Ability.Events.Publish(new Activated(context));
 
         var executed = ExecuteFeatureOrDamage(context);
         context.Ability.Data.Set(AbilityDataKeys.IsActive, false);
-        context.Ability.Events.Emit(GameEventType.Ability.Executed, new GameEventType.Ability.ExecutedEventData(context, executed));
-        GlobalEventBus.Global.Emit(GameEventType.Ability.Executed, new GameEventType.Ability.ExecutedEventData(context, executed));
+        context.Ability.Events.Publish(new Executed(context, executed));
 
         return new AbilityTriggerReport(AbilityTriggerResult.Success, executed, string.Empty);
     }
@@ -285,8 +284,6 @@ public sealed class AbilityService
 
     private static void EmitFailed(AbilityCastContext context, AbilityTriggerResult result, string message)
     {
-        var data = new GameEventType.Ability.FailedEventData(context, result, message);
-        context.Ability.Events.Emit(GameEventType.Ability.Failed, data);
-        GlobalEventBus.Global.Emit(GameEventType.Ability.Failed, data);
+        context.Ability.Events.Publish(new Failed(context, result, message));
     }
 }

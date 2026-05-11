@@ -1,19 +1,20 @@
 using SkilmeAI.GameOS.Runtime.Data;
+using SkilmeAI.GameOS.Runtime.Events.Core;
 
 namespace SkilmeAI.GameOS.Runtime.Event;
 
 /// <summary>
-/// Bridges Data notifications into an EventBus.
+/// 把 Data 层的变化桥接到实体 EventBus，发布 Core.DataPropertyChanged 事件。
 /// </summary>
 public sealed class EventDataChangeSink : IDataChangeSink
 {
-    private readonly EventBus events;
+    private readonly IEventBus events;
 
     /// <summary>
-    /// Creates a Data change sink for the target event bus.
+    /// 创建 Data 变化转事件的 sink。
     /// </summary>
-    /// <param name="events">Event bus that receives Data change events.</param>
-    public EventDataChangeSink(EventBus events)
+    /// <param name="events">接收事件的实体 EventBus。</param>
+    public EventDataChangeSink(IEventBus events)
     {
         this.events = events;
     }
@@ -21,6 +22,6 @@ public sealed class EventDataChangeSink : IDataChangeSink
     /// <inheritdoc />
     public void OnDataChanged(DataChangedEventData change)
     {
-        events.Emit(GameEventType.Data.PropertyChanged, new GameEventType.Data.PropertyChangedEventData(change));
+        events.Publish(new DataPropertyChanged(change));
     }
 }

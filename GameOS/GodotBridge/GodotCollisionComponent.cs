@@ -6,7 +6,7 @@ using SkilmeAI.GameOS.Runtime.Entity;
 namespace SkilmeAI.GameOS.GodotBridge;
 
 /// <summary>
-/// 桥接 Entity 根节点 `Area2D` 的碰撞信号到 `GameEventType.Collision`。
+/// 桥接 Entity 根节点 `Area2D` 的碰撞信号到 `Collision.Events.Entered` / `Exited`。
 /// </summary>
 public partial class GodotCollisionComponent : Node, IGodotComponent
 {

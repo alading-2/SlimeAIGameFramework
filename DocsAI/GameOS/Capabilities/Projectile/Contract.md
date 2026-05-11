@@ -26,6 +26,8 @@
 - Schedule
 - Pool（对象池复用）
 
+事件目录：`SkilmeAI/GameOS/Capabilities/Projectile/Events/`
+
 ## 4. 需要哪些其他 Capability
 
 - Movement（投射物移动）
@@ -56,33 +58,22 @@
 | Projectile.DamageType | 伤害类型 |
 | Projectile.DamageTags | 伤害标签 |
 
-## 7. 发布的事件
-
-- `Projectile.Spawned` — 投射物生成
-- `Projectile.Hit` — 命中目标
-- `Projectile.LifeTimeExpired` — 存活时间到期
-- `Projectile.Destroyed` — 销毁完成
-
-## 8. 订阅的事件
-
-无直接订阅。通过 `ProjectileTool.StartMovement()` 和 MovementCollision 回调驱动。
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `ProjectileTool` — 投射物生成和管理
 - `GodotProjectileEffectSpawner`（GodotBridge）— 场景实例化和视觉管理
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 - `ProjectileTool` — 生成、命中处理、生命周期管理
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
 启用：调用 `ProjectileDataKeys.RegisterAll()`。
 
 关闭：停止生成或设置 `MaxLifeTime = 0`。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -91,7 +82,7 @@ Tools/run-tests.sh
 
 覆盖生成、命中、穿透多目标、MaxLifeTime 销毁、视觉节点清理。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -100,7 +91,7 @@ Tools/run-tests.sh
 | 视觉节点残留 | `GodotProjectileEffectSpawner` 未正确清理 |
 | 穿透失效 | `MaxHitCount` 为 1 或 DamageService 未初始化 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

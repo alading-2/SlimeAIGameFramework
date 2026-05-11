@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Collision;
+using SkilmeAI.GameOS.Capabilities.Collision.Events;
 using SkilmeAI.GameOS.Capabilities.Damage;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Timer;
 
 namespace SkilmeAI.GameOS.GodotBridge;
@@ -16,8 +16,8 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
 {
     private readonly Dictionary<string, GameTimer> contactTimers = new(StringComparer.Ordinal);
     private IEntity? entity;
-    private Action<GameEventType.Collision.HurtboxEnteredEventData>? hurtboxEnteredHandler;
-    private Action<GameEventType.Collision.HurtboxExitedEventData>? hurtboxExitedHandler;
+    private IDisposable? hurtboxEnteredToken;
+    private IDisposable? hurtboxExitedToken;
 
     /// <summary>是否忽略同队接触目标。</summary>
     [Export]
@@ -36,32 +36,23 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
     {
         this.entity = entity;
         DamageDataKeys.RegisterAll();
-        hurtboxEnteredHandler = OnHurtboxEntered;
-        hurtboxExitedHandler = OnHurtboxExited;
-        entity.Events.On(GameEventType.Collision.HurtboxEntered, hurtboxEnteredHandler);
-        entity.Events.On(GameEventType.Collision.HurtboxExited, hurtboxExitedHandler);
+        hurtboxEnteredToken = entity.Events.Subscribe<HurtboxEntered>(OnHurtboxEntered);
+        hurtboxExitedToken = entity.Events.Subscribe<HurtboxExited>(OnHurtboxExited);
     }
 
     /// <inheritdoc />
     public void OnComponentUnregistered(IEntity? entity, Node? entityNode)
     {
-        if (this.entity != null && hurtboxEnteredHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Collision.HurtboxEntered, hurtboxEnteredHandler);
-        }
-
-        if (this.entity != null && hurtboxExitedHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Collision.HurtboxExited, hurtboxExitedHandler);
-        }
+        hurtboxEnteredToken?.Dispose();
+        hurtboxExitedToken?.Dispose();
+        hurtboxEnteredToken = null;
+        hurtboxExitedToken = null;
 
         CancelAllTimers();
-        hurtboxEnteredHandler = null;
-        hurtboxExitedHandler = null;
         this.entity = null;
     }
 
-    private void OnHurtboxEntered(GameEventType.Collision.HurtboxEnteredEventData data)
+    private void OnHurtboxEntered(HurtboxEntered data)
     {
         if (entity == null || !CanReceiveContactDamage(entity, data.Contact.Target))
         {
@@ -86,7 +77,7 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
             .OnLoop(() => ApplyContactDamage(data.Contact.Target));
     }
 
-    private void OnHurtboxExited(GameEventType.Collision.HurtboxExitedEventData data)
+    private void OnHurtboxExited(HurtboxExited data)
     {
         CancelTimer(data.Contact.Target.EntityId);
     }

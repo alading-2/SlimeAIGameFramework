@@ -2,6 +2,8 @@ using System;
 using SkilmeAI.GameOS.Capabilities.Collision;
 using SkilmeAI.GameOS.Capabilities.Damage;
 using SkilmeAI.GameOS.Capabilities.Movement;
+using SkilmeAI.GameOS.Capabilities.Movement.Events;
+using SkilmeAI.GameOS.Capabilities.Projectile.Events;
 using SkilmeAI.GameOS.Runtime.Entity;
 using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Relationship;
@@ -64,9 +66,7 @@ public static class ProjectileTool
         projectile.Data.Set(MovementDataKeys.Position, options.SpawnPosition);
         projectile.Data.Set(MovementDataKeys.FacingDirection, direction);
 
-        var data = new GameEventType.Projectile.SpawnedEventData(projectile, options.Source, options.Ability, options.Target);
-        projectile.Events.Emit(GameEventType.Projectile.Spawned, data);
-        GlobalEventBus.Global.Emit(GameEventType.Projectile.Spawned, data);
+        projectile.Events.Publish(new Spawned(projectile, options.Source, options.Ability, options.Target));
         return new ProjectileSpawnResult(projectile, true);
     }
 
@@ -124,9 +124,12 @@ public static class ProjectileTool
         });
         if (started && options.DestroyOnStop)
         {
-            projectile.Events.Once<GameEventType.Movement.StoppedEventData>(
-                GameEventType.Movement.Stopped,
-                _ => DestroyProjectileOnStop(projectile));
+            IDisposable? token = null;
+            token = projectile.Events.Subscribe<Stopped>(_ =>
+            {
+                token?.Dispose();
+                DestroyProjectileOnStop(projectile);
+            });
         }
 
         return started;
@@ -175,14 +178,12 @@ public static class ProjectileTool
             });
         }
 
-        var data = new GameEventType.Projectile.HitEventData(
+        projectile.Events.Publish(new Hit(
             projectile,
             source ?? projectile,
             context.Target,
             context,
-            damage);
-        projectile.Events.Emit(GameEventType.Projectile.Hit, data);
-        GlobalEventBus.Global.Emit(GameEventType.Projectile.Hit, data);
+            damage));
     }
 
     private static float ResolveDamage(IEntity projectile, ProjectileMovementOptions options)

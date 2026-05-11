@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Runtime.Events.Core;
 using SkilmeAI.GameOS.Runtime.Relationship;
 
 namespace SkilmeAI.GameOS.Runtime.Entity;
@@ -45,7 +46,7 @@ public static class EntityManager
         }
 
         Entities.Add(entity.EntityId, entity);
-        GlobalEventBus.Global.Emit(GameEventType.Entity.Spawned, new GameEventType.Entity.LifecycleEventData(entity));
+        entity.Events.Publish(new EntitySpawned(entity));
         return true;
     }
 
@@ -63,9 +64,8 @@ public static class EntityManager
         DestroyOwnedChildren(entityId);
         RelationshipManager.RemoveAllForEntity(entityId);
         Entities.Remove(entityId);
-        entity.Events.Clear();
         entity.Data.Reset();
-        GlobalEventBus.Global.Emit(GameEventType.Entity.Destroyed, new GameEventType.Entity.LifecycleEventData(entity));
+        entity.Events.Publish(new EntityDestroyed(entity));
         return true;
     }
 
@@ -97,18 +97,18 @@ public static class EntityManager
     }
 
     /// <summary>
-    /// 清空实体、事件订阅和关系图。
+    /// 清空实体、关系图和 world bus 状态。
     /// </summary>
     public static void Clear()
     {
         foreach (var entity in Entities.Values)
         {
-            entity.Events.Clear();
             entity.Data.Reset();
         }
 
         Entities.Clear();
         RelationshipManager.Clear();
+        WorldEvents.World.Clear();
     }
 
     /// <summary>

@@ -144,29 +144,27 @@ EventBus artifact 文件名建议：
 artifacts/eventbus-dump.json
 ```
 
-当前 `EventBus` 支持 `On`、`Once`、`Off`、优先级、同事件重入保护、pending removal、`HandlerException` 和 `EventContext.StopPropagation()`。当前实现不暴露订阅表；后续 dump 可以通过 debug-only wrapper 或 instrumentation 输出。
+Runtime EventBus 暴露的唯一导出入口是 `IEventBus.ExportObservation(path)`：`EntityEventBus` 与 `WorldEventBus` 都在内部维护 `EventBusObservation`，记录订阅、发布计数、同类型嵌套阻断和 handler 异常。
 
 Event dump MUST 能区分：
 
 - 没有订阅。
-- once handler 已经执行并移除。
-- handler 在 emit 中被标记 `pendingRemoval`。
-- 同事件重入被 guard 跳过。
-- `EventContext.StopPropagation()` 阻断低优先级 handler。
-- handler exception 被 `HandlerException` 捕获。
+- 订阅被 `IDisposable.Dispose()` 退订。
+- 同类型嵌套被 reentry guard 跳过（per-bus）。
+- handler 抛异常被 `EventBusObservation` 捕获。
 
-建议字段：
+字段：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `busName` | string | `global` 或 entity id。 |
-| `subscriptions` | array | 每个 eventName 的 handler count、once count、priority range。 |
-| `emittingEvents` | string[] | 当前正在 emit 的 event names。 |
-| `pendingRemovalCount` | int | 延迟移除数量。 |
-| `emittedCounts` | object | `eventName -> count`。 |
-| `skippedReentryCounts` | object | `eventName -> count`。 |
-| `flushCount` | int | pending removal flush 次数。 |
-| `handlerExceptions` | array | eventName、handler label、exception type、message。 |
+| `schemaVersion` | string | dump schema 版本。 |
+| `busName` | string | `world` 或 `entity:<id>`。 |
+| `generatedAtUtc` | string | ISO UTC 时间戳。 |
+| `subscriptions` | object | `eventTypeFullName -> { handlerCount, handlers:[{handlerLabel, registrationOrder}] }`。 |
+| `emittedCounts` | object | `eventTypeFullName -> publishCount`。 |
+| `sameTypeReentryBlockedCounts` | object | `eventTypeFullName -> blockedCount`。 |
+| `handlerExceptions` | array | `eventType`、`handlerLabel`、`exceptionType`、`message`。 |
+| `handlerRegistrationOrder` | string[] | `registrationOrder:handlerLabel`，按注册顺序排列。 |
 
 ## Lifecycle Tree 与 Typed References
 

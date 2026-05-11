@@ -28,12 +28,13 @@ M17：DataOS 正式适配最小闭环。
   - `RuntimeDataField`
   - `RuntimeResourceEntry`
 - Runtime Event 最小内核：
-  - `EventBus`
-  - `EventContext`
-  - `GlobalEventBus`
-  - `GameEventType`
-  - `GameEventType.Unit`
+  - `IEvent` / `IEntityEvent` / `IGlobalEvent` / `IBroadcastEvent` marker interface
+  - `IEventBus`
+  - `EntityEventBus`
+  - `WorldEventBus` / `WorldEvents.World`（替换旧 `GlobalEventBus`）
+  - `EventBusObservation`
   - `EventDataChangeSink`
+  - Runtime 事件按目录组织：`Runtime/Events/Core/`（Entity 生命周期、Data 变化、Relationship、Input）、`Runtime/Events/Global/`（Wave、GameState、MouseSelection），Capability 事件在 `Capabilities/<Cap>/Events/`
 - Runtime Entity 最小内核：
   - `IEntity`
   - `RuntimeEntity`
@@ -93,7 +94,7 @@ M17：DataOS 正式适配最小闭环。
   - `AbilityCastContext`
   - `AbilityExecutedResult`
   - `AbilityService`
-  - `GameEventType.Ability`
+  - 事件目录：`Capabilities/Ability/Events/`（`Activated / Executed / Failed`）
 - Feature Capability：
   - `FeatureDataKeys`
   - `FeatureDefinition`
@@ -103,7 +104,7 @@ M17：DataOS 正式适配最小闭环。
   - `IFeatureHandler`
   - `FeatureHandlerRegistry`
   - `FeatureService`
-  - `GameEventType.Feature`
+  - 事件目录：`Capabilities/Feature/Events/`（`Granted / Removed / Enabled / Disabled / Activated / Executed / Ended`）
 - Ability / Feature 接入：
   - `AbilityDataKeys.FeatureHandlerId`
   - `AbilityService` 可选调用 `FeatureService.Activate / End`
@@ -121,13 +122,13 @@ M17：DataOS 正式适配最小闭环。
   - `ProjectileSpawnResult`
   - `ProjectileMovementOptions`
   - `ProjectileTool`
-  - `GameEventType.Projectile`
+  - 事件目录：`Capabilities/Projectile/Events/`（`Spawned / Hit`）
 - Effect Capability：
   - `EffectDataKeys`
   - `EffectSpawnOptions`
   - `EffectSpawnResult`
   - `EffectTool`
-  - `GameEventType.Effect`
+  - 事件目录：`Capabilities/Effect/Events/`（`Spawned`）
 - AI Capability：
   - `AIDataKeys`
   - `AIContext`
@@ -145,7 +146,7 @@ M17：DataOS 正式适配最小闭环。
   - `EnemyBehaviorBlocks`
   - `EnemyBehaviorTreeBuilder`
 - Attack Runtime 事件：
-  - `GameEventType.Attack`
+  - 事件目录：`Capabilities/Attack/Events/`（`Requested / Started / Finished / Cancelled / CancelRequested`）
   - `AttackCancelReason`
 - Attack Capability：
   - `AttackDataKeys`

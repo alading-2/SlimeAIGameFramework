@@ -12,10 +12,15 @@
 - `SkilmeAI.GameOS.Runtime.GameOSInfo.PackageId`
 - `SkilmeAI.GameOS.Runtime.GameOSInfo.Version`
 - `SkilmeAI.GameOS.Runtime.GameOSInfo.Stage`
-- `SkilmeAI.GameOS.Runtime.Event.EventBus`
-- `SkilmeAI.GameOS.Runtime.Event.EventContext`
-- `SkilmeAI.GameOS.Runtime.Event.GlobalEventBus`
-- `SkilmeAI.GameOS.Runtime.Event.GameEventType`
+- `SkilmeAI.GameOS.Runtime.Event.IEvent`
+- `SkilmeAI.GameOS.Runtime.Event.IEntityEvent`
+- `SkilmeAI.GameOS.Runtime.Event.IGlobalEvent`
+- `SkilmeAI.GameOS.Runtime.Event.IBroadcastEvent`
+- `SkilmeAI.GameOS.Runtime.Event.IEventBus`
+- `SkilmeAI.GameOS.Runtime.Event.EntityEventBus`
+- `SkilmeAI.GameOS.Runtime.Event.WorldEventBus`
+- `SkilmeAI.GameOS.Runtime.Event.WorldEvents`
+- `SkilmeAI.GameOS.Runtime.Event.EventBusObservation`
 - `SkilmeAI.GameOS.Runtime.Data.Data`
 - `SkilmeAI.GameOS.Runtime.Data.DataMeta`
 - `SkilmeAI.GameOS.Runtime.Data.DataRegistry`
@@ -110,16 +115,20 @@
 - `DataMeta` 描述运行时键的类型、默认值、数值边界、选项、分类、迁移许可和计算函数。
 - `DataRegistry` 只注册运行时元数据，不承担 Authoring 数据表职责。
 - `IDataChangeSink` 是 Data 到外部通知的解耦接口。
-- `EventDataChangeSink` 将 `DataChangedEventData` 转成 `GameEventType.Data.PropertyChanged` 并发布到目标 `EventBus`。
-- `RuntimeEntity` 默认创建局部 `EventBus`，并让 `Data` 通过 `EventDataChangeSink` 接入 `Entity.Events`。
+- `EventDataChangeSink` 将 `DataChangedEventData` 包装成 `Runtime.Events.Core.DataPropertyChanged` 事件并通过目标 `IEventBus.Publish` 派发。
+- `RuntimeEntity` 默认创建 `EntityEventBus`，并让 `Data` 通过 `EventDataChangeSink` 接入 `Entity.Events`。
 - `DataKeyAttribute` 只负责 authoring config property 到 runtime key 的映射。
 - `RuntimeDataSnapshot` 只消费 DataOS 生成的 JSON snapshot，不在运行时热路径访问 SQLite；它可以按 `table + id/name` 找记录、把字段写入 `Data`，并把资源映射注册到 `ResourceCatalog`。
 
 ## Runtime Event 契约
 
-- `EventBus` 支持 typed / parameterless handler、优先级、Once、Off、同事件重入保护和 `EventContext.StopPropagation()`。
-- `GlobalEventBus.Global` 只承载跨实体 / 系统级低频事件，不作为状态容器。
-- 内置事件名先覆盖 Data、Entity 生命周期和 Relationship 增删；Capability 事件后续随 Capability 迁移扩展。
+- 事件总线只暴露 `Publish<T>(in T) / Subscribe<T>(Action<T>) → IDisposable / ExportObservation(path)` 三个入口；没有 `On / Emit / Once / Off / priority / EventContext`。
+- 事件 payload 是 `readonly record struct` 并实现 `IEntityEvent / IGlobalEvent / IBroadcastEvent` 之一；scope 完全由 marker interface 决定，调用方永远只 `Publish` 一次。
+- `EntityEventBus` 承载实体级事件；`IBroadcastEvent` 会在 Publish 后自动转发到注入的 `WorldEventBus`。反向违规（`IEntityEvent` 到 world bus、`IGlobalEvent` 到 entity bus）会 `log Error` 并 return，不派发。
+- 同类型嵌套 Publish 被阻断：per-bus 检测到正在派发的 `T` 时记录 reentry、log Error、return；跨类型级联和不同 bus 上的同类型 Publish 仍允许。
+- 订阅顺序等于注册顺序；退订唯一路径是 Dispose 由 `Subscribe` 返回的 token。handler 异常被 `EventBusObservation` 捕获，不会中断其他 handler。
+- `WorldEvents.World` 是进程级 world bus 的静态访问点；Capability 事件按目录组织在 `SkilmeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SkilmeAI/GameOS/Runtime/Events/{Core,Global}/`。
+- `ExportObservation` 写 `eventbus-dump.json`，字段覆盖 `schemaVersion`、`busName`、`generatedAtUtc`、`subscriptions`、`emittedCounts`、`sameTypeReentryBlockedCounts`、`handlerExceptions`、`handlerRegistrationOrder`。
 
 ## Runtime Entity 契约
 
@@ -133,7 +142,7 @@
 - `RelationshipManager` 是运行时关系图入口，维护父索引、子索引和类型索引。
 - `RelationshipType.Parent` 是归属主链，`ParentDestroyPolicy` 只写入 PARENT 关系。
 - 父实体销毁时，`DestroyRecursively` 子实体递归销毁，`Detach` 子实体继续存活并断开 PARENT。
-- 关系增删会通过 `GameEventType.Relationship.Added / Removed` 发布低频全局事件。
+- 关系增删会通过 `Runtime.Events.Core.RelationshipAdded / RelationshipRemoved` 发布低频全局事件（`IGlobalEvent`）。
 - 关系查询返回快照集合，避免调用方持有内部索引。
 
 ## Runtime Schedule 契约
@@ -173,7 +182,7 @@
 
 ## Movement Capability 契约
 
-- `MovementSystem` 是纯 C# 调度系统，当前负责 `Start / Stop / Tick`、速度积分、最大时长 / 最大距离停止和 `GameEventType.Movement.Started / Stopped`。
+- `MovementSystem` 是纯 C# 调度系统，当前负责 `Start / Stop / Tick`、速度积分、最大时长 / 最大距离停止和 `Capabilities.Movement.Events.Started / Stopped`。
 - Movement 内核不依赖 `Godot.Vector2` 或 `Node2D`；位置、速度、朝向统一用 `Vector2Value` 写入 `MovementDataKeys`。
 - `MovementDataKeys.Position / Velocity / FacingDirection / IsMoving / MoveSpeed` 是当前稳定 Runtime Data 入口；`MoveSpeed` 支持数值 Modifier。`MovementDataKeys` 也提供 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc 的 handler authoring 参数，供 Ability / Feature handler 从 DataOS 读取后显式映射到 `MovementParams`。
 - 当前已迁入 `MoveMode.Charge / Orbit / SineWave / Parabola / CircularArc`。Charge 支持方向移动、目标点移动、速度、`MaxDuration = -1` 不限制、`MaxDistance = -1` 不限制、`ReachDistance` 到点停止；Orbit 支持固定圆心、半径、初始角、角速度、总角度；SineWave 支持基础方向、速度、振幅、频率和相位；Parabola 支持固定终点、总时长和顶点高度；CircularArc 支持固定终点、半径、方向和总时长。
@@ -193,13 +202,13 @@
 - `GodotNodePool<T>` 管理 Godot Node 池化，支持 `Get(false)` 延迟激活、`Activate`、`Release`、`ReleaseAll`、`Destroy` 和 `PoolStats`。
 - `GodotCollisionIsolation` 负责回池时递归隔离 2D 碰撞：`CollisionObject2D` layer/mask 清零并缓存、`Area2D` 关闭 monitoring/monitorable、`CollisionShape2D / CollisionPolygon2D` 禁用、`CharacterBody2D` 清零速度。
 - `GodotNodePool<T>` 对 `CollisionObject2D` 根节点默认执行泊车位移动和脱树；重新出池时先挂回 `ActiveParent` 并同步禁用碰撞，再由 `Activate` 恢复处理、可见性和碰撞。
-- `GodotContactDamageComponent` 消费 `GameEventType.Collision.HurtboxEntered / HurtboxExited`，只把接触转换为 `DamageService` 请求，不直接修改 HP。
-- `GodotUnitAnimationComponent` 消费 `GameEventType.Unit.PlayAnimationRequested / StopAnimationRequested`，驱动 `VisualRoot` 或子节点中的 `AnimatedSprite2D`，缓存 `UnitDataKeys.AvailableAnimations`，并在非循环动画结束后发布 `GameEventType.Unit.AnimationFinished` 回退到 idle。
+- `GodotContactDamageComponent` 消费 `Capabilities.Collision.Events.HurtboxEntered / HurtboxExited`，只把接触转换为 `DamageService` 请求，不直接修改 HP。
+- `GodotUnitAnimationComponent` 消费 `Capabilities.Unit.Events.PlayAnimationRequested / StopAnimationRequested`，驱动 `VisualRoot` 或子节点中的 `AnimatedSprite2D`，缓存 `UnitDataKeys.AvailableAnimations`，并在非循环动画结束后发布 `Capabilities.Unit.Events.AnimationFinished` 回退到 idle。
 - `GodotAttackComponent` 是普通攻击 Godot bridge 第一段，注册默认 `AttackService`，把导出攻击参数写入 `AttackDataKeys`，并把 Godot 节点目标解析为 Runtime `IEntity` 后交给 `AttackService.TryRequest`。
 - `GodotAttackComponent` 可选把 `Attack.Started / Cancelled` 转成 Unit 动画请求；默认优先使用 `AttackAnimation`，当该动画不在 `UnitDataKeys.AvailableAnimations` 中时，会选择第一个 `attack*` 可用动画作为旧资源兼容回退；`PreferExistingDataOnRegister=true` 时会保留注册前已有 Attack Data。
 - `AttackComponent` 是旧项目类名 / 场景名兼容包装，继承 `GodotAttackComponent`，默认启用 `PreferExistingDataOnRegister`，用于旧场景迁移时保留 DataNew / 初始化流程写入的攻击参数。
 - `GodotAIComponent` 是 AI Godot bridge 第一段，注册时把导出 AI 参数写入 `AIDataKeys`，按 `GodotAIBehaviorTreeKind` 构建 Runtime 行为树，并通过 `_Process` 或 `TickAI(delta)` 调用 `AIService.Tick`；它只写 AI / Movement 意图，不直接移动 Godot 节点。
-- `GodotProjectileEffectSpawner` 监听 `GameEventType.Projectile.Spawned / Effect.Spawned`，从 `ScenePath` 读取 `res://` 路径并通过 `ResourceManagement.LoadPath<PackedScene>` 实例化视觉节点，按 Runtime EntityId 注册到 `GodotNodeRegistry`，并在对应 Runtime Entity 销毁时清理自己生成的视觉节点。
+- `GodotProjectileEffectSpawner` 监听 `Capabilities.Projectile.Events.Spawned / Capabilities.Effect.Events.Spawned`，从 `ScenePath` 读取 `res://` 路径并通过 `ResourceManagement.LoadPath<PackedScene>` 实例化视觉节点，按 Runtime EntityId 注册到 `GodotNodeRegistry`，并在对应 Runtime Entity 销毁时清理自己生成的视觉节点。
 
 ## Damage Capability 契约
 
@@ -229,8 +238,8 @@
 
 ## Projectile Capability 契约
 
-- `ProjectileTool.Spawn` 是当前纯 Runtime 投射物生成入口，生成 `RuntimeEntity`，写入 `ProjectileDataKeys` 和 Movement `Position / FacingDirection`，并发布 `GameEventType.Projectile.Spawned`。
-- `ProjectileTool.StartMovement` 是当前投射物飞行和命中生命周期入口，使用外部传入的 `MovementSystem` 启动移动，并通过 `MovementCollisionParams.OnCollision` 把命中转换为 `DamageService` 伤害结算和 `GameEventType.Projectile.Hit`。
+- `ProjectileTool.Spawn` 是当前纯 Runtime 投射物生成入口，生成 `RuntimeEntity`，写入 `ProjectileDataKeys` 和 Movement `Position / FacingDirection`，并发布 `Capabilities.Projectile.Events.Spawned`。
+- `ProjectileTool.StartMovement` 是当前投射物飞行和命中生命周期入口，使用外部传入的 `MovementSystem` 启动移动，并通过 `MovementCollisionParams.OnCollision` 把命中转换为 `DamageService` 伤害结算和 `Capabilities.Projectile.Events.Hit`。
 - Movement 碰撞在一次位移段内会连续派发多个有效目标，支持 Projectile 同帧穿透；同一次移动内已命中的目标会去重，且会显式跳过移动实体自身。
 - `ProjectileMovementOptions` 当前覆盖 `Mode / Speed / MaxDuration / MaxDistance / ReachDistance / StopAtTarget / ApplyDamageOnHit / StopAfterHitCount / DestroyOnStop / IgnoreSameTeam / TargetMatchMode / SourceRadiusOverride / TargetRadiusOverride / Damage / DamageType / DamageTags`；`StopAfterHitCount` 默认读取 `ProjectileDataKeys.MaxHitCount`，`StopAfterHitCount = -1` 表示只命中通知和伤害但不停止；`MaxDuration` 默认读取 `ProjectileDataKeys.MaxLifeTime`，`-1` 表示不限制。
 - `DestroyOnStop` 对 Projectile 的碰撞停止、到时、到距离和完成停止都生效；默认开启，用于停止后销毁 Runtime 投射物并触发 GodotBridge 清理视觉节点。
@@ -241,7 +250,7 @@
 
 ## Effect Capability 契约
 
-- `EffectTool.Spawn` 是当前纯 Runtime 效果生成入口，生成 `RuntimeEntity`，写入 `EffectDataKeys` 和 Movement `Position`，并发布 `GameEventType.Effect.Spawned`。
+- `EffectTool.Spawn` 是当前纯 Runtime 效果生成入口，生成 `RuntimeEntity`，写入 `EffectDataKeys` 和 Movement `Position`，并发布 `Capabilities.Effect.Events.Spawned`。
 - `EffectDataKeys` 当前覆盖 `ScenePath / Name / AnimationName / SourceEntity / AbilityEntity / TargetEntity / Position / Duration`。
 - `Duration = -1` 表示不自动结束，遵守数值型“不限制”语义。
 - 生成时会绑定 `RelationshipType.EntityToEffect / Source`，有目标实体时额外绑定 `RelationshipType.Target`。
@@ -255,7 +264,7 @@
 - `FeatureDefinition` 当前包含 `FeatureId / HandlerId / Modifiers`；纯属性 Feature 可以只配置 `FeatureModifierEntry`，复杂逻辑通过 `IFeatureHandler` 扩展。
 - `FeatureService.Grant` 会把 `FeatureModifierEntry` 转成 `DataModifier` 写入 Owner Data，Modifier source 标记为 Feature 实体；`Remove` 通过 `Data.RemoveModifiersBySource(feature)` 回滚。
 - `FeatureHandlerRegistry` 以完整 `HandlerId` 查询 handler，不使用分组作为运行时查找键。
-- `GameEventType.Feature` 当前覆盖 Granted / Removed / Enabled / Disabled / Activated / Executed / Ended。
+- `GameEventType.Feature` 已删除；Feature 事件 payload 位于 `SkilmeAI/GameOS/Capabilities/Feature/Events/`，覆盖 `Granted / Removed / Enabled / Disabled / Activated / Executed / Ended`。
 - `FeatureDataKeys` 当前覆盖 Feature Id / HandlerId / 描述 / 分类 / 启用状态和 modifier authoring 字段；复杂 Feature action 仍通过 handler 扩展。
 
 ## AI Capability 契约
@@ -267,7 +276,7 @@
 - `MoveToTargetAction` 只写 `MovementDataKeys.AIMoveDirection / AIMoveSpeedMultiplier`，由 `AIControlledMovementStrategy` 实际移动。
 - `FindNearestTargetAction` 当前从 `EntityManager.GetAll()` 快照查询最近目标，支持 `range = -1` 不限距离、同队过滤、死亡过滤，并写入 `AIDataKeys.TargetEntity / TargetPosition / HasTargetPosition`。
 - `IsTargetInRangeCondition` 使用当前目标实体或目标点检查距离，`range = -1` 表示不限距离；范围可从固定值或 DataKey 读取。
-- `RequestAttackAction` 发出 `GameEventType.Attack.Requested`，payload 使用纯 Runtime `IEntity` 目标和 `Vector2Value` 目标点；动作会写入 `AIMoveDirection` 面向目标、`AIMoveSpeedMultiplier = 0` 停步，并把 `AIDataKeys.IsAttackRequested` 标记为本 Tick 已请求。
+- `RequestAttackAction` 发出 `Capabilities.Attack.Events.Requested`，payload 使用纯 Runtime `IEntity` 目标和 `Vector2Value` 目标点；动作会写入 `AIMoveDirection` 面向目标、`AIMoveSpeedMultiplier = 0` 停步，并把 `AIDataKeys.IsAttackRequested` 标记为本 Tick 已请求。
 - `PatrolAction` 是当前确定性巡逻最小动作，读取 `AIDataKeys.PatrolCenter / PatrolRadius / PatrolWaitTime`，写入 `PatrolTargetPosition / PatrolWaitRemaining` 和 `MovementDataKeys.AIMoveDirection / AIMoveSpeedMultiplier`；不直接移动 Godot 节点。
 - `EnemyBehaviorBlocks` 当前提供 `AttackBranch / ChaseBranch / PatrolBranch / AbilityAutoTriggerBranch`，只组合现有纯 Runtime 节点。
 - `EnemyBehaviorTreeBuilder` 当前提供 `BuildMeleeEnemyTree / BuildAbilityMeleeEnemyTree / BuildPatrolOnlyTree / BuildChaserTree` 预制树，标准近战树顺序是攻击优先、追逐其次、巡逻兜底。
@@ -277,7 +286,7 @@
 
 ## Attack Capability 契约
 
-- `AttackService` 是当前普通攻击最小 Runtime 入口，可直接调用 `TryRequest(...)`，也可通过 `Register(entity)` 订阅实体局部 `GameEventType.Attack.Requested`。
+- `AttackService` 是当前普通攻击最小 Runtime 入口，可直接调用 `TryRequest(...)`，也可通过 `Register(entity)` 订阅实体局部 `Capabilities.Attack.Events.Requested`。
 - `AttackDataKeys.Damage / Range / Interval / WindUpTime / RecoveryTime / CanAttack / IsAttacking / State / CooldownRemaining` 是当前稳定 Data 入口。
 - `TryRequest` 会检查目标、攻击者死亡、目标死亡、`CanAttack`、攻击占用状态、冷却和距离；通过后发布 `Attack.Started`，进入前摇或立即结算。
 - 命中结算统一调用 `DamageService`，伤害标签固定带 `DamageTags.Attack`，不直接修改 HP。
@@ -288,7 +297,7 @@
 当前不包含：
 
 - 旧 `IEntity` 直接依赖。
-- 旧全局命名空间 `GameEventType` 直接依赖。
+- 旧全局命名空间 `GameEventType`、`GlobalEventBus`、`EventContext`、`EventPriority` 或 `On / Emit / Once / Off` API。
 - Godot headless 场景断言。
 - PhysicsServer2D trace 读取协议。
 - Capability 层：Ability 点选目标上下文、自动索敌第一段、Projectile / Effect 纯 Runtime 生成入口、Projectile 命中生命周期、Projectile 穿透 / 生命周期扩展、Godot 实例化第一段和 Effect 动画播放第一段已迁入；DataOS authoring 已建立 schema / migration / generator / validator / Runtime snapshot loader 最小闭环；AI 巡逻最小 Runtime、行为树预制块、Ability 自动索敌上下文准备和 Godot AIComponent bridge 第一段已迁入；GodotAttackComponent、Attack 动画事件桥、旧 Attack 动画选择兼容和旧 AttackComponent 类名兼容包装已迁入；Movement 已完成旧 `MoveMode` 纯 C# 策略、Godot 2D 位移桥、运动碰撞、同帧多命中、Godot Physics broadphase 和 Godot Orientation 第一段；Collision / Damage / Attack 已完成第一段。

@@ -1,7 +1,8 @@
 using System;
+using SkilmeAI.GameOS.Capabilities.Damage;
+using SkilmeAI.GameOS.Capabilities.Feature.Events;
 using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.Capabilities.Feature;
 
@@ -42,9 +43,7 @@ public sealed class FeatureService
         var context = new FeatureContext { Owner = owner, Feature = feature, Definition = definition };
         FeatureHandlerRegistry.Get(definition.HandlerId)?.OnGranted(context);
 
-        var data = new GameEventType.Feature.ChangedEventData(owner, feature, definition);
-        owner.Events.Emit(GameEventType.Feature.Granted, data);
-        GlobalEventBus.Global.Emit(GameEventType.Feature.Granted, data);
+        owner.Events.Publish(new Granted(owner, feature, definition));
         return context;
     }
 
@@ -63,9 +62,7 @@ public sealed class FeatureService
         FeatureHandlerRegistry.Get(definition.HandlerId)?.OnRemoved(context);
         owner.Data.RemoveModifiersBySource(feature);
 
-        var data = new GameEventType.Feature.ChangedEventData(owner, feature, definition);
-        owner.Events.Emit(GameEventType.Feature.Removed, data);
-        GlobalEventBus.Global.Emit(GameEventType.Feature.Removed, data);
+        owner.Events.Publish(new Removed(owner, feature, definition));
     }
 
     /// <summary>
@@ -85,16 +82,12 @@ public sealed class FeatureService
         var handler = FeatureHandlerRegistry.Get(definition.HandlerId);
         handler?.OnActivated(context);
 
-        var activated = new GameEventType.Feature.ContextEventData(context);
-        context.Feature.Events.Emit(GameEventType.Feature.Activated, activated);
-        GlobalEventBus.Global.Emit(GameEventType.Feature.Activated, activated);
+        context.Feature.Events.Publish(new Activated(context));
 
         context.ExecuteResult = handler?.OnExecute(context);
         context.Feature.Data.Add(FeatureDataKeys.ActivationCount, 1);
 
-        var executed = new GameEventType.Feature.ContextEventData(context);
-        context.Feature.Events.Emit(GameEventType.Feature.Executed, executed);
-        GlobalEventBus.Global.Emit(GameEventType.Feature.Executed, executed);
+        context.Feature.Events.Publish(new Executed(context));
         return context;
     }
 
@@ -115,9 +108,7 @@ public sealed class FeatureService
         var definition = context.Definition ?? ReadDefinition(context.Feature);
         FeatureHandlerRegistry.Get(definition.HandlerId)?.OnEnded(context, reason);
 
-        var ended = new GameEventType.Feature.EndedEventData(context, reason);
-        context.Feature.Events.Emit(GameEventType.Feature.Ended, ended);
-        GlobalEventBus.Global.Emit(GameEventType.Feature.Ended, ended);
+        context.Feature.Events.Publish(new Ended(context, reason));
     }
 
     /// <summary>
@@ -148,12 +139,12 @@ public sealed class FeatureService
         if (enabled)
         {
             FeatureHandlerRegistry.Get(definition.HandlerId)?.OnEnabled(context);
-            owner.Events.Emit(GameEventType.Feature.Enabled, new GameEventType.Feature.ChangedEventData(owner, feature, definition));
+            owner.Events.Publish(new Enabled(owner, feature, definition));
         }
         else
         {
             FeatureHandlerRegistry.Get(definition.HandlerId)?.OnDisabled(context);
-            owner.Events.Emit(GameEventType.Feature.Disabled, new GameEventType.Feature.ChangedEventData(owner, feature, definition));
+            owner.Events.Publish(new Disabled(owner, feature, definition));
         }
     }
 

@@ -26,6 +26,8 @@ Feature 是"做什么"，Ability 是"何时做"。
 - Event
 - Schedule
 
+事件目录：`SkilmeAI/GameOS/Capabilities/Feature/Events/`
+
 ## 4. 需要哪些其他 Capability
 
 无。Feature 是基础框架 Capability，被 Ability 依赖。
@@ -50,24 +52,13 @@ Modifier 通过 Data.Modifier API 写入目标 DataKey。
 | Feature.ModifierType | Modifier 类型 |
 | Feature.ModifierValue | Modifier 数值 |
 
-## 7. 发布的事件
-
-- `Feature.Activated` — Feature 激活
-- `Feature.Deactivated` — Feature 停用
-- `Feature.ModifierApplied` — Modifier 已应用
-- `Feature.ModifierRemoved` — Modifier 已移除
-
-## 8. 订阅的事件
-
-无直接订阅。通过 `FeatureService.Activate()` 被动调用。
-
-## 9. 挂载的 Component
+## 7. 挂载的 Component
 
 - `FeatureService` — 全局 Feature 服务
 - `FeatureHandlerRegistry` — Handler 注册表
 - `IFeatureHandler` — Handler 接口
 
-## 10. 注册的 System / Strategy / Handler
+## 8. 注册的 System / Strategy / Handler
 
 - `FeatureService` — Schedule Update 阶段 Tick
 - `FeatureHandlerRegistry` — Handler 注册和查找
@@ -78,13 +69,13 @@ Modifier 通过 Data.Modifier API 写入目标 DataKey。
 - `技能.被动.环绕技能`
 - 等等（见 `BrotatoLikeAbilityHandlers`）
 
-## 11. 如何启用和关闭
+## 9. 如何启用和关闭
 
 启用：调用 `FeatureDataKeys.RegisterAll()`，注册 Handler，通过 `FeatureService.Activate()` 激活。
 
 关闭：调用 `FeatureService.Deactivate()` 或设置 `IsEnabled = false`。
 
-## 12. 如何测试
+## 10. 如何测试
 
 ```bash
 cd /home/slime/Code/SkilmeAI/SkilmeAI
@@ -93,7 +84,7 @@ Tools/run-tests.sh
 
 覆盖 Modifier 授予/回滚、handler 生命周期、ActivationCount。
 
-## 13. 常见错误日志
+## 11. 常见错误日志
 
 | 日志/症状 | 根因 |
 |-----------|------|
@@ -101,7 +92,7 @@ Tools/run-tests.sh
 | Modifier 不生效 | `ModifierTargetKey` 错误或目标 DataKey 不支持 Modifier |
 | Feature 重复激活 | 未检查 `IsActive` 状态 |
 
-## 14. AI 修改边界
+## 12. AI 修改边界
 
 ### 可以修改
 

@@ -36,7 +36,7 @@
 ## 修改规则
 
 - 新 DataKey 必须通过对应 `*DataKeys.cs` 和 `DataMeta` 注册，不新增散落字符串访问。
-- 新 Event 优先挂到对应 Capability 的 `GameEventType` 分组。
+- 新 Event 按 Capability 放入 `SkilmeAI/GameOS/Capabilities/<Cap>/Events/<Name>.cs`，每个事件为 `readonly record struct` 并实现 `IEntityEvent / IGlobalEvent / IBroadcastEvent` 之一；跨 Capability 的 Runtime 级事件放 `Runtime/Events/{Core,Global}/`。
 - Capability service 只处理本能力职责，不直接吞掉其他 Capability 的状态真相源。
 - 纯 Runtime Capability 不依赖 Godot `Node`、`Vector2` 或资源加载。
 - GodotBridge 只做 Node / SceneTree / Physics / Input / Resource 适配，不把 Godot Node tree 当玩法状态真相源。

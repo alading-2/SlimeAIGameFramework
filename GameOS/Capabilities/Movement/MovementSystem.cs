@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Schedule;
+using MovementEvents = SkilmeAI.GameOS.Capabilities.Movement.Events;
 
 namespace SkilmeAI.GameOS.Capabilities.Movement;
 
@@ -70,7 +70,7 @@ public sealed class MovementSystem : IRuntimeSystem
         };
 
         entity.Data.Set(MovementDataKeys.IsMoving, true);
-        entity.Events.Emit(GameEventType.Movement.Started, new GameEventType.Movement.StartedEventData(entity, movementParams));
+        entity.Events.Publish(new MovementEvents.Started(entity, movementParams));
         return true;
     }
 
@@ -251,7 +251,7 @@ public sealed class MovementSystem : IRuntimeSystem
         collisionParams?.OnCollision?.Invoke(context);
         if (collisionParams?.EmitCollisionEvent != false)
         {
-            entity.Events.Emit(GameEventType.Movement.Collision, new GameEventType.Movement.CollisionEventData(context));
+            entity.Events.Publish(new MovementEvents.Collision(context));
         }
     }
 
@@ -264,6 +264,6 @@ public sealed class MovementSystem : IRuntimeSystem
         var finalPosition = entity.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
         var context = new MovementStopContext(entity, active.Params, reason, finalPosition);
         active.Strategy.OnStop(entity, entity.Data, in context);
-        entity.Events.Emit(GameEventType.Movement.Stopped, new GameEventType.Movement.StoppedEventData(context));
+        entity.Events.Publish(new MovementEvents.Stopped(context));
     }
 }

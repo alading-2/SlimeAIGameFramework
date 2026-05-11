@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SkilmeAI.GameOS.Runtime.Event;
+using SkilmeAI.GameOS.Runtime.Events.Core;
 
 namespace SkilmeAI.GameOS.Runtime.Relationship;
 
@@ -68,9 +69,7 @@ public static class RelationshipManager
         GetOrCreateSet(ChildIndex, childId).Add(relationshipId);
         GetOrCreateSet(TypeIndex, relationType).Add(relationshipId);
 
-        GlobalEventBus.Global.Emit(
-            GameEventType.Relationship.Added,
-            new GameEventType.Relationship.ChangedEventData(parentId, childId, relationType));
+        WorldEvents.World.Publish(new RelationshipAdded(parentId, childId, relationType));
         return true;
     }
 
@@ -96,9 +95,7 @@ public static class RelationshipManager
         CleanupEmptySet(ChildIndex, childId);
         CleanupEmptySet(TypeIndex, relationType);
 
-        GlobalEventBus.Global.Emit(
-            GameEventType.Relationship.Removed,
-            new GameEventType.Relationship.ChangedEventData(parentId, childId, relationType));
+        WorldEvents.World.Publish(new RelationshipRemoved(parentId, childId, relationType));
         return true;
     }
 

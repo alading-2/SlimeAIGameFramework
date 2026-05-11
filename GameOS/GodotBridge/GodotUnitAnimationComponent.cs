@@ -1,9 +1,9 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Unit;
+using SkilmeAI.GameOS.Capabilities.Unit.Events;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.GodotBridge;
 
@@ -14,8 +14,8 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
 {
     private IEntity? entity;
     private AnimatedSprite2D? sprite;
-    private Action<GameEventType.Unit.PlayAnimationRequestedEventData>? playHandler;
-    private Action<GameEventType.Unit.StopAnimationRequestedEventData>? stopHandler;
+    private IDisposable? playToken;
+    private IDisposable? stopToken;
     private bool isOneShotAnimation;
 
     /// <summary>默认待机动画名。</summary>
@@ -35,10 +35,8 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
         this.entity = entity;
         UnitDataKeys.RegisterAll();
         sprite = ResolveSprite(entityNode);
-        playHandler = OnPlayAnimationRequested;
-        stopHandler = OnStopAnimationRequested;
-        entity.Events.On(GameEventType.Unit.PlayAnimationRequested, playHandler);
-        entity.Events.On(GameEventType.Unit.StopAnimationRequested, stopHandler);
+        playToken = entity.Events.Subscribe<PlayAnimationRequested>(OnPlayAnimationRequested);
+        stopToken = entity.Events.Subscribe<StopAnimationRequested>(OnStopAnimationRequested);
 
         if (sprite != null)
         {
@@ -54,30 +52,23 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
     /// <inheritdoc />
     public void OnComponentUnregistered(IEntity? entity, Node? entityNode)
     {
-        if (this.entity != null && playHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Unit.PlayAnimationRequested, playHandler);
-        }
-
-        if (this.entity != null && stopHandler != null)
-        {
-            this.entity.Events.Off(GameEventType.Unit.StopAnimationRequested, stopHandler);
-        }
+        playToken?.Dispose();
+        stopToken?.Dispose();
+        playToken = null;
+        stopToken = null;
 
         if (sprite != null && GodotObject.IsInstanceValid(sprite))
         {
             sprite.AnimationFinished -= OnAnimationFinished;
         }
 
-        playHandler = null;
-        stopHandler = null;
         sprite = null;
         this.entity = null;
         CurrentAnimation = string.Empty;
         isOneShotAnimation = false;
     }
 
-    private void OnPlayAnimationRequested(GameEventType.Unit.PlayAnimationRequestedEventData data)
+    private void OnPlayAnimationRequested(PlayAnimationRequested data)
     {
         if (entity == null || data.Entity.EntityId != entity.EntityId)
         {
@@ -87,7 +78,7 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
         Play(data.AnimationName, data.ForceRestart, data.Duration);
     }
 
-    private void OnStopAnimationRequested(GameEventType.Unit.StopAnimationRequestedEventData data)
+    private void OnStopAnimationRequested(StopAnimationRequested data)
     {
         if (entity == null || data.Entity.EntityId != entity.EntityId || sprite == null)
         {
@@ -154,9 +145,7 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
 
         var finishedAnimation = CurrentAnimation;
         isOneShotAnimation = false;
-        entity.Events.Emit(
-            GameEventType.Unit.AnimationFinished,
-            new GameEventType.Unit.AnimationFinishedEventData(entity, finishedAnimation));
+        entity.Events.Publish(new AnimationFinished(entity, finishedAnimation));
 
         if (finishedAnimation != IdleAnimation)
         {

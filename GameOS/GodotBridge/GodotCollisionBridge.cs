@@ -1,8 +1,8 @@
 using System;
 using Godot;
 using SkilmeAI.GameOS.Capabilities.Collision;
+using SkilmeAI.GameOS.Capabilities.Collision.Events;
 using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
 
 namespace SkilmeAI.GameOS.GodotBridge;
 
@@ -77,18 +77,31 @@ public static class GodotCollisionBridge
     /// </summary>
     public static bool EmitHurtboxEntered(IEntity source, Node targetNode, CollisionFilterPolicy policy = default)
     {
-        return EmitHurtboxEvent(source, targetNode, GameEventType.Collision.HurtboxEntered, policy);
+        var target = ResolveOwningEntity(targetNode);
+        if (target == null)
+        {
+            return false;
+        }
+
+        var collisionSystem = new CollisionSystem();
+        if (!collisionSystem.CanCollide(source, target, policy))
+        {
+            return false;
+        }
+
+        var contact = new CollisionContact(
+            source,
+            target,
+            source.Data.Get<uint>(CollisionDataKeys.CollisionLayer, 0u),
+            target.Data.Get<uint>(CollisionDataKeys.CollisionLayer, 0u));
+        source.Events.Publish(new HurtboxEntered(contact));
+        return true;
     }
 
     /// <summary>
     /// 发射 Hurtbox 离开事件。
     /// </summary>
     public static bool EmitHurtboxExited(IEntity source, Node targetNode, CollisionFilterPolicy policy = default)
-    {
-        return EmitHurtboxEvent(source, targetNode, GameEventType.Collision.HurtboxExited, policy);
-    }
-
-    private static bool EmitHurtboxEvent(IEntity source, Node targetNode, string eventType, CollisionFilterPolicy policy)
     {
         var target = ResolveOwningEntity(targetNode);
         if (target == null)
@@ -107,13 +120,7 @@ public static class GodotCollisionBridge
             target,
             source.Data.Get<uint>(CollisionDataKeys.CollisionLayer, 0u),
             target.Data.Get<uint>(CollisionDataKeys.CollisionLayer, 0u));
-        if (eventType == GameEventType.Collision.HurtboxExited)
-        {
-            source.Events.Emit(eventType, new GameEventType.Collision.HurtboxExitedEventData(contact));
-            return true;
-        }
-
-        source.Events.Emit(eventType, new GameEventType.Collision.HurtboxEnteredEventData(contact));
+        source.Events.Publish(new HurtboxExited(contact));
         return true;
     }
 
