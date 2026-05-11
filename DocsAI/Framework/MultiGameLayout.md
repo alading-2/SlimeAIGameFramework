@@ -113,10 +113,14 @@ cd BrotatoLike && git submodule update --init
 
 ## csproj 配置
 
-游戏 csproj 当前使用 `<ProjectReference>`（过渡期）：
+**过渡期**：游戏 csproj 通过 `ProjectReference` 引用独立工作树的框架项目：
 
 ```xml
-<ProjectReference Include="SkilmeAI/GameOS/SkilmeAI.GameOS.csproj" />
+<ProjectReference Include="../../SkilmeAI/GameOS/SkilmeAI.GameOS.csproj" />
 ```
 
-最终形态可改为纯 glob（删除 ProjectReference，依赖默认 `**/*.cs`）。两种都能工作，区别在于 ProjectReference 保留了 assembly 边界（IDE 智能提示更精确），glob 更简单但所有代码混入同一 assembly。
+- `../../SkilmeAI/` 指向工作区根下的框架独立工作树（`/home/slime/Code/SkilmeAI/SkilmeAI`），不是 git submodule 目录。
+- `ScriptPathAttributeGenerator` 基于游戏 csproj 的 `GodotProjectDir`（= 游戏仓根）生成路径，如 `res://SkilmeAI/GameOS/GodotBridge/GodotEntity2D.cs`。
+- 游戏 csproj 默认 `**/*.cs` glob 会自动包含 `SkilmeAI/` submodule 目录下的源码；需用 `<Compile Remove="SkilmeAI/Tests/**/*.cs" />` 排除测试文件。
+
+**最终形态**：改为 `SkilmeAI/GameOS/SkilmeAI.GameOS.csproj`（引用 submodule 内项目）或纯 glob（删除 ProjectReference，依赖默认 `**/*.cs`）。两者区别在于 ProjectReference 保留了 assembly 边界（IDE 智能提示更精确），glob 更简单但所有代码混入同一 assembly。

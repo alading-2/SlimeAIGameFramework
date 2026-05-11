@@ -6,9 +6,9 @@
 
 | API | 类型 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| `SkilmeAI.GameOS.Runtime.GameOSInfo` | static class | bootstrap | 包身份和迁移阶段标记。 |
-| `GameOSInfo.PackageId` | const string | stable | `SkilmeAI.GameOS`。 |
-| `GameOSInfo.Version` | const string | bootstrap | 当前包版本。 |
+| `SkilmeAI.GameOS.Runtime.GameOSInfo` | static class | bootstrap | 框架身份和迁移阶段标记。 |
+| `GameOSInfo.FrameworkId` | const string | stable | `SkilmeAI.GameOS`。 |
+| `GameOSInfo.Version` | const string | bootstrap | 当前框架版本。 |
 | `GameOSInfo.Stage` | const string | bootstrap | 当前迁移阶段。 |
 | `SkilmeAI.GameOS.Runtime.Data.Data` | class | migrated | 运行时动态数据容器。 |
 | `SkilmeAI.GameOS.Runtime.Data.DataMeta` | class | migrated | Data key 元数据和约束。 |

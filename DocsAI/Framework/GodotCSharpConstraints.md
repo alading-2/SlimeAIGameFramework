@@ -2,6 +2,17 @@
 
 本文档记录 Godot 4.6.2 引擎中 C# 脚本与场景加载的硬约束，基于引擎源码分析。这些约束决定了框架不能通过 NuGet 或 ProjectReference 共享 `.tscn` 场景。
 
+## C# 优先边界
+
+SkilmeAI 的纯 Runtime、DataOS tooling、验证入口和普通数据处理优先使用 C# 标准库与框架 API，不默认使用 Godot helper：
+
+- JSON 读写优先 `System.Text.Json`。
+- 普通文件和目录优先 `System.IO`。
+- 集合、排序、过滤、时间、随机数优先 .NET API 或框架内注入接口。
+- 只有 `Node`、`SceneTree`、Physics、Input、Resource、可视化实例化、场景生命周期和 `res://` 资源边界进入 GodotBridge。
+
+这条规则不是语言偏好，而是 AI-first 边界：纯逻辑越少依赖 Godot，越容易用 `dotnet build` / Runtime tests 验证，也越不容易把 Godot 场景树误当玩法状态真相源。
+
 ## 核心链路
 
 ```
@@ -81,6 +92,35 @@ Godot 加载 C# 脚本的完整路径：
 - 所有用框架的游戏都要换成 fork runtime，NuGet 路线完全破产。
 
 结论：**不改引擎**。
+
+## 常见误解澄清
+
+### "非直接运行的子场景可以放框架 NuGet 包里吗？"
+
+**不能。** 无论场景是主场景还是子场景（PackedScene）、是否"直接运行"，Godot 加载时统一走 `AddScriptBridge` → `_pathTypeBiMap` 查询（`csharp_script.cpp:2612`）。只要 `.tscn` 里的 `ExtResource(type="Script")` 指向一个 C# 脚本，该脚本就必须在主 assembly 的扫描范围内。
+
+NuGet 包的 `.cs` 在运行时可作为**基类/组件**被代码继承（`.NET assembly 加载`机制），但其 `[ScriptPathAttribute]` 不会进入主 assembly 的 `_pathTypeBiMap`。场景加载时脚本挂载失败，节点变为无脚本的普通 Node。
+
+### "ProjectReference 的脚本可以代码继承，为什么场景里不能挂载？"
+
+这是两个不同机制：
+
+- **代码继承**：`.NET` 的 assembly 加载机制。ProjectReference 的 type 对主项目完全可见。`class MyEntity : GodotEntity2D` 完全合法。
+- **场景挂载**：Godot 的 `ScriptManagerBridge` 通过 `[ScriptPathAttribute]` 建立 `res://` → `Type` 映射。这个映射只在主 assembly 内建立，被引用 assembly 的 attribute 被忽略。
+
+**结论**：NuGet / ProjectReference 适合共享**可代码实例化的基类和工具类**，不适合共享**需要被场景直接挂载的脚本**。因此 SkilmeAI 采用 `git submodule` 源码级复用（框架源码物理嵌入游戏 `res://` 空间，统一编译进游戏主 assembly），而非 NuGet / 外部 ProjectReference。
+
+## 换语言能解决问题吗？
+
+**不能。** Godot 对 `.tscn` 的加载约束根源在**资源系统**（`res://` 根目录 + `ScriptManagerBridge` 单 assembly 扫描），不在 C# 语言绑定层。
+
+| 方案 | 能否共享 .tscn | 原因 |
+|------|---------------|------|
+| GDScript | 不能 | 同样受 `res://` 限制，无法从外部包加载场景 |
+| C++ 模块 / GDExtension | 不能 | 同样需要通过 `res://` 加载脚本资源 |
+| Rust / Bevy | 不适用 | Bevy 是不同引擎，无 Godot 式场景编辑器工作流 |
+
+改引擎 fork 的成本见下节。结论：Godot 的约束是**引擎架构级**（无虚拟文件系统），不是语言绑定层的问题。
 
 ## 与 Unity UPM 的本质差异
 

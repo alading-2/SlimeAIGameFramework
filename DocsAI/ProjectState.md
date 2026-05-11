@@ -12,6 +12,8 @@ Runtime 事件系统（`openspec/changes/rebuild-event-system`）已完成全仓
 
 DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、Agent Protocol、Observation 和 Godot 场景测试文档集中在 `SkilmeAI/DocsAI/`；源码目录只保留允许例外和操作指针。
 
+AI 新功能开发入口已补齐：新增 `.codex/skills/ai-feature-development` 和 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md`，作为每次写新功能、扩展能力、迁移旧逻辑或重构框架行为前的前置入口；该入口强调 AI 可路由、可验证、可观察优先，不为旧框架兼容保留新入口，并把纯 Runtime / DataOS tooling 的普通数据处理收束到 C# 标准库和框架 API。
+
 GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。
 
 ## 下一步

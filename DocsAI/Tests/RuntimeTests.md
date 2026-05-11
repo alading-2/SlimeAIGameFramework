@@ -63,11 +63,10 @@ Tools/run-dataos-validate.sh
 dotnet run --project Tests/SkilmeAI.GameOS.Tests/SkilmeAI.GameOS.Tests.csproj
 ```
 
-## 与构建和打包的关系
+## 与构建的关系
 
 - `SkilmeAI.slnx` 包含 `Tests/SkilmeAI.GameOS.Tests/`，所以 `Tools/run-build.sh` 会构建测试项目。
 - `Tools/run-tests.sh` 会执行测试项目。
-- `Tools/run-pack.sh` 只打包 `GameOS/SkilmeAI.GameOS.csproj` 到 `Packages/LocalNuGet`，不会打包 `Tests/`。
 
 ## 什么时候补测试
 

@@ -10,6 +10,7 @@
 
 ## 计划协议
 
+- `Protocols/AIFeatureDevelopmentProtocol.md`：每次写新功能、扩展能力、迁移旧逻辑或重构框架行为前的 AI-first 开发入口；先调用 `.codex/skills/ai-feature-development`，再进入 owner skill。
 - `Protocols/OpenSpecChangeProtocol.md`：框架级计划事实源和 change 生命周期协议。
 
 后续长期任务默认进入 `openspec/changes/<change>/`。`plan` / `ralplan` 只作为澄清、评审和风险收敛手段；需要落盘时写入 OpenSpec artifact。

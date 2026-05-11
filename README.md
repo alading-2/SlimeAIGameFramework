@@ -28,7 +28,6 @@ openspec instructions apply --change "<change>" --json
 
 ```bash
 Tools/run-build.sh
-Tools/run-pack.sh
 ```
 
 当前构建目标是 `GameOS/SkilmeAI.GameOS.csproj`。

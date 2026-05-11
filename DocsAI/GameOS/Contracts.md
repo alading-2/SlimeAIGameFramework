@@ -5,11 +5,11 @@
 
 ## 当前契约
 
-当前包已建立构建边界、发布身份，并迁入 Runtime 最小内核：Data / Event / Entity / Relationship / Schedule / Resource / Pool / Timer，GodotBridge 第一版和 Node 池化 / 碰撞隔离扩展第一段，以及 Movement / Collision / Damage / Ability / Feature / AI / Attack / Projectile / Effect Capability 第一批。
+当前框架已建立构建边界、发布身份，并迁入 Runtime 最小内核：Data / Event / Entity / Relationship / Schedule / Resource / Pool / Timer，GodotBridge 第一版和 Node 池化 / 碰撞隔离扩展第一段，以及 Movement / Collision / Damage / Ability / Feature / AI / Attack / Projectile / Effect Capability 第一批。
 
 已存在的稳定入口：
 
-- `SkilmeAI.GameOS.Runtime.GameOSInfo.PackageId`
+- `SkilmeAI.GameOS.Runtime.GameOSInfo.FrameworkId`
 - `SkilmeAI.GameOS.Runtime.GameOSInfo.Version`
 - `SkilmeAI.GameOS.Runtime.GameOSInfo.Stage`
 - `SkilmeAI.GameOS.Runtime.Event.IEvent`
@@ -313,4 +313,4 @@
 
 - Runtime API 改动必须同步本文件和 `ApiIndex.md`。
 - Capability 新增必须带 manifest、`Contract.md`、测试和 Debug 文档。
-- 发布包前必须通过 `Tools/run-build.sh` 和 `Tools/run-tests.sh`。
+- 发布前必须通过 `Tools/run-build.sh` 和 `Tools/run-tests.sh`。

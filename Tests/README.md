@@ -4,8 +4,6 @@
 
 它可以理解为不启动 Godot 的最小 GameOS 运行沙盘：手动创建 Runtime Entity、写入 DataKey、调用 Runtime service，并断言结果。
 
-它不是打包目录。打包入口是 `Tools/run-pack.sh`，输出到 `Packages/LocalNuGet`。
-
 ## 用途
 
 - 快速验证 GameOS 纯 C# Runtime 规则没有被破坏。
@@ -21,7 +19,7 @@ cd /home/slime/Code/SkilmeAI/SkilmeAI
 Tools/run-tests.sh
 ```
 
-`Tools/run-build.sh` 会构建测试项目；`Tools/run-tests.sh` 会执行测试项目；`Tools/run-pack.sh` 不会打包测试项目。
+`Tools/run-build.sh` 会构建测试项目；`Tools/run-tests.sh` 会执行测试项目。
 
 ## 文档
 
