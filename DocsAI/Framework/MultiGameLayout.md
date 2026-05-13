@@ -46,46 +46,8 @@ Games/BrotatoLike/          (游戏仓根 = project.godot 所在 = res:// 根)
 ## 版本管理
 
 - submodule commit hash = 框架版本号，天然写在游戏仓的 git 记录里。
-- 游戏锁定版本：不更新 submodule 指针即可。
-- 游戏升级框架：`cd SkilmeAI && git pull origin main && cd .. && git add SkilmeAI && git commit -m "bump SkilmeAI to <commit>"`。
 - SkilmeAI 仓可用 tag 标记里程碑版本（如 `v0.3.0`）。
-
-## 工作流
-
-### 日常开发
-
-```bash
-# 在 SkilmeAI 仓开发框架
-cd /home/slime/Code/SkilmeAI/SkilmeAI
-# 改代码、改场景...
-git add . && git commit -m "..." && git push SlimeAIGameFramework main
-
-# 在游戏仓拉取更新
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
-cd SkilmeAI && git pull && cd ..
-git add SkilmeAI && git commit -m "bump SkilmeAI"
-git push BrotatoLike main
-```
-
-### 新游戏接入
-
-```bash
-mkdir Games/Game2 && cd Games/Game2
-# 初始化 Godot 项目（project.godot + Game2.csproj）
-git init && git remote add origin <url>
-git submodule add https://github.com/alading-2/SlimeAIGameFramework.git SkilmeAI
-# Game2.csproj 默认 **/*.cs glob 自动吃 SkilmeAI 源码
-# 场景里可直接引用 res://SkilmeAI/... 的脚本和场景
-```
-
-### 克隆游戏仓
-
-```bash
-git clone --recurse-submodules https://github.com/alading-2/BrotatoLike.git
-# 或
-git clone https://github.com/alading-2/BrotatoLike.git
-cd BrotatoLike && git submodule update --init
-```
+- 游戏升级框架、克隆、故障排查等操作详见工作区文档 `Workspace/DocsAI/GitSubmoduleWorkflow.md`。
 
 ## 禁区
 

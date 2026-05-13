@@ -7,3 +7,8 @@ obj/
 .DS_Store
 *.swp
 **/*.uid
+
+# AI tool directories (submodule should not carry these)
+.codex/
+.claude/
+.windsurf/
