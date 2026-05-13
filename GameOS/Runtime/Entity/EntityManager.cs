@@ -19,14 +19,9 @@ public static class EntityManager
     /// <param name="config">生成参数。</param>
     public static RuntimeEntity Spawn(EntitySpawnConfig config = default)
     {
-        var entity = new RuntimeEntity(string.IsNullOrWhiteSpace(config.EntityId)
-            ? Guid.NewGuid().ToString("N")
-            : config.EntityId);
-
-        if (config.Config != null)
-        {
-            entity.Data.LoadFromConfig(config.Config);
-        }
+        var entity = new RuntimeEntity(
+            string.IsNullOrWhiteSpace(config.EntityId) ? Guid.NewGuid().ToString("N") : config.EntityId,
+            config.DataCatalog);
 
         Register(entity);
         BindSpawnRelationships(entity.EntityId, config);

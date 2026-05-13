@@ -10,90 +10,42 @@ namespace SkilmeAI.GameOS.Capabilities.Effect;
 public static class EffectDataKeys
 {
     /// <summary>效果资源路径。</summary>
-    public static readonly DataMeta ScenePath = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.ScenePath",
-        DisplayName = "Effect Scene Path",
-        Type = typeof(string),
-        Category = EffectCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "效果 Godot 场景或资源路径。"
-    });
+    public static readonly DataKey<string> ScenePath = DataKey.Create<string>("Effect.ScenePath",
+        defaultValue: string.Empty,
+        category: EffectCategory.Basic);
 
     /// <summary>效果名称。</summary>
-    public static readonly DataMeta Name = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.Name",
-        DisplayName = "Effect Name",
-        Type = typeof(string),
-        Category = EffectCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "效果显示或调试名称。"
-    });
+    public static readonly DataKey<string> Name = DataKey.Create<string>("Effect.Name",
+        defaultValue: string.Empty,
+        category: EffectCategory.Basic);
 
     /// <summary>效果播放动画名；为空时由 Godot 视觉节点使用当前动画或第一个可用动画。</summary>
-    public static readonly DataMeta AnimationName = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.AnimationName",
-        DisplayName = "Effect Animation Name",
-        Type = typeof(string),
-        Category = EffectCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "效果视觉节点播放的动画名；为空时由桥接层自动选择。"
-    });
+    public static readonly DataKey<string> AnimationName = DataKey.Create<string>("Effect.AnimationName",
+        defaultValue: string.Empty,
+        category: EffectCategory.Basic);
 
     /// <summary>来源实体。</summary>
-    public static readonly DataMeta SourceEntity = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.SourceEntity",
-        DisplayName = "Source Entity",
-        Type = typeof(IEntity),
-        Category = EffectCategory.Runtime,
-        Description = "生成该效果的实体。"
-    });
+    public static readonly DataKey<IEntity?> SourceEntity = DataKey.Create<IEntity?>("Effect.SourceEntity",
+        category: EffectCategory.Runtime);
 
     /// <summary>关联技能实体。</summary>
-    public static readonly DataMeta AbilityEntity = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.AbilityEntity",
-        DisplayName = "Ability Entity",
-        Type = typeof(IEntity),
-        Category = EffectCategory.Runtime,
-        Description = "生成该效果的技能实体。"
-    });
+    public static readonly DataKey<IEntity?> AbilityEntity = DataKey.Create<IEntity?>("Effect.AbilityEntity",
+        category: EffectCategory.Runtime);
 
     /// <summary>目标实体。</summary>
-    public static readonly DataMeta TargetEntity = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.TargetEntity",
-        DisplayName = "Target Entity",
-        Type = typeof(IEntity),
-        Category = EffectCategory.Runtime,
-        Description = "效果附着或锁定的目标实体。"
-    });
+    public static readonly DataKey<IEntity?> TargetEntity = DataKey.Create<IEntity?>("Effect.TargetEntity",
+        category: EffectCategory.Runtime);
 
     /// <summary>效果位置。</summary>
-    public static readonly DataMeta Position = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.Position",
-        DisplayName = "Effect Position",
-        Type = typeof(Vector2Value),
-        Category = EffectCategory.Runtime,
-        DefaultValue = Vector2Value.Zero,
-        Description = "效果生成位置。"
-    });
+    public static readonly DataKey<Vector2Value> Position = DataKey.Create<Vector2Value>("Effect.Position",
+        defaultValue: Vector2Value.Zero,
+        category: EffectCategory.Runtime);
 
     /// <summary>持续时间，-1 表示不自动结束。</summary>
-    public static readonly DataMeta Duration = DataRegistry.Register(new DataMeta
-    {
-        Key = "Effect.Duration",
-        DisplayName = "Effect Duration",
-        Type = typeof(float),
-        Category = EffectCategory.Basic,
-        DefaultValue = -1f,
-        MinValue = -1f,
-        Description = "效果持续时间；-1 表示不自动结束。"
-    });
+    public static readonly DataKey<float> Duration = DataKey.Create<float>("Effect.Duration",
+        defaultValue: -1f,
+        category: EffectCategory.Basic,
+        minValue: -1f);
 
     /// <summary>
     /// 显式触发静态 DataKey 注册。

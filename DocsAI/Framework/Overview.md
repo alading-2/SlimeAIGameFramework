@@ -2,12 +2,13 @@
 
 ## 定位
 
-SkilmeAI 是 AI-first GameOS 框架，不是通用游戏引擎。它面向 Godot 4.6 C# 项目，提供可由 AI 稳定路由和验证的运行时内核、可选能力、数据快照、观察日志、Agent 协议和游戏适配边界。
+SkilmeAI 是 `AI-first GameOS` 框架，不是通用游戏引擎，也不是传统 ECS 框架。它的运行时架构定位为 `Capability Composition Runtime`：面向 Godot 4.6 C# 项目，提供可由 AI 稳定路由和验证的运行时内核、可选 Capability、数据快照、观察日志、Agent 协议和游戏适配边界。
 
 核心结构：
 
 ```text
 Small Runtime Kernel
+  + Capability Composition Runtime
   + Optional Capabilities
   + Genre Profiles
   + Game Adapters
@@ -18,7 +19,8 @@ Small Runtime Kernel
 
 ## 框架职责
 
-- Runtime Kernel：Entity、Data、Event、Relationship、Schedule、Timer、Pool、Resource。
+- Runtime Kernel：Runtime Entity、Runtime Data / DataKey、Event、Relationship、RuntimeSchedule、Timer、Pool、Resource。
+- Capability Composition Runtime：用 Capability 组合玩法行为和所有权边界，不暴露传统 ECS world query / archetype / component storage 作为业务入口。
 - Optional Capabilities：Movement、Collision、Damage、Unit、Attack、AI、Ability、Feature、Projectile、Effect。
 - Genre Profiles：定义某类游戏可复用能力组合，例如 Survivor2D。
 - Game Adapters：把框架能力接入具体游戏，不把游戏专属行为上提为框架默认。
@@ -36,6 +38,6 @@ Small Runtime Kernel
 ## 非目标
 
 - 不替代 Godot 引擎。
-- 不复制 ECS/GAS/DOTS/QFramework 公共 API。
+- 不复制 ECS/GAS/DOTS/QFramework 公共 API；`ECS` 只用于历史迁移、外部对照和明确拒绝清单语境。
 - 不让 runtime hot path 查询 DataOS authoring SQLite。
 - 不把 BrotatoLike 技能、波次、UI、资产路径当成框架契约。

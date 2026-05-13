@@ -6,6 +6,7 @@ using SkilmeAI.GameOS.Capabilities.Attack.Events;
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Capabilities.Unit;
 using SkilmeAI.GameOS.Capabilities.Unit.Events;
+using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Entity;
 
 namespace SkilmeAI.GameOS.GodotBridge;
@@ -168,7 +169,7 @@ public partial class GodotAttackComponent : Node, IGodotComponent
         SetExportedValue(entity, AttackDataKeys.CanAttack, CanAttack);
     }
 
-    private void SetExportedValue<T>(IEntity entity, SkilmeAI.GameOS.Runtime.Data.DataMeta key, T value)
+    private void SetExportedValue<T>(IEntity entity, DataKey<T> key, T value)
     {
         if (PreferExistingDataOnRegister && entity.Data.Has(key))
         {

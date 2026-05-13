@@ -1,6 +1,6 @@
 # DataOS Snapshot Manifest 与 Validation Report
 
-> 更新日期：2026-05-09  
+> 更新日期：2026-05-13  
 > 状态：contract draft  
 > 适用范围：DataOS generated snapshot、source trace、structured validation report、Observation sidecar。
 
@@ -12,7 +12,7 @@
 - 使用哪个 schema / migration / generator version。
 - 生成时有哪些 warning / error。
 - 资源路径是 migrated、legacy、missing 还是 intentionally dropped。
-- DataOS 字段类型是否与 Runtime DataKey/DataMeta 一致。
+- DataOS 字段类型是否与 Runtime `DataKey<T>` / active `DataCatalog` 一致。
 
 Manifest 和 validation report 不进入 gameplay hot path，不要求 Runtime 查询 authoring SQLite。
 
@@ -26,7 +26,7 @@ runtime_snapshot.manifest.json
 dataos_validation_report.json
 ```
 
-`runtime_snapshot.json` 可继续保持当前结构。`runtime_snapshot.manifest.json` 和 `dataos_validation_report.json` 可以由 generator / validator 后续分阶段实现。
+当前 `runtime_snapshot.json` 已内嵌 `manifest / descriptors / records / resources` 四段。独立 `runtime_snapshot.manifest.json` 和 `dataos_validation_report.json` 可作为后续 sidecar 输出，但 runtime loader 的正式输入以 generated snapshot 内嵌 manifest/descriptors 为准。
 
 ## Snapshot Manifest 字段
 
@@ -34,51 +34,52 @@ Manifest 最低字段：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `snapshotVersion` | string | Snapshot contract 版本。 |
 | `schemaVersion` | int | DataOS schema version。 |
-| `migrationVersion` | int | 最新 migration version。 |
-| `generatorVersion` | string | generator 脚本或工具版本。 |
 | `generatedAtUtc` | string | UTC ISO-8601 生成时间；默认可保持稳定时间以避免反复改动。 |
-| `sourcePaths` | string[] | 参与生成的 schema、migration、seed、override 路径。 |
-| `sourceHashes` | object | `path -> sha256` 映射。 |
-| `profilePresetVersion` | string | 使用的 GenreProfile preset 版本；没有则为空字符串。 |
-| `gameOverrideVersion` | string | 游戏侧 override / seed 版本；没有则为空字符串。 |
-| `validationReportId` | string | 对应 structured validation report id。 |
-| `resourceDependencies` | array | 资源依赖摘要。 |
-| `snapshotHash` | string | `runtime_snapshot.json` 的 sha256。 |
-| `recordCounts` | object | 按 table 统计记录数量。 |
-| `warningCount` | int | validation warning 数量。 |
-| `errorCount` | int | validation error 数量。 |
+| `profile` | string | active profile，例如 `framework` 或 `brotatolike`。 |
+| `catalogId` | string | active `DataCatalog` id。 |
+| `enabledCapabilities` | string[] | snapshot 中启用的 capability id。 |
+| `descriptorCount` | int | `descriptors[]` 数量。 |
+| `recordCount` | int | `records[]` 数量。 |
+| `resourceCount` | int | `resources[]` 数量。 |
+| `validation.warningCount` | int | validation warning 数量。 |
+| `validation.errorCount` | int | validation error 数量。 |
 
 示例形状：
 
 ```json
 {
-  "snapshotVersion": "1",
-  "schemaVersion": 1,
-  "migrationVersion": 1,
-  "generatorVersion": "generate-runtime-snapshot.sh@1",
+  "schemaVersion": 2,
   "generatedAtUtc": "1970-01-01T00:00:00Z",
-  "sourcePaths": [
-    "DataOS/Migrations/001_initial.sql",
-    "Games/BrotatoLike/DataOS/Authoring/BrotatoLike.seed.sql"
-  ],
-  "sourceHashes": {
-    "DataOS/Migrations/001_initial.sql": "sha256:..."
+  "profile": "brotatolike",
+  "catalogId": "brotatolike",
+  "enabledCapabilities": ["Ability", "Movement", "Projectile"],
+  "descriptorCount": 124,
+  "recordCount": 37,
+  "resourceCount": 39,
+  "validation": {
+    "warningCount": 0,
+    "errorCount": 0
   },
-  "profilePresetVersion": "",
-  "gameOverrideVersion": "BrotatoLike.seed.sql@1",
-  "validationReportId": "dataos-validation-19700101T000000Z",
-  "resourceDependencies": [],
-  "snapshotHash": "sha256:...",
-  "recordCounts": {
-    "unit.enemy": 2,
-    "ability": 10
-  },
-  "warningCount": 0,
-  "errorCount": 0
 }
 ```
+
+## Snapshot Descriptors
+
+`descriptors[]` 是 authoring metadata mirror，不进入 gameplay hot path。字段包括：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `stableKey` | string | Runtime `DataKey<T>.StableKey`。 |
+| `ownerCapability` | string | 拥有该 key 的 capability 或 profile。 |
+| `ownerSkill` | string | AI owner skill。 |
+| `valueType` | string | DataOS canonical type：`bool / int / float / double / string`。 |
+| `defaultValue` | string | C# runtime default 的 authoring mirror。 |
+| `displayName / description / iconPath / category` | string | 工具和文档 metadata。 |
+| `minValue / maxValue / options / isPercentage` | mixed | authoring validation metadata。 |
+| `supportsModifiers / isComputed` | bool | 与 runtime key contract 对齐的校验标记。 |
+
+loader 必须先通过 active `DataCatalog` resolve `stableKey`，再比较 descriptor `valueType/defaultValue` 与 `DataKey<T>` runtime contract。drift 是错误，不允许把字段当作缺省值处理。
 
 ## Validation Report 字段
 
@@ -93,7 +94,7 @@ Structured validation report 最低字段：
 | `migrationVersion` | int | migration version。 |
 | `checks` | array | 每项检查的名称、状态、数量和 message。 |
 | `resources` | array | 资源路径检查结果。 |
-| `dataKeyTypeChecks` | array | DataKey/DataMeta 类型一致性检查结果。 |
+| `dataKeyTypeChecks` | array | DataKey descriptor / runtime catalog 类型一致性检查结果。 |
 | `warnings` | array | warning 明细。 |
 | `errors` | array | error 明细。 |
 | `summary` | object | 总计和 PASS/FAIL。 |
@@ -153,14 +154,15 @@ Structured validation report 最低字段：
 
 `migrated` 只表示资源路径状态，不表示玩法行为完成。旧行为是否完成必须由 migration ledger、Observation artifact 和可玩切片 PASS/FAIL evidence 证明。
 
-## DataKey / DataMeta Type Consistency
+## DataKey Type Consistency
 
 类型一致性检查目标：
 
-- DataOS `data_field.field_key` 必须能映射到已知 Runtime DataKey，或被 report 标记为 unknown。
-- DataOS `data_field.value_type` 必须与 Runtime `DataMeta` 期望类型一致。
-- 枚举、flags、资源路径等 string 字段可以先作为 string 检查，但 report 必须保留进一步校验入口。
-- 未注册 DataMeta 的字段不应自动失败；第一阶段可标记 warning，直到对应 DataKey owner 明确迁移状态。
+- DataOS `data_field.field_key` 必须能映射到 active catalog 中的 Runtime `DataKey<T>`，否则 snapshot loader 报 `snapshot.unknown_key`。
+- DataOS `data_field.value_type`、descriptor `valueType` 和 Runtime `DataKey<T>` 类型必须一致。
+- descriptor `defaultValue` 必须 mirror `DataKey<T>.DefaultValue`；不一致时报 `snapshot.default_drift`。
+- 枚举和 flags 在 DataOS 中按 canonical string 编码，loader 通过 typed key 转换到 enum 类型。
+- 未注册或被 disabled capability trim 掉的字段、descriptor、resource 不能进入 active snapshot。
 
 检查项示例：
 
@@ -202,7 +204,6 @@ Runtime 禁止：
 
 ## 后续实现任务
 
-- generator 输出 `runtime_snapshot.manifest.json`。
-- validator 输出 `dataos_validation_report.json`。
-- 设计 DataKey/DataMeta manifest 或导出机制，用于 validator 做类型一致性检查。
+- 如需要外部审计 artifact，再输出独立 `runtime_snapshot.manifest.json`。
+- 如需要 CI 长期留档，再输出独立 `dataos_validation_report.json`。
 - 把 validation report 接入 Observation artifact。

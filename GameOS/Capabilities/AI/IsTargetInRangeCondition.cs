@@ -1,5 +1,6 @@
 using SkilmeAI.GameOS.Capabilities.Movement;
 using SkilmeAI.GameOS.Capabilities.Damage;
+using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Entity;
 
 namespace SkilmeAI.GameOS.Capabilities.AI;
@@ -9,7 +10,7 @@ namespace SkilmeAI.GameOS.Capabilities.AI;
 /// </summary>
 public sealed class IsTargetInRangeCondition : BehaviorNode
 {
-    private readonly string? rangeDataKey;
+    private readonly DataKey<float>? rangeDataKey;
     private readonly float defaultRange;
 
     /// <summary>
@@ -26,7 +27,7 @@ public sealed class IsTargetInRangeCondition : BehaviorNode
     /// </summary>
     /// <param name="rangeDataKey">从 Entity.Data 读取范围的 DataKey。</param>
     /// <param name="defaultRange">DataKey 未配置时的回退范围，-1 表示不限距离。</param>
-    public IsTargetInRangeCondition(string rangeDataKey, float defaultRange = -1f) : base("IsTargetInRange")
+    public IsTargetInRangeCondition(DataKey<float> rangeDataKey, float defaultRange = -1f) : base("IsTargetInRange")
     {
         this.rangeDataKey = rangeDataKey;
         this.defaultRange = defaultRange;

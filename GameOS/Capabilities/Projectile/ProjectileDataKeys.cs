@@ -11,164 +11,80 @@ namespace SkilmeAI.GameOS.Capabilities.Projectile;
 public static class ProjectileDataKeys
 {
     /// <summary>投射物资源路径。</summary>
-    public static readonly DataMeta ScenePath = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.ScenePath",
-        DisplayName = "Projectile Scene Path",
-        Type = typeof(string),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "投射物 Godot 场景或资源路径。"
-    });
+    public static readonly DataKey<string> ScenePath = DataKey.Create<string>("Projectile.ScenePath",
+        defaultValue: string.Empty,
+        category: ProjectileCategory.Basic);
 
     /// <summary>发射者实体。</summary>
-    public static readonly DataMeta SourceEntity = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.SourceEntity",
-        DisplayName = "Source Entity",
-        Type = typeof(IEntity),
-        Category = ProjectileCategory.Runtime,
-        Description = "生成该投射物的实体。"
-    });
+    public static readonly DataKey<IEntity?> SourceEntity = DataKey.Create<IEntity?>("Projectile.SourceEntity",
+        category: ProjectileCategory.Runtime);
 
     /// <summary>关联技能实体。</summary>
-    public static readonly DataMeta AbilityEntity = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.AbilityEntity",
-        DisplayName = "Ability Entity",
-        Type = typeof(IEntity),
-        Category = ProjectileCategory.Runtime,
-        Description = "生成该投射物的技能实体。"
-    });
+    public static readonly DataKey<IEntity?> AbilityEntity = DataKey.Create<IEntity?>("Projectile.AbilityEntity",
+        category: ProjectileCategory.Runtime);
 
     /// <summary>目标实体。</summary>
-    public static readonly DataMeta TargetEntity = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.TargetEntity",
-        DisplayName = "Target Entity",
-        Type = typeof(IEntity),
-        Category = ProjectileCategory.Runtime,
-        Description = "投射物锁定的目标实体。"
-    });
+    public static readonly DataKey<IEntity?> TargetEntity = DataKey.Create<IEntity?>("Projectile.TargetEntity",
+        category: ProjectileCategory.Runtime);
 
     /// <summary>生成位置。</summary>
-    public static readonly DataMeta SpawnPosition = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.SpawnPosition",
-        DisplayName = "Spawn Position",
-        Type = typeof(Vector2Value),
-        Category = ProjectileCategory.Runtime,
-        DefaultValue = Vector2Value.Zero,
-        Description = "投射物生成位置。"
-    });
+    public static readonly DataKey<Vector2Value> SpawnPosition = DataKey.Create<Vector2Value>("Projectile.SpawnPosition",
+        defaultValue: Vector2Value.Zero,
+        category: ProjectileCategory.Runtime);
 
     /// <summary>目标位置。</summary>
-    public static readonly DataMeta TargetPosition = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.TargetPosition",
-        DisplayName = "Target Position",
-        Type = typeof(Vector2Value),
-        Category = ProjectileCategory.Runtime,
-        DefaultValue = Vector2Value.Zero,
-        Description = "投射物目标位置。"
-    });
+    public static readonly DataKey<Vector2Value> TargetPosition = DataKey.Create<Vector2Value>("Projectile.TargetPosition",
+        defaultValue: Vector2Value.Zero,
+        category: ProjectileCategory.Runtime);
 
     /// <summary>发射方向。</summary>
-    public static readonly DataMeta Direction = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.Direction",
-        DisplayName = "Direction",
-        Type = typeof(Vector2Value),
-        Category = ProjectileCategory.Runtime,
-        DefaultValue = Vector2Value.Zero,
-        Description = "投射物初始飞行方向。"
-    });
+    public static readonly DataKey<Vector2Value> Direction = DataKey.Create<Vector2Value>("Projectile.Direction",
+        defaultValue: Vector2Value.Zero,
+        category: ProjectileCategory.Runtime);
 
     /// <summary>飞行速度。</summary>
-    public static readonly DataMeta Speed = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.Speed",
-        DisplayName = "Speed",
-        Type = typeof(float),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = 0f,
-        MinValue = 0f,
-        SupportModifiers = true,
-        Description = "投射物飞行速度。"
-    });
+    public static readonly DataKey<float> Speed = DataKey.Create<float>("Projectile.Speed",
+        defaultValue: 0f,
+        category: ProjectileCategory.Basic,
+        minValue: 0f,
+        supportsModifiers: true);
 
     /// <summary>最大有效命中数，-1 表示不限制。</summary>
-    public static readonly DataMeta MaxHitCount = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.MaxHitCount",
-        DisplayName = "Max Hit Count",
-        Type = typeof(int),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = 1,
-        MinValue = -1f,
-        SupportModifiers = true,
-        Description = "投射物最大有效命中数，-1 表示不限制。"
-    });
+    public static readonly DataKey<int> MaxHitCount = DataKey.Create<int>("Projectile.MaxHitCount",
+        defaultValue: 1,
+        category: ProjectileCategory.Basic,
+        minValue: -1f,
+        supportsModifiers: true);
 
     /// <summary>已有效命中次数。</summary>
-    public static readonly DataMeta HitCount = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.HitCount",
-        DisplayName = "Hit Count",
-        Type = typeof(int),
-        Category = ProjectileCategory.Runtime,
-        DefaultValue = 0,
-        MinValue = 0f,
-        Description = "投射物本次生命周期内已经命中的目标数量。"
-    });
+    public static readonly DataKey<int> HitCount = DataKey.Create<int>("Projectile.HitCount",
+        defaultValue: 0,
+        category: ProjectileCategory.Runtime,
+        minValue: 0f);
 
     /// <summary>最大存活时间，-1 表示不限制。</summary>
-    public static readonly DataMeta MaxLifeTime = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.MaxLifeTime",
-        DisplayName = "Max Life Time",
-        Type = typeof(float),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = -1f,
-        MinValue = -1f,
-        SupportModifiers = true,
-        Description = "投射物最大存活时间，-1 表示不限制。"
-    });
+    public static readonly DataKey<float> MaxLifeTime = DataKey.Create<float>("Projectile.MaxLifeTime",
+        defaultValue: -1f,
+        category: ProjectileCategory.Basic,
+        minValue: -1f,
+        supportsModifiers: true);
 
     /// <summary>命中伤害。</summary>
-    public static readonly DataMeta Damage = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.Damage",
-        DisplayName = "Damage",
-        Type = typeof(float),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = 0f,
-        MinValue = 0f,
-        SupportModifiers = true,
-        Description = "投射物命中伤害。"
-    });
+    public static readonly DataKey<float> Damage = DataKey.Create<float>("Projectile.Damage",
+        defaultValue: 0f,
+        category: ProjectileCategory.Basic,
+        minValue: 0f,
+        supportsModifiers: true);
 
     /// <summary>伤害类型。</summary>
-    public static readonly DataMeta DamageType = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.DamageType",
-        DisplayName = "Damage Type",
-        Type = typeof(DamageType),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = Capabilities.Damage.DamageType.Physical,
-        Description = "投射物命中伤害类型。"
-    });
+    public static readonly DataKey<DamageType> DamageType = DataKey.Create<DamageType>("Projectile.DamageType",
+        defaultValue: Capabilities.Damage.DamageType.Physical,
+        category: ProjectileCategory.Basic);
 
     /// <summary>伤害标签。</summary>
-    public static readonly DataMeta DamageTags = DataRegistry.Register(new DataMeta
-    {
-        Key = "Projectile.DamageTags",
-        DisplayName = "Damage Tags",
-        Type = typeof(DamageTags),
-        Category = ProjectileCategory.Basic,
-        DefaultValue = Capabilities.Damage.DamageTags.Projectile,
-        Description = "投射物命中伤害标签。"
-    });
+    public static readonly DataKey<DamageTags> DamageTags = DataKey.Create<DamageTags>("Projectile.DamageTags",
+        defaultValue: Capabilities.Damage.DamageTags.Projectile,
+        category: ProjectileCategory.Basic);
 
     /// <summary>
     /// 显式触发静态 DataKey 注册。

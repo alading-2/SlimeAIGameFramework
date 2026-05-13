@@ -6,6 +6,8 @@ using SkilmeAI.GameOS.Observation;
 using SkilmeAI.GameOS.Runtime.Entity;
 using SkilmeAI.GameOS.Runtime.Event;
 using SkilmeAI.GameOS.Runtime.Events.Core;
+using RuntimeDataKey = SkilmeAI.GameOS.Runtime.Data.DataKey;
+using RuntimeDataKeyInt = SkilmeAI.GameOS.Runtime.Data.DataKey<int>;
 
 namespace SkilmeAI.SceneTests.Runtime.Event;
 
@@ -17,6 +19,7 @@ public partial class RuntimeEventValidationScene : Node
     private const string ScenePath = "res://SkilmeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn";
     private const string ArtifactFileName = "runtime-event-validation.json";
     private const string LogContext = "RuntimeEventValidation";
+    private static readonly RuntimeDataKeyInt BridgeValue = RuntimeDataKey.Create("RuntimeEventValidation.Value", 0);
 
     /// <inheritdoc />
     public override void _Ready()
@@ -115,61 +118,70 @@ public partial class RuntimeEventValidationScene : Node
 
     private static CheckResult ValidateHandlerExceptionCapture()
     {
-        var bus = new EntityEventBus("entity:validation-exception");
-        var continuedCount = 0;
-
-        bus.Subscribe<ValidationLocalEvent>(_ => throw new InvalidOperationException("expected validation exception"));
-        bus.Subscribe<ValidationLocalEvent>(_ => continuedCount++);
-
-        bus.Publish(new ValidationLocalEvent(1));
-
-        var success = continuedCount == 1;
-        return CheckResult.From(success, success ? "exception isolated and dispatch continued" : "exception interrupted dispatch", new Dictionary<string, object?>
+        return RunWithStdoutMuted(() =>
         {
-            ["continuedCount"] = continuedCount
+            var bus = new EntityEventBus("entity:validation-exception");
+            var continuedCount = 0;
+
+            bus.Subscribe<ValidationLocalEvent>(_ => throw new InvalidOperationException("expected validation exception"));
+            bus.Subscribe<ValidationLocalEvent>(_ => continuedCount++);
+
+            bus.Publish(new ValidationLocalEvent(1));
+
+            var success = continuedCount == 1;
+            return CheckResult.From(success, success ? "exception isolated and dispatch continued" : "exception interrupted dispatch", new Dictionary<string, object?>
+            {
+                ["continuedCount"] = continuedCount
+            });
         });
     }
 
     private static CheckResult ValidateSameTypeReentryBlocked()
     {
-        var bus = new EntityEventBus("entity:validation-reentry");
-        var executions = 0;
-
-        bus.Subscribe<ValidationLocalEvent>(_ =>
+        return RunWithStdoutMuted(() =>
         {
-            executions++;
-            if (executions == 1)
+            var bus = new EntityEventBus("entity:validation-reentry");
+            var executions = 0;
+
+            bus.Subscribe<ValidationLocalEvent>(_ =>
             {
-                bus.Publish(new ValidationLocalEvent(2));
-            }
-        });
+                executions++;
+                if (executions == 1)
+                {
+                    bus.Publish(new ValidationLocalEvent(2));
+                }
+            });
 
-        bus.Publish(new ValidationLocalEvent(1));
+            bus.Publish(new ValidationLocalEvent(1));
 
-        var success = executions == 1;
-        return CheckResult.From(success, success ? "same-type reentry was blocked" : "same-type reentry executed unexpectedly", new Dictionary<string, object?>
-        {
-            ["executions"] = executions
+            var success = executions == 1;
+            return CheckResult.From(success, success ? "same-type reentry was blocked" : "same-type reentry executed unexpectedly", new Dictionary<string, object?>
+            {
+                ["executions"] = executions
+            });
         });
     }
 
     private static CheckResult ValidateEntityEventRejectedOnWorldBus()
     {
-        var count = 0;
-        var token = WorldEvents.World.Subscribe<ValidationLocalEvent>(_ => count++);
-        try
+        return RunWithStdoutMuted(() =>
         {
-            WorldEvents.World.Publish(new ValidationLocalEvent(1));
-        }
-        finally
-        {
-            token.Dispose();
-        }
+            var count = 0;
+            var token = WorldEvents.World.Subscribe<ValidationLocalEvent>(_ => count++);
+            try
+            {
+                WorldEvents.World.Publish(new ValidationLocalEvent(1));
+            }
+            finally
+            {
+                token.Dispose();
+            }
 
-        var success = count == 0;
-        return CheckResult.From(success, success ? "world bus rejected IEntityEvent" : "world bus accepted IEntityEvent", new Dictionary<string, object?>
-        {
-            ["count"] = count
+            var success = count == 0;
+            return CheckResult.From(success, success ? "world bus rejected IEntityEvent" : "world bus accepted IEntityEvent", new Dictionary<string, object?>
+            {
+                ["count"] = count
+            });
         });
     }
 
@@ -207,14 +219,14 @@ public partial class RuntimeEventValidationScene : Node
         entity.Events.Subscribe<DataPropertyChanged>(data =>
         {
             receivedCount++;
-            receivedKey = data.Change.Key;
+            receivedKey = data.Change.StableKey;
             receivedValue = data.Change.NewValue;
         });
 
-        entity.Data.Set("RuntimeEventValidationValue", 42);
+        entity.Data.Set(BridgeValue, 42);
 
         var success = receivedCount == 1
-            && receivedKey == "RuntimeEventValidationValue"
+            && receivedKey == BridgeValue.StableKey
             && receivedValue is int intValue
             && intValue == 42;
         return CheckResult.From(success, success ? "Data.Set emitted PropertyChanged" : "Data-to-Event bridge did not emit expected payload", new Dictionary<string, object?>
@@ -224,6 +236,32 @@ public partial class RuntimeEventValidationScene : Node
             ["receivedKey"] = receivedKey,
             ["receivedValue"] = receivedValue
         });
+    }
+
+    private static CheckResult RunWithStdoutMuted(Func<CheckResult> validate)
+    {
+        GameOSLog.Configure(new GameOSLogOptions
+        {
+            MinimumLevel = GameOSLogLevel.Trace,
+            EnableStdout = false,
+            EnableJsonl = true,
+            EnableGodotRichText = true
+        });
+
+        try
+        {
+            return validate();
+        }
+        finally
+        {
+            GameOSLog.Configure(new GameOSLogOptions
+            {
+                MinimumLevel = GameOSLogLevel.Trace,
+                EnableStdout = true,
+                EnableJsonl = true,
+                EnableGodotRichText = true
+            });
+        }
     }
 
     private readonly record struct ValidationLocalEvent(int Value) : IEntityEvent;

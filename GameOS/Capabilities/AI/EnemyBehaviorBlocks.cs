@@ -1,3 +1,5 @@
+using SkilmeAI.GameOS.Runtime.Data;
+
 namespace SkilmeAI.GameOS.Capabilities.AI;
 
 /// <summary>
@@ -13,7 +15,7 @@ public static class EnemyBehaviorBlocks
     /// <param name="defaultAttackRange">DataKey 未配置时的回退攻击范围，-1 表示不限距离。</param>
     public static BehaviorNode AttackBranch(
         float targetSearchRange = -1f,
-        string? attackRangeDataKey = null,
+        DataKey<float>? attackRangeDataKey = null,
         float defaultAttackRange = -1f)
     {
         return new SequenceNode("Attack")

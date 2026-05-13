@@ -153,7 +153,7 @@ public sealed class FeatureService
         for (var i = 0; i < definition.Modifiers.Length; i++)
         {
             var entry = definition.Modifiers[i];
-            if (string.IsNullOrEmpty(entry.DataKey))
+            if (string.IsNullOrEmpty(entry.DataKey.StableKey))
             {
                 continue;
             }
@@ -164,7 +164,7 @@ public sealed class FeatureService
                     entry.ModifierType,
                     entry.Value,
                     entry.Priority,
-                    id: $"{feature.EntityId}:{entry.DataKey}:{i}",
+                    id: $"{feature.EntityId}:{entry.DataKey.StableKey}:{i}",
                     source: feature));
         }
     }
@@ -173,8 +173,8 @@ public sealed class FeatureService
     {
         return new FeatureDefinition
         {
-            FeatureId = feature.Data.Get<string>(FeatureDataKeys.FeatureId, string.Empty),
-            HandlerId = feature.Data.Get<string>(FeatureDataKeys.HandlerId, string.Empty)
+            FeatureId = feature.Data.Get(FeatureDataKeys.FeatureId, string.Empty),
+            HandlerId = feature.Data.Get(FeatureDataKeys.HandlerId, string.Empty)
         };
     }
 }

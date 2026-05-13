@@ -2,6 +2,7 @@
 
 > 日期：2026-05-06
 > 状态：Phase 01-09 已完成，Phase 10-11 待开始
+> 术语说明：本文中的 `ECS` 仅指旧仓库历史来源和迁移对照，不代表 SkilmeAI 当前框架身份；当前定位见 `GameOS/Overview.md#术语表` 和 ECS 边界 ADR。
 > 来源仓库：`/home/slime/Code/Godot/Games/MyGames/brotato-my`
 > 目标工作区：`/home/slime/Code/SkilmeAI/`
 
@@ -9,7 +10,7 @@
 
 ## 1. 为什么迁移
 
-旧仓库 `brotato-my` 是一个 Godot 4.6 C# Brotato-like 游戏项目，积累了完整的 ECS 框架、DataNew 配置体系、Skill 文档和测试基础设施。随着项目从"单个游戏"向"AI-First 游戏框架"演进，出现以下结构性问题：
+旧仓库 `brotato-my` 是一个 Godot 4.6 C# Brotato-like 游戏项目，积累了完整的历史 ECS 框架、DataNew 配置体系、Skill 文档和测试基础设施。随着项目从"单个游戏"向"AI-First 游戏框架"演进，出现以下结构性问题：
 
 | 问题 | 影响 |
 |------|------|
@@ -231,7 +232,7 @@ brotato-my/
 
 **不再做的事情**：
 - 不再新增长期架构能力
-- 不再修改旧 ECS 框架代码
+- 不再修改旧 ECS 框架代码；该词只保留为历史迁移搜索词
 - 不再把旧 Skill 作为执行入口
 
 **保留的内容**：

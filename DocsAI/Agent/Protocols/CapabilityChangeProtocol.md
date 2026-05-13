@@ -1,6 +1,6 @@
 # Capability 修改协议
 
-> 更新日期：2026-05-09  
+> 更新日期：2026-05-13  
 > 状态：生效候选  
 > 适用范围：修改 `SkilmeAI/GameOS/Capabilities/`、相关 DataKeys、Events、GodotBridge adapter、Capability tests 或 Capability 文档。
 
@@ -10,7 +10,7 @@
 
 - Movement、Collision、Damage、Unit、Attack、AI、Ability、Feature、Projectile、Effect。
 - Capability service、tool、handler、DataKeys、Events、Contract、Debug、tests。
-- Capability 相关 GodotBridge component。
+- Capability 相关 GodotBridge Adapter / legacy `Godot*Component`。
 - Capability status、owner skill、validation evidence。
 
 ## 必须读什么
@@ -35,11 +35,12 @@
 
 ## 修改规则
 
-- 新 DataKey 必须通过对应 `*DataKeys.cs` 和 `DataMeta` 注册，不新增散落字符串访问。
+- 新 DataKey 必须通过对应 `*DataKeys.cs` 暴露为 `DataKey<T>` handle，并通过 `FrameworkDataKeys.RegisterAll()` / profile `DataCatalog` 进入 active catalog；authoring metadata 写入 DataOS `data_key_descriptor`，不新增散落字符串访问。
 - 新 Event 按 Capability 放入 `SkilmeAI/GameOS/Capabilities/<Cap>/Events/<Name>.cs`，每个事件为 `readonly record struct` 并实现 `IEntityEvent / IGlobalEvent / IBroadcastEvent` 之一；跨 Capability 的 Runtime 级事件放 `Runtime/Events/{Core,Global}/`。
 - Capability service 只处理本能力职责，不直接吞掉其他 Capability 的状态真相源。
+- Gameplay 行为必须路由到 Capability service、tool、handler、DataKey、Event、selector 或必要的 Runtime Process；不要新增泛型 Component 或裸 System 来拥有玩法行为。
 - 纯 Runtime Capability 不依赖 Godot `Node`、`Vector2` 或资源加载。
-- GodotBridge 只做 Node / SceneTree / Physics / Input / Resource 适配，不把 Godot Node tree 当玩法状态真相源。
+- GodotBridge Adapter 只做 Node / SceneTree / Physics / Input / Resource 适配，不把 Godot Node tree 当玩法状态真相源。`IGodotComponent` / `Godot*Component` 是 legacy compatibility name。
 - 游戏侧 handler 可以消费 Capability API，但不把游戏专属规则写回框架。
 - 修改 owner、status、DataKeys、Events、GodotBridge boundary 或 validation evidence 时，同步更新 `CapabilityIndex.md`。
 
@@ -51,6 +52,7 @@
 - 禁止 Capability 内直接调用 `GD.Load`；资源加载放在 ResourceManagement / GodotBridge / 游戏侧。
 - 禁止把 BrotatoLike 专属技能行为写进框架默认 Capability。
 - 禁止把 legacy `stable` 自动当作 `Supported`。
+- 禁止把 SkilmeAI 任务按传统 ECS world / component storage / query system 心智模型改造；除非单独 OpenSpec change 已明确论证并列出验证。
 
 ## 验证什么
 
@@ -76,7 +78,14 @@ cd /home/slime/Code/SkilmeAI/SkilmeAI
 Tools/run-dataos-validate.sh
 ```
 
-Godot 场景命令当前不运行；后续用户确认环境可运行后再恢复。
+GodotBridge 或游戏 adapter 相关：
+
+```bash
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
 
 ## 完成时怎么汇报
 

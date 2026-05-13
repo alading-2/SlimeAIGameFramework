@@ -1,134 +1,125 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Reflection;
 
 namespace SkilmeAI.GameOS.Runtime.Data;
 
 /// <summary>
-/// Runtime dynamic data container.
+/// Runtime typed data container.
 /// </summary>
 public sealed class Data
 {
-    private static readonly Dictionary<Type, (PropertyInfo Prop, string Key)[]> ConfigPropertyCache = new();
-
+    private readonly DataCatalog catalog;
     private readonly IDataChangeSink? changeSink;
-    private readonly Dictionary<string, object?> values = new();
-    private readonly Dictionary<string, List<DataModifier>> modifiers = new();
-    private readonly Dictionary<string, object?> cachedValues = new();
-    private readonly HashSet<string> dirtyKeys = new();
+    private readonly Dictionary<int, IDataSlot> slots = new();
 
     /// <summary>
-    /// Creates a runtime Data container.
+    /// 创建带 frozen catalog 的运行时 Data 容器。
     /// </summary>
-    /// <param name="changeSink">Optional bridge for data change notifications.</param>
-    public Data(IDataChangeSink? changeSink = null)
+    public Data(DataCatalog catalog, IDataChangeSink? changeSink = null)
     {
+        this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         this.changeSink = changeSink;
     }
 
     /// <summary>
-    /// Sets a base value.
+    /// 使用当前已注册 key 创建默认框架 catalog。
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="value">New base value.</param>
-    public bool Set<T>(string key, T value)
+    public Data(IDataChangeSink? changeSink = null)
+        : this(DataCatalog.Framework, changeSink)
     {
-        var meta = DataRegistry.GetMeta(key);
-        object? finalValue = value;
-        if (meta != null)
-        {
-            if (meta.HasOptions && !meta.IsValidOption(value))
-            {
-                return false;
-            }
-            finalValue = meta.Clamp(value);
-        }
+    }
 
-        values.TryGetValue(key, out var oldValue);
-        if (values.ContainsKey(key) && Equals(oldValue, finalValue))
+    /// <summary>当前 Data 绑定的 catalog。</summary>
+    public DataCatalog Catalog => catalog;
+
+    /// <summary>
+    /// Sets a typed base value.
+    /// </summary>
+    public bool Set<T>(DataKey<T> key, T value)
+    {
+        var slot = GetOrCreateSlot(key);
+        if (!slot.TrySet(value, out var oldValue, out var newValue))
         {
             return false;
         }
 
-        values[key] = finalValue;
         MarkDirty(key);
-        NotifyChanged(key, oldValue, finalValue);
+        NotifyChanged(key, oldValue, newValue);
         return true;
     }
 
     /// <summary>
-    /// Gets an effective value.
+    /// Gets an effective typed value.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="defaultValue">Optional fallback value.</param>
-    public T Get<T>(string key, object? defaultValue = null)
+    public T Get<T>(DataKey<T> key)
     {
-        var meta = DataRegistry.GetMeta(key);
-        if (meta == null)
+        var slot = GetOrCreateSlot(key);
+        return slot.Get(this);
+    }
+
+    /// <summary>
+    /// Gets an effective typed value with a caller fallback for unset base keys.
+    /// </summary>
+    public T Get<T>(DataKey<T> key, T defaultValue)
+    {
+        var slot = GetOrCreateSlot(key);
+        return slot.HasBaseValue || key.IsComputed ? slot.Get(this) : defaultValue;
+    }
+
+    /// <summary>
+    /// Attempts to read an explicit base value. Computed keys are treated as present.
+    /// </summary>
+    public bool TryGet<T>(DataKey<T> key, out T value)
+    {
+        var slot = GetOrCreateSlot(key);
+        if (key.IsComputed)
         {
-            var fallback = defaultValue ?? DataMeta.GetTypeDefaultValue(typeof(T));
-            return values.TryGetValue(key, out var rawValue) && rawValue != null
-                ? ConvertValue<T>(rawValue, fallback)
-                : ConvertValue<T>(fallback, default);
+            value = slot.Get(this);
+            return true;
         }
 
-        if (meta.IsComputed)
-        {
-            var fallback = defaultValue ?? meta.GetDefaultValue();
-            return ConvertValue<T>(GetComputedValueBoxed(key, meta, fallback, typeof(T)), fallback);
-        }
-
-        var effectiveDefault = defaultValue ?? meta.GetDefaultValue();
-        if (!values.TryGetValue(key, out var baseValue) || baseValue == null)
-        {
-            return ConvertValue<T>(effectiveDefault, default);
-        }
-
-        if (meta.SupportModifiers == true && modifiers.ContainsKey(key))
-        {
-            return ConvertValue<T>(GetModifiedValueBoxed(key, baseValue, effectiveDefault, typeof(T)), effectiveDefault);
-        }
-
-        return ConvertValue<T>(baseValue, effectiveDefault);
+        return slot.TryGetBase(out value);
     }
 
     /// <summary>
     /// Gets a base value without modifiers.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="defaultValue">Fallback value.</param>
-    public T GetBase<T>(string key, T defaultValue = default!)
+    public T GetBase<T>(DataKey<T> key)
     {
-        return values.TryGetValue(key, out var value) && value != null
-            ? ConvertValue<T>(value, defaultValue)
-            : defaultValue;
+        var slot = GetOrCreateSlot(key);
+        return slot.GetBase();
     }
 
     /// <summary>
-    /// Returns true when the key exists or is computed.
+    /// Gets a base value without modifiers.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    public bool Has(string key)
+    public T GetBase<T>(DataKey<T> key, T defaultValue)
     {
-        return values.ContainsKey(key) || DataRegistry.IsComputed(key);
+        var slot = GetOrCreateSlot(key);
+        return slot.TryGetBase(out var value) ? value : defaultValue;
     }
 
     /// <summary>
-    /// Removes a base value and its modifiers.
+    /// Returns true when the typed key has an explicit base value or is computed.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    public bool Remove(string key)
+    public bool Has<T>(DataKey<T> key)
     {
-        if (!values.TryGetValue(key, out var oldValue))
+        var slot = GetOrCreateSlot(key);
+        return key.IsComputed || slot.HasBaseValue;
+    }
+
+    /// <summary>
+    /// Removes a typed base value and its modifiers.
+    /// </summary>
+    public bool Remove<T>(DataKey<T> key)
+    {
+        if (!slots.TryGetValue(key.Id, out var slot) || !slot.Remove(out var oldValue))
         {
             return false;
         }
 
-        values.Remove(key);
-        modifiers.Remove(key);
-        cachedValues.Remove(key);
-        dirtyKeys.Remove(key);
+        MarkDirty(key);
         NotifyChanged(key, oldValue, null);
         return true;
     }
@@ -136,99 +127,89 @@ public sealed class Data
     /// <summary>
     /// Adds a numeric value to an existing base value.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="delta">Numeric delta.</param>
-    public void Add<T>(string key, T delta) where T : INumber<T>
+    public void Add<T>(DataKey<T> key, T delta) where T : INumber<T>
     {
-        Set(key, GetBase(key, T.Zero) + delta);
+        Set(key, GetBase(key, key.DefaultValue) + delta);
     }
 
     /// <summary>
     /// Multiplies an existing base value.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="factor">Numeric multiplier.</param>
-    public void Multiply<T>(string key, T factor) where T : INumber<T>
+    public void Multiply<T>(DataKey<T> key, T factor) where T : INumber<T>
     {
-        Set(key, GetBase(key, T.Zero) * factor);
+        Set(key, GetBase(key, key.DefaultValue) * factor);
     }
 
     /// <summary>
-    /// Adds a modifier to a supported key.
+    /// Adds a modifier to a typed numeric key.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="modifier">Runtime modifier.</param>
-    public bool AddModifier(string key, DataModifier modifier)
+    public bool AddModifier<T>(DataKey<T> key, DataModifier modifier)
     {
-        if (!DataRegistry.SupportModifiers(key))
+        return AddModifier((IDataKey)key, modifier);
+    }
+
+    /// <summary>
+    /// Adds a modifier to a catalog-resolved numeric key.
+    /// </summary>
+    public bool AddModifier(IDataKey key, DataModifier modifier)
+    {
+        if (!key.SupportsModifiers || !key.IsNumeric)
         {
             return false;
         }
 
-        if (!modifiers.TryGetValue(key, out var list))
+        var slot = GetOrCreateSlot(key);
+        if (!slot.AddModifier(modifier))
         {
-            list = new List<DataModifier>();
-            modifiers[key] = list;
+            return false;
         }
 
-        for (var i = 0; i < list.Count; i++)
-        {
-            if (list[i].Id == modifier.Id)
-            {
-                return false;
-            }
-        }
-
-        var insertIndex = list.BinarySearch(modifier, ModifierPriorityComparer.Instance);
-        if (insertIndex < 0) insertIndex = ~insertIndex;
-        list.Insert(insertIndex, modifier);
         MarkDirty(key);
-        NotifyChanged(key, null, Get<float>(key));
+        NotifyChanged(key, null, slot.GetBoxed(this));
         return true;
     }
 
     /// <summary>
     /// Removes a modifier by id.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    /// <param name="modifierId">Modifier id.</param>
-    public bool RemoveModifier(string key, string modifierId)
+    public bool RemoveModifier<T>(DataKey<T> key, string modifierId)
     {
-        if (!modifiers.TryGetValue(key, out var list))
-        {
-            return false;
-        }
+        return RemoveModifier((IDataKey)key, modifierId);
+    }
 
-        var removed = list.RemoveAll(modifier => modifier.Id == modifierId);
-        if (removed <= 0)
+    /// <summary>
+    /// Removes a modifier by id.
+    /// </summary>
+    public bool RemoveModifier(IDataKey key, string modifierId)
+    {
+        if (!slots.TryGetValue(key.Id, out var slot) || !slot.RemoveModifier(modifierId))
         {
             return false;
         }
 
         MarkDirty(key);
-        NotifyChanged(key, null, Get<float>(key));
+        NotifyChanged(key, null, slot.GetBoxed(this));
         return true;
     }
 
     /// <summary>
     /// Removes every modifier whose source matches the supplied source object.
     /// </summary>
-    /// <param name="source">Modifier source object.</param>
     public int RemoveModifiersBySource(object source)
     {
         ArgumentNullException.ThrowIfNull(source);
         var removedTotal = 0;
-        foreach (var pair in modifiers)
+        foreach (var pair in slots)
         {
-            var removed = pair.Value.RemoveAll(modifier => ReferenceEquals(modifier.Source, source));
+            var removed = pair.Value.RemoveModifiersBySource(source);
             if (removed <= 0)
             {
                 continue;
             }
 
             removedTotal += removed;
-            MarkDirty(pair.Key);
-            NotifyChanged(pair.Key, null, Get<float>(pair.Key));
+            MarkDirty(pair.Value.Key);
+            NotifyChanged(pair.Value.Key, null, pair.Value.GetBoxed(this));
         }
 
         return removedTotal;
@@ -237,50 +218,27 @@ public sealed class Data
     /// <summary>
     /// Gets a copy of all modifiers for a key.
     /// </summary>
-    /// <param name="key">Runtime Data key.</param>
-    public List<DataModifier> GetModifiers(string key)
+    public IReadOnlyList<DataModifier> GetModifiers<T>(DataKey<T> key)
     {
-        return modifiers.TryGetValue(key, out var list) ? new List<DataModifier>(list) : new List<DataModifier>();
+        return slots.TryGetValue(key.Id, out var slot) ? slot.GetModifiers() : Array.Empty<DataModifier>();
     }
 
     /// <summary>
-    /// Loads public readable config properties into Data.
+    /// Resets existing values in a category to runtime defaults.
     /// </summary>
-    /// <param name="config">Authoring config object.</param>
-    public void LoadFromConfig(object config)
-    {
-        var type = config.GetType();
-        if (!ConfigPropertyCache.TryGetValue(type, out var cached))
-        {
-            cached = BuildPropertyCache(type);
-            ConfigPropertyCache[type] = cached;
-        }
-
-        for (var i = 0; i < cached.Length; i++)
-        {
-            var (prop, key) = cached[i];
-            var value = prop.GetValue(config);
-            if (value != null)
-            {
-                Set(key, value);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Resets existing values in a category to metadata defaults.
-    /// </summary>
-    /// <param name="category">Data category enum.</param>
     public void ResetByCategory(Enum category)
     {
-        var metas = DataRegistry.GetCachedMetaByCategory(category);
-        for (var i = 0; i < metas.Length; i++)
+        var keys = catalog.GetByCategory(category);
+        for (var i = 0; i < keys.Count; i++)
         {
-            var meta = metas[i];
-            if (values.ContainsKey(meta.Key))
+            var key = keys[i];
+            if (!slots.TryGetValue(key.Id, out var slot) || !slot.HasBaseValue)
             {
-                Set(meta.Key, meta.GetDefaultValue());
+                continue;
             }
+
+            TryApplyUntyped(key, key.DefaultValueBoxed, out var oldValue, out var newValue);
+            NotifyChanged(key, oldValue, newValue);
         }
     }
 
@@ -289,181 +247,84 @@ public sealed class Data
     /// </summary>
     public void Reset()
     {
-        values.Clear();
-        modifiers.Clear();
-        cachedValues.Clear();
-        dirtyKeys.Clear();
+        slots.Clear();
     }
 
     /// <summary>
-    /// Gets a copy of all base values.
+    /// Gets a copy of all explicit base values keyed by stable DataKey.
     /// </summary>
     public Dictionary<string, object?> GetAll()
     {
-        return new Dictionary<string, object?>(values);
-    }
-
-    private static (PropertyInfo, string)[] BuildPropertyCache(Type type)
-    {
-        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-        var result = new List<(PropertyInfo, string)>(properties.Length);
-        for (var i = 0; i < properties.Length; i++)
+        var result = new Dictionary<string, object?>(StringComparer.Ordinal);
+        foreach (var pair in slots)
         {
-            var prop = properties[i];
-            if (!prop.CanRead) continue;
-
-            var attr = prop.GetCustomAttribute<DataKeyAttribute>();
-            result.Add((prop, attr?.Key ?? prop.Name));
-        }
-        return result.ToArray();
-    }
-
-    private object? GetComputedValueBoxed(string key, DataMeta meta, object? defaultValue, Type targetType)
-    {
-        if (!dirtyKeys.Contains(key) && cachedValues.TryGetValue(key, out var cached))
-        {
-            return cached == null ? defaultValue : ConvertValueBoxed(cached, targetType, defaultValue);
-        }
-
-        var result = meta.Compute!(this);
-        cachedValues[key] = result;
-        dirtyKeys.Remove(key);
-        return result == null ? defaultValue : ConvertValueBoxed(result, targetType, defaultValue);
-    }
-
-    private object? GetModifiedValueBoxed(string key, object baseValue, object? defaultValue, Type targetType)
-    {
-        if (!dirtyKeys.Contains(key) && cachedValues.TryGetValue(key, out var cached))
-        {
-            return cached == null ? defaultValue : ConvertValueBoxed(cached, targetType, defaultValue);
-        }
-
-        var finalValue = CalculateFinalValue(key, Convert.ToSingle(baseValue));
-        cachedValues[key] = finalValue;
-        dirtyKeys.Remove(key);
-        return ConvertValueBoxed(finalValue, targetType, defaultValue);
-    }
-
-    private float CalculateFinalValue(string key, float baseValue)
-    {
-        if (!modifiers.TryGetValue(key, out var list) || list.Count == 0)
-        {
-            return baseValue;
-        }
-
-        var additive = 0f;
-        var multiplicative = 1f;
-        var finalAdditive = 0f;
-        float? overrideValue = null;
-        float? cap = null;
-
-        for (var i = 0; i < list.Count; i++)
-        {
-            var modifier = list[i];
-            switch (modifier.Type)
+            var slot = pair.Value;
+            if (slot.HasBaseValue)
             {
-                case ModifierType.Additive:
-                    additive += modifier.Value;
-                    break;
-                case ModifierType.Multiplicative:
-                    multiplicative *= modifier.Value;
-                    break;
-                case ModifierType.FinalAdditive:
-                    finalAdditive += modifier.Value;
-                    break;
-                case ModifierType.Override:
-                    overrideValue ??= modifier.Value;
-                    break;
-                case ModifierType.Cap:
-                    cap = cap.HasValue ? Math.Min(cap.Value, modifier.Value) : modifier.Value;
-                    break;
+                result[slot.Key.StableKey] = slot.BaseValueBoxed;
             }
         }
 
-        var result = overrideValue ?? (baseValue + additive) * multiplicative + finalAdditive;
-        if (cap.HasValue) result = Math.Min(result, cap.Value);
-
-        var meta = DataRegistry.GetMeta(key);
-        return meta != null ? Convert.ToSingle(meta.Clamp(result)) : result;
+        return result;
     }
 
-    private void MarkDirty(string key)
+    /// <summary>
+    /// Catalog/snapshot 边界使用的 typed apply 入口。
+    /// </summary>
+    internal bool TryApplyUntyped(IDataKey key, object? value, out object? oldValue, out object? newValue)
     {
-        dirtyKeys.Add(key);
-        cachedValues.Remove(key);
-
-        foreach (var dependentKey in DataRegistry.GetDependentComputedKeys(key))
+        var slot = GetOrCreateSlot(key);
+        if (!slot.TrySetBoxed(value, out oldValue, out newValue))
         {
-            dirtyKeys.Add(dependentKey);
-            cachedValues.Remove(dependentKey);
+            return false;
+        }
+
+        MarkDirty(key);
+        NotifyChanged(key, oldValue, newValue);
+        return true;
+    }
+
+    private DataSlot<T> GetOrCreateSlot<T>(DataKey<T> key)
+    {
+        if (!slots.TryGetValue(key.Id, out var slot))
+        {
+            slot = key.CreateSlot();
+            slots.Add(key.Id, slot);
+        }
+
+        return (DataSlot<T>)slot;
+    }
+
+    private IDataSlot GetOrCreateSlot(IDataKey key)
+    {
+        if (!slots.TryGetValue(key.Id, out var slot))
+        {
+            slot = key.CreateSlot();
+            slots.Add(key.Id, slot);
+        }
+
+        return slot;
+    }
+
+    private void MarkDirty(IDataKey key)
+    {
+        if (slots.TryGetValue(key.Id, out var slot))
+        {
+            slot.MarkDirty();
+        }
+
+        var dependents = catalog.GetDependentKeyIds(key.Id);
+        for (var i = 0; i < dependents.Count; i++)
+        {
+            if (slots.TryGetValue(dependents[i], out var dependentSlot))
+            {
+                dependentSlot.MarkDirty();
+            }
         }
     }
 
-    private void NotifyChanged(string key, object? oldValue, object? newValue)
+    private void NotifyChanged(IDataKey key, object? oldValue, object? newValue)
     {
         changeSink?.OnDataChanged(new DataChangedEventData(key, oldValue, newValue));
-    }
-
-    private static object? ConvertValueBoxed(object value, Type targetType, object? defaultValue)
-    {
-        if (targetType.IsInstanceOfType(value))
-        {
-            return value;
-        }
-
-        try
-        {
-            var valueType = value.GetType();
-            if (targetType.IsEnum)
-            {
-                if (value is string enumText)
-                {
-                    return Enum.Parse(targetType, enumText, ignoreCase: false);
-                }
-
-                return Enum.ToObject(targetType, Convert.ToInt64(value));
-            }
-
-            if (valueType.IsEnum)
-            {
-                if (targetType == typeof(string))
-                {
-                    return value.ToString() ?? defaultValue;
-                }
-
-                return Convert.ChangeType(Convert.ToInt64(value), targetType);
-            }
-
-            return Convert.ChangeType(value, targetType);
-        }
-        catch
-        {
-            return defaultValue;
-        }
-    }
-
-    private static T ConvertValue<T>(object? value, object? defaultValue)
-    {
-        var fallback = defaultValue ?? DataMeta.GetTypeDefaultValue(typeof(T));
-        if (value == null)
-        {
-            return fallback is T fallbackValue ? fallbackValue : default!;
-        }
-
-        var converted = ConvertValueBoxed(value, typeof(T), fallback);
-        return converted is T typedValue ? typedValue : default!;
-    }
-
-    private sealed class ModifierPriorityComparer : IComparer<DataModifier>
-    {
-        public static readonly ModifierPriorityComparer Instance = new();
-
-        public int Compare(DataModifier? x, DataModifier? y)
-        {
-            if (x == null && y == null) return 0;
-            if (x == null) return -1;
-            if (y == null) return 1;
-            return x.Priority.CompareTo(y.Priority);
-        }
     }
 }

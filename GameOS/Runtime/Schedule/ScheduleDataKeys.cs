@@ -8,356 +8,170 @@ namespace SkilmeAI.GameOS.Runtime.Schedule;
 public static class ScheduleDataKeys
 {
     /// <summary>系统唯一 Id。</summary>
-    public static readonly DataMeta SystemId = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.SystemId",
-        DisplayName = "System Id",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "调度系统使用的稳定系统 Id。"
-    });
+    public static readonly DataKey<string> SystemId = DataKey.Create<string>("Schedule.SystemId",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>系统挂载分组。</summary>
-    public static readonly DataMeta MountGroup = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.MountGroup",
-        DisplayName = "Mount Group",
-        Type = typeof(SystemGroup),
-        Category = ScheduleCategory.System,
-        DefaultValue = SystemGroup.Else,
-        Description = "系统在 RuntimeSchedule 中的挂载分组。"
-    });
+    public static readonly DataKey<SystemGroup> MountGroup = DataKey.Create<SystemGroup>("Schedule.MountGroup",
+        defaultValue: SystemGroup.Else,
+        category: ScheduleCategory.System);
 
     /// <summary>系统标签。</summary>
-    public static readonly DataMeta Tags = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Tags",
-        DisplayName = "System Tags",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "系统标签 flags 文本，供 DataOS authoring 和预设筛选使用。"
-    });
+    public static readonly DataKey<string> Tags = DataKey.Create<string>("Schedule.Tags",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>是否为必需系统。</summary>
-    public static readonly DataMeta Required = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Required",
-        DisplayName = "Required",
-        Type = typeof(bool),
-        Category = ScheduleCategory.System,
-        DefaultValue = false,
-        Description = "系统是否为必需系统。"
-    });
+    public static readonly DataKey<bool> Required = DataKey.Create<bool>("Schedule.Required",
+        defaultValue: false,
+        category: ScheduleCategory.System);
 
     /// <summary>默认是否自动装载。</summary>
-    public static readonly DataMeta AutoLoad = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.AutoLoad",
-        DisplayName = "Auto Load",
-        Type = typeof(bool),
-        Category = ScheduleCategory.System,
-        DefaultValue = true,
-        Description = "没有激活预设时是否默认装载该系统。"
-    });
+    public static readonly DataKey<bool> AutoLoad = DataKey.Create<bool>("Schedule.AutoLoad",
+        defaultValue: true,
+        category: ScheduleCategory.System);
 
     /// <summary>首次纳入管理时是否启用。</summary>
-    public static readonly DataMeta StartEnabled = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.StartEnabled",
-        DisplayName = "Start Enabled",
-        Type = typeof(bool),
-        Category = ScheduleCategory.System,
-        DefaultValue = true,
-        Description = "系统首次注册到 RuntimeSchedule 时的启用状态。"
-    });
+    public static readonly DataKey<bool> StartEnabled = DataKey.Create<bool>("Schedule.StartEnabled",
+        defaultValue: true,
+        category: ScheduleCategory.System);
 
     /// <summary>加载优先级。</summary>
-    public static readonly DataMeta Priority = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Priority",
-        DisplayName = "Priority",
-        Type = typeof(int),
-        Category = ScheduleCategory.System,
-        DefaultValue = 0,
-        Description = "系统加载和依赖排序优先级，数值越小越优先。"
-    });
+    public static readonly DataKey<int> Priority = DataKey.Create<int>("Schedule.Priority",
+        defaultValue: 0,
+        category: ScheduleCategory.System);
 
     /// <summary>允许的流程状态。</summary>
-    public static readonly DataMeta AllowedFlowStates = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.AllowedFlowStates",
-        DisplayName = "Allowed Flow States",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "系统允许运行的流程状态 flags 文本。"
-    });
+    public static readonly DataKey<string> AllowedFlowStates = DataKey.Create<string>("Schedule.AllowedFlowStates",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>要求存在的覆盖层。</summary>
-    public static readonly DataMeta RequiredOverlays = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.RequiredOverlays",
-        DisplayName = "Required Overlays",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "系统要求存在的覆盖层 flags 文本。"
-    });
+    public static readonly DataKey<string> RequiredOverlays = DataKey.Create<string>("Schedule.RequiredOverlays",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>禁止存在的覆盖层。</summary>
-    public static readonly DataMeta BlockedOverlays = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.BlockedOverlays",
-        DisplayName = "Blocked Overlays",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "系统禁止运行的覆盖层 flags 文本。"
-    });
+    public static readonly DataKey<string> BlockedOverlays = DataKey.Create<string>("Schedule.BlockedOverlays",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>允许的模拟状态。</summary>
-    public static readonly DataMeta AllowedSimulationStates = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.AllowedSimulationStates",
-        DisplayName = "Allowed Simulation States",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "系统允许运行的模拟状态 flags 文本。"
-    });
+    public static readonly DataKey<string> AllowedSimulationStates = DataKey.Create<string>("Schedule.AllowedSimulationStates",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>依赖系统 Id 列表。</summary>
-    public static readonly DataMeta Dependencies = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Dependencies",
-        DisplayName = "Dependencies",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "逗号分隔的依赖系统 Id 列表。"
-    });
+    public static readonly DataKey<string> Dependencies = DataKey.Create<string>("Schedule.Dependencies",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>预设名称。</summary>
-    public static readonly DataMeta PresetName = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.PresetName",
-        DisplayName = "Preset Name",
-        Type = typeof(string),
-        Category = ScheduleCategory.Preset,
-        DefaultValue = string.Empty,
-        Description = "系统预设稳定名称。"
-    });
+    public static readonly DataKey<string> PresetName = DataKey.Create<string>("Schedule.PresetName",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.Preset);
 
     /// <summary>预设是否激活。</summary>
-    public static readonly DataMeta PresetIsActive = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Preset.IsActive",
-        DisplayName = "Preset Is Active",
-        Type = typeof(bool),
-        Category = ScheduleCategory.Preset,
-        DefaultValue = false,
-        Description = "系统预设是否为当前激活预设。"
-    });
+    public static readonly DataKey<bool> PresetIsActive = DataKey.Create<bool>("Schedule.Preset.IsActive",
+        defaultValue: false,
+        category: ScheduleCategory.Preset);
 
     /// <summary>预设启用标签。</summary>
-    public static readonly DataMeta PresetEnabledTags = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Preset.EnabledTags",
-        DisplayName = "Preset Enabled Tags",
-        Type = typeof(string),
-        Category = ScheduleCategory.Preset,
-        DefaultValue = string.Empty,
-        Description = "预设启用的系统标签 flags 文本。"
-    });
+    public static readonly DataKey<string> PresetEnabledTags = DataKey.Create<string>("Schedule.Preset.EnabledTags",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.Preset);
 
     /// <summary>预设显式启用系统。</summary>
-    public static readonly DataMeta PresetEnabledSystemIds = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Preset.EnabledSystemIds",
-        DisplayName = "Preset Enabled System Ids",
-        Type = typeof(string),
-        Category = ScheduleCategory.Preset,
-        DefaultValue = string.Empty,
-        Description = "预设显式启用的系统 Id 列表。"
-    });
+    public static readonly DataKey<string> PresetEnabledSystemIds = DataKey.Create<string>("Schedule.Preset.EnabledSystemIds",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.Preset);
 
     /// <summary>预设显式禁用系统。</summary>
-    public static readonly DataMeta PresetDisabledSystemIds = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Preset.DisabledSystemIds",
-        DisplayName = "Preset Disabled System Ids",
-        Type = typeof(string),
-        Category = ScheduleCategory.Preset,
-        DefaultValue = string.Empty,
-        Description = "预设显式禁用的系统 Id 列表。"
-    });
+    public static readonly DataKey<string> PresetDisabledSystemIds = DataKey.Create<string>("Schedule.Preset.DisabledSystemIds",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.Preset);
 
     /// <summary>描述文本。</summary>
-    public static readonly DataMeta Description = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Description",
-        DisplayName = "Schedule Description",
-        Type = typeof(string),
-        Category = ScheduleCategory.System,
-        DefaultValue = string.Empty,
-        Description = "系统或预设描述文本。"
-    });
+    public static readonly DataKey<string> Description = DataKey.Create<string>("Schedule.Description",
+        defaultValue: string.Empty,
+        category: ScheduleCategory.System);
 
     /// <summary>默认波次持续时间。</summary>
-    public static readonly DataMeta WaveDuration = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Spawn.WaveDuration",
-        DisplayName = "Wave Duration",
-        Type = typeof(float),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 60f,
-        MinValue = 0f,
-        Description = "生成系统默认单波持续时间。"
-    });
+    public static readonly DataKey<float> WaveDuration = DataKey.Create<float>("Schedule.Spawn.WaveDuration",
+        defaultValue: 60f,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>最大波次数量。</summary>
-    public static readonly DataMeta MaxWaves = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Spawn.MaxWaves",
-        DisplayName = "Max Waves",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = -1,
-        MinValue = -1f,
-        Description = "生成系统最大波次数；-1 表示不限制。"
-    });
+    public static readonly DataKey<int> MaxWaves = DataKey.Create<int>("Schedule.Spawn.MaxWaves",
+        defaultValue: -1,
+        category: ScheduleCategory.Spawn,
+        minValue: -1f);
 
     /// <summary>波次间隔时间。</summary>
-    public static readonly DataMeta WaveBreakTime = DataRegistry.Register(new DataMeta
-    {
-        Key = "Schedule.Spawn.WaveBreakTime",
-        DisplayName = "Wave Break Time",
-        Type = typeof(float),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 0f,
-        MinValue = 0f,
-        Description = "两波之间的默认休息时间。"
-    });
+    public static readonly DataKey<float> WaveBreakTime = DataKey.Create<float>("Schedule.Spawn.WaveBreakTime",
+        defaultValue: 0f,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>生成规则是否启用。</summary>
-    public static readonly DataMeta SpawnRuleEnabled = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.IsEnabled",
-        DisplayName = "Spawn Rule Enabled",
-        Type = typeof(bool),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = false,
-        Description = "单个生成规则是否启用。"
-    });
+    public static readonly DataKey<bool> SpawnRuleEnabled = DataKey.Create<bool>("Spawn.IsEnabled",
+        defaultValue: false,
+        category: ScheduleCategory.Spawn);
 
     /// <summary>生成位置策略。</summary>
-    public static readonly DataMeta SpawnPositionStrategy = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.PositionStrategy",
-        DisplayName = "Spawn Position Strategy",
-        Type = typeof(string),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = "Rectangle",
-        Description = "生成位置策略，例如 Rectangle 或 Circle。"
-    });
+    public static readonly DataKey<string> SpawnPositionStrategy = DataKey.Create<string>("Spawn.PositionStrategy",
+        defaultValue: "Rectangle",
+        category: ScheduleCategory.Spawn);
 
     /// <summary>最小生成波次。</summary>
-    public static readonly DataMeta SpawnMinWave = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.MinWave",
-        DisplayName = "Spawn Min Wave",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 1,
-        MinValue = 0f,
-        Description = "从第几波开始允许生成。"
-    });
+    public static readonly DataKey<int> SpawnMinWave = DataKey.Create<int>("Spawn.MinWave",
+        defaultValue: 1,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>最大生成波次。</summary>
-    public static readonly DataMeta SpawnMaxWave = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.MaxWave",
-        DisplayName = "Spawn Max Wave",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = -1,
-        MinValue = -1f,
-        Description = "截止第几波允许生成；-1 表示不限制。"
-    });
+    public static readonly DataKey<int> SpawnMaxWave = DataKey.Create<int>("Spawn.MaxWave",
+        defaultValue: -1,
+        category: ScheduleCategory.Spawn,
+        minValue: -1f);
 
     /// <summary>生成间隔。</summary>
-    public static readonly DataMeta SpawnInterval = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.Interval",
-        DisplayName = "Spawn Interval",
-        Type = typeof(float),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 1f,
-        MinValue = 0f,
-        Description = "同一规则两次生成之间的间隔秒数。"
-    });
+    public static readonly DataKey<float> SpawnInterval = DataKey.Create<float>("Spawn.Interval",
+        defaultValue: 1f,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>单波最大生成数量。</summary>
-    public static readonly DataMeta SpawnMaxCountPerWave = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.MaxCountPerWave",
-        DisplayName = "Spawn Max Count Per Wave",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = -1,
-        MinValue = -1f,
-        Description = "单波次最大生成数量；-1 表示不限制。"
-    });
+    public static readonly DataKey<int> SpawnMaxCountPerWave = DataKey.Create<int>("Spawn.MaxCountPerWave",
+        defaultValue: -1,
+        category: ScheduleCategory.Spawn,
+        minValue: -1f);
 
     /// <summary>单次生成数量。</summary>
-    public static readonly DataMeta SpawnSingleCount = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.SingleCount",
-        DisplayName = "Spawn Single Count",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 1,
-        MinValue = 0f,
-        Description = "每次触发规则时生成的基础数量。"
-    });
+    public static readonly DataKey<int> SpawnSingleCount = DataKey.Create<int>("Spawn.SingleCount",
+        defaultValue: 1,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>单次生成数量波动。</summary>
-    public static readonly DataMeta SpawnSingleVariance = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.SingleVariance",
-        DisplayName = "Spawn Single Variance",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 0,
-        MinValue = 0f,
-        Description = "单次生成数量的随机波动值。"
-    });
+    public static readonly DataKey<int> SpawnSingleVariance = DataKey.Create<int>("Spawn.SingleVariance",
+        defaultValue: 0,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>波次开始后的首次生成延迟。</summary>
-    public static readonly DataMeta SpawnStartDelay = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.StartDelay",
-        DisplayName = "Spawn Start Delay",
-        Type = typeof(float),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 0f,
-        MinValue = 0f,
-        Description = "波次开始后首次生成的延迟秒数。"
-    });
+    public static readonly DataKey<float> SpawnStartDelay = DataKey.Create<float>("Spawn.StartDelay",
+        defaultValue: 0f,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>生成权重。</summary>
-    public static readonly DataMeta SpawnWeight = DataRegistry.Register(new DataMeta
-    {
-        Key = "Spawn.Weight",
-        DisplayName = "Spawn Weight",
-        Type = typeof(int),
-        Category = ScheduleCategory.Spawn,
-        DefaultValue = 1,
-        MinValue = 0f,
-        Description = "随机生成池中的权重。"
-    });
+    public static readonly DataKey<int> SpawnWeight = DataKey.Create<int>("Spawn.Weight",
+        defaultValue: 1,
+        category: ScheduleCategory.Spawn,
+        minValue: 0f);
 
     /// <summary>显式触发静态 DataKey 注册。</summary>
     public static void RegisterAll()

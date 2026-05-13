@@ -8,126 +8,60 @@ namespace SkilmeAI.GameOS.Capabilities.Feature;
 public static class FeatureDataKeys
 {
     /// <summary>Feature 稳定 Id。</summary>
-    public static readonly DataMeta FeatureId = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Id",
-        DisplayName = "Feature Id",
-        Type = typeof(string),
-        Category = FeatureCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "Feature 的稳定唯一 Id。"
-    });
+    public static readonly DataKey<string> FeatureId = DataKey.Create<string>("Feature.Id",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Basic);
 
     /// <summary>Feature Handler Id。</summary>
-    public static readonly DataMeta HandlerId = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.HandlerId",
-        DisplayName = "Feature Handler Id",
-        Type = typeof(string),
-        Category = FeatureCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "运行时处理器注册 Id。"
-    });
+    public static readonly DataKey<string> HandlerId = DataKey.Create<string>("Feature.HandlerId",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Basic);
 
     /// <summary>Feature 描述。</summary>
-    public static readonly DataMeta Description = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Description",
-        DisplayName = "Feature Description",
-        Type = typeof(string),
-        Category = FeatureCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "Feature UI 和工具使用的描述文本。"
-    });
+    public static readonly DataKey<string> Description = DataKey.Create<string>("Feature.Description",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Basic);
 
     /// <summary>Feature 分类。</summary>
-    public static readonly DataMeta Category = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Category",
-        DisplayName = "Feature Category",
-        Type = typeof(string),
-        Category = FeatureCategory.Basic,
-        DefaultValue = string.Empty,
-        Description = "Feature 在游戏侧 authoring 中的分类。"
-    });
+    public static readonly DataKey<string> Category = DataKey.Create<string>("Feature.Category",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Basic);
 
     /// <summary>修改器目标 DataKey。</summary>
-    public static readonly DataMeta ModifierTargetKey = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Modifier.TargetKey",
-        DisplayName = "Modifier Target Key",
-        Type = typeof(string),
-        Category = FeatureCategory.Modifier,
-        DefaultValue = string.Empty,
-        Description = "Feature 修改器作用的 Runtime DataKey。"
-    });
+    public static readonly DataKey<string> ModifierTargetKey = DataKey.Create<string>("Feature.Modifier.TargetKey",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Modifier);
 
     /// <summary>修改器类型。</summary>
-    public static readonly DataMeta ModifierType = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Modifier.Type",
-        DisplayName = "Modifier Type",
-        Type = typeof(string),
-        Category = FeatureCategory.Modifier,
-        DefaultValue = string.Empty,
-        Description = "Feature 修改器类型。"
-    });
+    public static readonly DataKey<string> ModifierType = DataKey.Create<string>("Feature.Modifier.Type",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Modifier);
 
     /// <summary>修改器数值。</summary>
-    public static readonly DataMeta ModifierValue = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Modifier.Value",
-        DisplayName = "Modifier Value",
-        Type = typeof(float),
-        Category = FeatureCategory.Modifier,
-        DefaultValue = 0f,
-        Description = "Feature 修改器数值。"
-    });
+    public static readonly DataKey<float> ModifierValue = DataKey.Create<float>("Feature.Modifier.Value",
+        defaultValue: 0f,
+        category: FeatureCategory.Modifier);
 
     /// <summary>修改器优先级。</summary>
-    public static readonly DataMeta ModifierPriority = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.Modifier.Priority",
-        DisplayName = "Modifier Priority",
-        Type = typeof(int),
-        Category = FeatureCategory.Modifier,
-        DefaultValue = 0,
-        Description = "Feature 修改器计算优先级。"
-    });
+    public static readonly DataKey<int> ModifierPriority = DataKey.Create<int>("Feature.Modifier.Priority",
+        defaultValue: 0,
+        category: FeatureCategory.Modifier);
 
     /// <summary>是否启用。</summary>
-    public static readonly DataMeta IsEnabled = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.IsEnabled",
-        DisplayName = "Is Enabled",
-        Type = typeof(bool),
-        Category = FeatureCategory.Runtime,
-        DefaultValue = true,
-        Description = "Feature 是否启用。"
-    });
+    public static readonly DataKey<bool> IsEnabled = DataKey.Create<bool>("Feature.IsEnabled",
+        defaultValue: true,
+        category: FeatureCategory.Runtime);
 
     /// <summary>是否激活中。</summary>
-    public static readonly DataMeta IsActive = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.IsActive",
-        DisplayName = "Is Active",
-        Type = typeof(bool),
-        Category = FeatureCategory.Runtime,
-        DefaultValue = false,
-        Description = "Feature 当前是否处于单次运行中。"
-    });
+    public static readonly DataKey<bool> IsActive = DataKey.Create<bool>("Feature.IsActive",
+        defaultValue: false,
+        category: FeatureCategory.Runtime);
 
     /// <summary>激活次数。</summary>
-    public static readonly DataMeta ActivationCount = DataRegistry.Register(new DataMeta
-    {
-        Key = "Feature.ActivationCount",
-        DisplayName = "Activation Count",
-        Type = typeof(int),
-        Category = FeatureCategory.Runtime,
-        DefaultValue = 0,
-        MinValue = 0f,
-        Description = "Feature 累计激活次数。"
-    });
+    public static readonly DataKey<int> ActivationCount = DataKey.Create<int>("Feature.ActivationCount",
+        defaultValue: 0,
+        category: FeatureCategory.Runtime,
+        minValue: 0f);
 
     /// <summary>
     /// 显式触发静态 DataKey 注册。

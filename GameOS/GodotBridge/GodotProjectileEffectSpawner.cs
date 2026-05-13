@@ -87,14 +87,14 @@ public partial class GodotProjectileEffectSpawner : Node
 
     private void OnProjectileSpawned(ProjectileSpawned data)
     {
-        var scenePath = data.Projectile.Data.Get<string>(ProjectileDataKeys.ScenePath, string.Empty);
+        var scenePath = data.Projectile.Data.Get(ProjectileDataKeys.ScenePath, string.Empty);
         var position = data.Projectile.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
         InstantiateVisual(data.Projectile, scenePath, position, ResolveParent(ProjectileParentPath), "Projectile");
     }
 
     private void OnEffectSpawned(EffectSpawned data)
     {
-        var scenePath = data.Effect.Data.Get<string>(EffectDataKeys.ScenePath, string.Empty);
+        var scenePath = data.Effect.Data.Get(EffectDataKeys.ScenePath, string.Empty);
         var position = data.Effect.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
         var node = InstantiateVisual(data.Effect, scenePath, position, ResolveParent(EffectParentPath), "Effect");
         if (node != null)
@@ -199,7 +199,7 @@ public partial class GodotProjectileEffectSpawner : Node
 
     private static string ResolveEffectAnimationName(IEntity effect, AnimatedSprite2D sprite)
     {
-        var animationName = effect.Data.Get<string>(EffectDataKeys.AnimationName, string.Empty);
+        var animationName = effect.Data.Get(EffectDataKeys.AnimationName, string.Empty);
         if (!string.IsNullOrWhiteSpace(animationName) && sprite.SpriteFrames?.HasAnimation(animationName) == true)
         {
             return animationName;

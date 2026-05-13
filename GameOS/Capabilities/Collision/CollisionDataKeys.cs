@@ -8,49 +8,25 @@ namespace SkilmeAI.GameOS.Capabilities.Collision;
 public static class CollisionDataKeys
 {
     /// <summary>实体所属碰撞层。</summary>
-    public static readonly DataMeta CollisionLayer = DataRegistry.Register(new DataMeta
-    {
-        Key = "Collision.Layer",
-        DisplayName = "Collision Layer",
-        Type = typeof(uint),
-        Category = CollisionCategory.Config,
-        DefaultValue = 0u,
-        Description = "实体自身碰撞身份层。"
-    });
+    public static readonly DataKey<uint> CollisionLayer = DataKey.Create<uint>("Collision.Layer",
+        defaultValue: 0u,
+        category: CollisionCategory.Config);
 
     /// <summary>实体感兴趣的碰撞层。</summary>
-    public static readonly DataMeta CollisionMask = DataRegistry.Register(new DataMeta
-    {
-        Key = "Collision.Mask",
-        DisplayName = "Collision Mask",
-        Type = typeof(uint),
-        Category = CollisionCategory.Config,
-        DefaultValue = 0u,
-        Description = "实体碰撞查询或事件过滤使用的目标层掩码。"
-    });
+    public static readonly DataKey<uint> CollisionMask = DataKey.Create<uint>("Collision.Mask",
+        defaultValue: 0u,
+        category: CollisionCategory.Config);
 
     /// <summary>实体队伍标识。</summary>
-    public static readonly DataMeta Team = DataRegistry.Register(new DataMeta
-    {
-        Key = "Collision.Team",
-        DisplayName = "Team",
-        Type = typeof(int),
-        Category = CollisionCategory.Config,
-        DefaultValue = 0,
-        Description = "用于碰撞过滤和后续伤害敌对判断的队伍标识。"
-    });
+    public static readonly DataKey<int> Team = DataKey.Create<int>("Collision.Team",
+        defaultValue: 0,
+        category: CollisionCategory.Config);
 
     /// <summary>纯运行时碰撞扫描使用的圆形半径，单位像素。</summary>
-    public static readonly DataMeta CollisionRadius = DataRegistry.Register(new DataMeta
-    {
-        Key = "Collision.Radius",
-        DisplayName = "Collision Radius",
-        Type = typeof(float),
-        Category = CollisionCategory.Config,
-        DefaultValue = 0f,
-        MinValue = 0f,
-        Description = "Movement 纯运行时碰撞扫描使用的圆形碰撞半径。"
-    });
+    public static readonly DataKey<float> CollisionRadius = DataKey.Create<float>("Collision.Radius",
+        defaultValue: 0f,
+        category: CollisionCategory.Config,
+        minValue: 0f);
 
     /// <summary>
     /// 显式触发静态 DataKey 注册。

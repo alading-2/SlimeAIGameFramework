@@ -10,11 +10,13 @@ GameOS 基础层验证采用“框架规格 + 游戏承载”模式：
 - `SkilmeAI/GameOS/Validation/` 定义验证契约、命名规则、artifact 字段和判定规则。
 - `Games/BrotatoLike` 承载实际可运行的 Godot `.tscn` 场景，因为 `res://` 绑定当前 `project.godot` root。
 
-该体系用于补齐纯 C# 测试之外的 Godot headless 运行证据。第一轮只覆盖 `Runtime/Event`，后续按基础层顺序扩展：
+该体系用于补齐纯 C# 测试之外的 Godot headless 运行证据。当前已覆盖 `Runtime/Data` 和 `Runtime/Event`；后续按基础层顺序扩展：
 
 ```text
-Data -> Entity -> Pool -> Timer -> Resource -> Schedule -> Relationship -> Observation
+Entity -> Pool -> Timer -> Resource -> Schedule -> Relationship -> Observation
 ```
+
+新增功能如果依赖 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧胶水，必须新增独立验证场景。`run-main-smoke` 和普通主场景 playable acceptance 只能作为回归补充，不能替代该功能自己的验证场景。
 
 ## 场景命名
 
@@ -24,7 +26,15 @@ Data -> Entity -> Pool -> Timer -> Resource -> Schedule -> Relationship -> Obser
 - C# 脚本放在 `Src/SceneTests/<Area>/<Layer>/`。
 - README 放在场景同目录，文件名固定为 `README.md`。
 
-当前 Event 场景固定为：
+当前 Runtime/Data 场景固定为：
+
+```text
+Games/BrotatoLike/SkilmeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn
+Games/BrotatoLike/SkilmeAI/Scenes/Validation/Runtime/Data/README.md
+Games/BrotatoLike/SkilmeAI/Src/SceneTests/Runtime/Data/RuntimeDataValidationScene.cs
+```
+
+当前 Runtime/Event 场景固定为：
 
 ```text
 Games/BrotatoLike/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn
@@ -147,10 +157,23 @@ GameOS Runtime Event validation FAIL
 
 基础层场景允许最小必要依赖，但必须在 README 和 artifact 中标注。
 
+- Runtime/Data 核心断言只依赖 `SkilmeAI.GameOS.Runtime.Data`。
+- 使用 `RuntimeEntity` 或 `DataPropertyChanged` 的检查必须标注为 Data-to-Event bridge 检查。
 - EventBus 核心断言只依赖 `SkilmeAI.GameOS.Runtime.Event`。
 - 使用 `RuntimeEntity` 或 `Data.Set` 的检查必须标注为跨层桥接检查。
 - `WorldEvents.World` 使用前后必须 Clear，避免污染同进程后续场景。
 - 游戏侧代码只能作为 Godot 承载和 runner 接入，不应引入 BrotatoLike 玩法行为作为基础层通过条件。
+
+## Runtime/Data 第一轮覆盖
+
+`RuntimeDataValidation` 必须验证：
+
+- `DataCatalog` 能 typed resolve `DataKey<T>` 并保留 capability enabled/disabled metadata。
+- `DataKey<T>` default、`Set`、`Get`、`TryGet`、`Has`、`Remove` 和 `GetAll` typed lifecycle。
+- min/max clamp 和 options 非法值拒绝。
+- numeric modifier 叠加、重复 modifier 拒绝、移除 modifier，以及 computed key dependency dirty。
+- `ResetByCategory` 只重置目标分类中的显式值。
+- `RuntimeEntity + Data.Set(DataKey<T>)` 触发 `Runtime.Events.Core.DataPropertyChanged`，并保留 stable key、old value、new value。
 
 ## Runtime/Event 第一轮覆盖
 

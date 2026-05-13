@@ -122,7 +122,7 @@ Godot smoke 验证所有 MoveMode 的 `Node2D.Position` 同步。
 ### 可以修改
 
 - 新增 `IMovementStrategy` 实现并注册到 `MovementStrategyRegistry`
-- 新增 `MovementDataKeys`（遵循 `static readonly DataMeta` + `DataRegistry.Register`）
+- 新增 `MovementDataKeys`（暴露 `static readonly DataKey<T>`，并同步 DataOS descriptor mirror）
 - 调整 `MovementParams` 默认值
 - 在 GodotBridge 中新增驱动方式
 

@@ -1,7 +1,7 @@
 # GameOS Capability 索引
 
 > 状态：routing-index  
-> 更新日期：2026-05-09  
+> 更新日期：2026-05-13  
 > 范围：AI 任务路由、Capability 所有权、状态规范、验证证据。
 
 ## 定位
@@ -9,6 +9,8 @@
 本索引是 GameOS Capability 工作的第一路由入口。它告诉 AI 或开发者：某个 Capability 归哪个 skill 所有，应该先读哪些 contract / debug 文档，涉及哪些 DataKeys 和 Events，GodotBridge 边界在哪里，以及需要哪些验证证据。
 
 本文件不是 runtime registry，不改变 public API。`capability.json` 仍是本地 metadata 来源；本索引用来补充跨 Capability 的路由和证据规则。
+
+Capability 是 `Capability Composition Runtime` 的玩法组合和所有权单元。新增或修改 gameplay 行为时，优先路由到对应 Capability 的 service、tool、handler、DataKey、Event、selector 和测试，不新增泛型 `Component` 或绕过 owner 的 `System`。`Godot*Component` 是 GodotBridge Adapter 的 legacy compatibility name；`MovementSystem`、`CollisionSystem` 等现有类名是 Runtime Process / Schedule Process 的兼容符号。
 
 ## 状态规则
 
@@ -33,18 +35,30 @@
 cd /home/slime/Code/SkilmeAI/SkilmeAI
 Tools/run-build.sh
 Tools/run-tests.sh
+Tools/run-dataos-validate.sh
 ```
 
 当 Capability 触及 GodotBridge 时，BrotatoLike smoke 或 scene evidence 的参考命令：
 
 ```bash
 cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
-Tools/run-godot-smoke.sh
+Tools/run-build.sh
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
 
-当前阶段暂不运行 Godot 场景验证。`Tools/run-godot-smoke.sh` 只能作为 bridge 和 smoke path 证据，不是 playable-slice 完成证据。
+`Tools/run-godot-smoke.sh` 只作为兼容入口；新证据优先使用统一 scene runner 和 analyzer。
+
+## Typed DataKey / Descriptor 路由
+
+- Capability Runtime DataKeys 必须暴露为 `DataKey<T>` handles，例如 `DamageDataKeys.CurrentHp`；业务代码只调用 `Data.Get/Set/TryGet/Has/Remove(DataKey<T>)`。
+- stable key string 只允许在 DataOS、snapshot、manifest、observation、debug dump 和 catalog resolve 边界出现，不作为 gameplay write API。
+- authoring metadata 属于 DataOS `data_key_descriptor`，包括 display name、description、icon、owner skill、range/options、default mirror 和 modifier/computed 标记。
+- 每个 descriptor 必须有明确 `ownerCapability` 和 `ownerSkill`；游戏专属 descriptor 留在游戏 seed/profile，不上提为框架默认。
+- DataOS generator / validator / loader 必须验证 descriptor coverage、type/default drift、capability dependencies、disabled capability trimming 和 resource ownership。
+- 修改任何 Capability DataKey 后，必须同步 DataOS descriptor mirror 或验证会在 `Tools/run-dataos-validate.sh`、`Tools/run-tests.sh`、BrotatoLike build/smoke 中失败。
+- 如果任务使用 `ECS / Entity / Component / System` 词汇，先回到 `GameOS/Overview.md#术语表`：`Component` 默认不是 gameplay/data owner，`System` 默认不是 ECS query processor，`Entity` 默认是 Runtime Entity 身份容器。
 
 ## Capability 必含文件
 
@@ -74,7 +88,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | 每帧 movement tick；调用方负责 schedule 注册和 delta 来源。 |
 | GodotBridge boundary | `GodotMovementDriver`、`GodotOrientationComponent`、`GodotPlayerInputComponent`、`GodotPhysicsMovementCollisionTargetQuery` 把 Node2D / input / physics 同步到 Runtime data。 |
 | Dependencies | Runtime Entity/Data/Event；Collision 用于过滤；GodotBridge 用于场景同步。 |
-| Validation commands | Framework build/tests；Godot movement bridge 参考 BrotatoLike smoke，但当前阶段暂不运行 Godot。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；Godot bridge 触及时运行 BrotatoLike `Tools/run-build.sh`、`Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs`、`Tools/analyze-godot-scene-logs.sh`。 |
 | Game-slice evidence | BrotatoLike smoke 已覆盖 PlayerInput、AIControlled、轨迹、朝向和 physics broadphase；普通 playable-slice PASS/FAIL evidence 仍待补。 |
 | Gaps | 在普通 `Scenes/Main.tscn` 下记录 Survivor2D/BrotatoLike playable-slice acceptance 前，不标记为 `Supported`。 |
 
@@ -95,7 +109,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | Collision event 由 bridge/system 驱动；消费者不能绕过 Damage 或 Attack services。 |
 | GodotBridge boundary | `GodotAreaEntity2D`、`GodotCollisionBridge`、`GodotCollisionComponent`、`GodotHurtboxComponent`、`GodotContactDamageComponent`、collision isolation。 |
 | Dependencies | Runtime Entity/Data/Event；Movement 用于 movement-collision scans；Damage 用于 contact damage conversion。 |
-| Validation commands | Framework build/tests；hurtbox/contact damage 和 physics broadphase 的 Godot 证据暂不运行。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；Godot bridge 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | Smoke 曾覆盖 runtime collision events 和 Godot hurtbox/contact bridge；main-scene playable collision acceptance 待补。 |
 | Gaps | 需要 Observation selector/collision dump 和 playable-slice collision evidence 后才能考虑 `Supported`。 |
 
@@ -116,7 +130,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | Service call 和 timer-driven periodic damage；调用方负责调度。 |
 | GodotBridge boundary | `GodotContactDamageComponent` 把 hurtbox contacts 转为 `DamageService` 请求；bridge 不直接写 HP。 |
 | Dependencies | Runtime Entity/Data/Event/Timer；Collision 用于 contact filtering。 |
-| Validation commands | Framework build/tests；contact damage 和 projectile damage bridge 的 Godot 证据暂不运行。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；contact / projectile bridge 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | Runtime tests 覆盖 processor pipeline、healing、statistics、periodic/multi-target damage；smoke 曾覆盖 contact 和 projectile damage；main-scene death/cleanup evidence 待补。 |
 | Gaps | 需要 playable-slice evidence 覆盖 damage、death、cleanup、damage logs 或 damage numbers。 |
 
@@ -137,7 +151,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | 首批没有独立 RuntimeSchedule system。 |
 | GodotBridge boundary | `GodotUnitAnimationComponent` 消费 Unit animation event requests 和 available animation metadata。 |
 | Dependencies | Runtime Data；GodotBridge 用于视觉动画；DataOS 用于 unit authoring records。 |
-| Validation commands | Framework build/tests；animation bridge 和 DataOS unit records 的 Godot 证据暂不运行。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；DataOS unit 或 animation bridge 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | BrotatoLike smoke 曾覆盖 DataOS player/enemy unit records 和 animation bridge；HUD / health bar playable evidence 待补。 |
 | Gaps | Unit 暂无独立 owner skill；不要把游戏专属 unit visuals 或 HUD layout 当成框架默认。 |
 
@@ -158,7 +172,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | Event/service driven；windup、recovery 和 cooldown 使用 `TimerManager`。 |
 | GodotBridge boundary | `GodotAttackComponent`、legacy `AttackComponent`、`GodotUnitAnimationComponent` animation requests。 |
 | Dependencies | Damage 用于伤害结算；Timer；Unit animation events；AI/input 负责请求。 |
-| Validation commands | Framework build/tests；GodotAttackComponent 和 legacy wrapper 的 Godot 证据暂不运行。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；GodotAttackComponent 或 legacy wrapper 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | Runtime tests 覆盖 request consumption、range、cooldown、windup、recovery 和 damage；smoke 曾覆盖 Godot bridge 和 animation selection；普通 main-scene combat acceptance 待补。 |
 | Gaps | 需要 playable-slice evidence 覆盖敌人 / 玩家攻击循环和 cleanup。 |
 
@@ -179,7 +193,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | AI tick 由调用方调度；AI 只写 intent/request DataKeys 和 events，不直接移动或造成伤害。 |
 | GodotBridge boundary | `GodotAIComponent` 导出参数并 tick `AIService`；不直接移动 Godot nodes。 |
 | Dependencies | Movement 用于移动意图；Attack 用于攻击请求；Ability 用于 auto-trigger contexts；Damage 用于死亡门禁。 |
-| Validation commands | Framework build/tests；Godot AI bridge 证据暂不运行。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；Godot AI bridge 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | Runtime tests 覆盖 target finding、patrol、melee behavior、attack request、ability auto-target context；smoke 曾覆盖 Godot AI bridge；main-scene enemy chase evidence 待补。 |
 | Gaps | 需要 playable-slice evidence 覆盖 wave enemy chase 和 attack behavior。 |
 
@@ -200,7 +214,7 @@ Tools/analyze-godot-scene-logs.sh
 | RuntimeSchedule boundary | Manual/event/periodic trigger boundary；periodic auto-trigger tick 由调用方调度。 |
 | GodotBridge boundary | 暂无通用 Ability bridge；BrotatoLike game handlers 通过 `BrotatoLikeAbilityHandlers` 适配游戏侧技能。 |
 | Dependencies | Damage 用于 ability damage；Feature 用于 handler execution；Projectile/Effect/Movement 用于 game-side handler outputs；AI 可准备 auto-trigger contexts。 |
-| Validation commands | Framework build/tests；selected game-side ability handler paths 的 Godot 证据暂不运行。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；selected game-side ability handler paths 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | Runtime tests 覆盖 target semantics、cooldown、charges、periodic damage、periodic auto-trigger 和 auto-targeting；smoke 曾覆盖多个 BrotatoLike handlers，但至少两个旧技能的 playable-slice evidence 待补。 |
 | Gaps | 不把 BrotatoLike 专属 skill names 或 handler behavior 上提为 framework defaults。 |
 
@@ -272,7 +286,7 @@ Tools/analyze-godot-scene-logs.sh
 - Ability trigger、cooldown、charge、target validation 和 `AbilityTriggerReport` 使用 `ability-system`。
 - 可复用 modifier 和 handler lifecycle 使用 `feature-system`。游戏专属 handler body 先放在 `Games/BrotatoLike`，除非单独 proposal 证明可复用。
 - `ProjectileTool`、`EffectTool`、projectile hit lifecycle、visual spawn bridge 和 effect animation playback 使用 `projectile-effect-system`。
-- 修改 GodotBridge component protocol 或 `IGodotComponent` 行为时使用 `ecs-component`。
+- 修改 GodotBridge Adapter protocol 或 legacy `IGodotComponent` 行为时使用 `ecs-component`；skill ID 暂不重命名。
 - 修改 DataOS schema、migration、generator、validator 或 DataKey authoring mapping 时使用 `data-authoring`。
 - 修改 validation、Observation、runner、artifact 或 log-analysis 时使用 `test-system`。
 

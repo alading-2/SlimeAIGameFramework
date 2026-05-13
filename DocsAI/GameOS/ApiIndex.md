@@ -2,6 +2,18 @@
 
 > Version: 0.1.0-alpha.0
 
+## AI-facing 术语映射
+
+| Preferred term | Legacy public symbols / search terms | 解释 |
+| --- | --- | --- |
+| `Runtime Entity` | `IEntity`、`RuntimeEntity`、`EntityManager`、`Entity` | 运行时对象身份容器，暴露 `EntityId + Data + Events`；不是 archetype entity 或行为 owner。 |
+| `Runtime Data / DataKey` | `Data`、`DataKey<T>`、`DataCatalog`、`DataSlot`、历史 `Component` 搜索 | 状态契约和 typed 读写入口；不是 ECS component storage。 |
+| `Capability` | `Movement`、`Damage`、`Ability`、`Feature` 等 Capability API | 玩法组合和所有权单元；行为进入 service、tool、handler、DataKey、Event 或 selector。 |
+| `GodotBridge Adapter` | `IGodotComponent`、`Godot*Component`、`AttackComponent`、`Component` | Godot Node 生命周期/输入/物理/表现桥接；旧符号是 compatibility name，不是传统 ECS data component。 |
+| `Runtime Process` / `Schedule Process` | `IRuntimeSystem`、`SystemConfig`、`SystemRunCondition`、`SystemGroup`、`MovementSystem`、`System` | `RuntimeSchedule` 调度执行单元；旧符号是 schedule compatibility name，不是 ECS query system。 |
+
+本索引保留 legacy symbol 以便搜索和迁移。Phase 1 不做 C# public API rename；任何 `IEntity`、`RuntimeEntity`、`EntityManager`、`IGodotComponent`、`IRuntimeSystem`、`SystemConfig` 或 `MovementSystem` 改名都必须进入单独 OpenSpec code migration RFC。
+
 ## Runtime
 
 | API | 类型 | 状态 | 说明 |
@@ -10,18 +22,24 @@
 | `GameOSInfo.FrameworkId` | const string | stable | `SkilmeAI.GameOS`。 |
 | `GameOSInfo.Version` | const string | bootstrap | 当前框架版本。 |
 | `GameOSInfo.Stage` | const string | bootstrap | 当前迁移阶段。 |
-| `SkilmeAI.GameOS.Runtime.Data.Data` | class | migrated | 运行时动态数据容器。 |
-| `SkilmeAI.GameOS.Runtime.Data.DataMeta` | class | migrated | Data key 元数据和约束。 |
-| `SkilmeAI.GameOS.Runtime.Data.DataRegistry` | static class | migrated | DataMeta 注册和查询。 |
+| `SkilmeAI.GameOS.Runtime.Data.Data` | class | typed-contract | 运行时 typed 数据容器，绑定 `DataCatalog`，公开 `DataKey<T>` 读写 API。 |
+| `SkilmeAI.GameOS.Runtime.Data.DataKey<T>` | class | typed-contract | 业务 Data 访问入口，定义 stable key、runtime default、类型、分类、modifier/computed 规则。 |
+| `SkilmeAI.GameOS.Runtime.Data.IDataKey` | interface | typed-contract | Catalog、snapshot、debug 边界使用的非泛型只读 DataKey 视图。 |
+| `SkilmeAI.GameOS.Runtime.Data.DataSlot<T>` | class | typed-contract | 内部 typed slot，管理 base value、modifier、computed dirty/cache 和 default fallback。 |
+| `SkilmeAI.GameOS.Runtime.Data.DataCatalog` | class | typed-contract | frozen framework/profile/test DataKey contract，负责 stable key resolve、key id lookup 和 capability metadata。 |
+| `SkilmeAI.GameOS.Runtime.Data.DataKeyRegistry` | static class | internal-contract | 进程内 typed DataKey 注册辅助，业务代码不直接按字符串写 Data。 |
+| `SkilmeAI.GameOS.Runtime.Data.FrameworkDataKeys` | static class | typed-contract | 显式注册框架 Runtime / Capability DataKeys。 |
 | `SkilmeAI.GameOS.Runtime.Data.DataModifier` | class | migrated | 数值修改器。 |
 | `SkilmeAI.GameOS.Runtime.Data.ModifierType` | enum | migrated | 修改器类型。 |
-| `SkilmeAI.GameOS.Runtime.Data.DataKeyAttribute` | attribute | migrated | Config 属性到 Data key 的映射。 |
 | `SkilmeAI.GameOS.Runtime.Data.IDataChangeSink` | interface | bootstrap | Event Runtime 迁入前的数据变更通知桥。 |
-| `SkilmeAI.GameOS.Runtime.Data.DataChangedEventData` | record struct | bootstrap | 数据变更通知 payload。 |
-| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataSnapshot` | class | bootstrap | DataOS 生成的 Runtime JSON snapshot 读取入口，可应用记录到 `Data` 并注册资源。 |
-| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataRecord` | class | bootstrap | DataOS snapshot 中的一条数据记录。 |
-| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataField` | class | bootstrap | DataOS snapshot 字段值，支持 string / int / float / double / bool 转 CLR 值。 |
-| `SkilmeAI.GameOS.Runtime.Data.RuntimeResourceEntry` | class | bootstrap | DataOS snapshot 资源映射条目。 |
+| `SkilmeAI.GameOS.Runtime.Data.DataChangedEventData` | record struct | typed-contract | 数据变更通知 payload，可从 `IDataKey` 派生 stable key。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataSnapshot` | class | typed-loader | DataOS typed snapshot 读取入口，先校验 manifest/descriptors/catalog，再 typed apply records 并注册资源。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeSnapshotManifest` | class | typed-loader | Snapshot manifest：schema、profile、catalog、enabled capabilities、counts、validation summary。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataDescriptor` | class | typed-loader | Snapshot descriptor mirror：stable key、owner capability、authoring metadata、type/default mirror。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataRecord` | class | typed-loader | DataOS snapshot 中的一条数据记录。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeDataField` | class | typed-loader | DataOS snapshot 字段值，按 resolved `DataKey<T>` 严格转换，不静默替换默认值。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeResourceEntry` | class | typed-loader | DataOS snapshot 资源映射条目，受 profile/capability trimming 约束。 |
+| `SkilmeAI.GameOS.Runtime.Data.RuntimeSnapshotApplyReport` | class | typed-loader | typed apply / resource registration 结构化报告。 |
 | `SkilmeAI.GameOS.Runtime.Event.IEvent` | marker interface | migrated | 所有事件 payload 的基础标记接口。 |
 | `SkilmeAI.GameOS.Runtime.Event.IEntityEvent` | marker interface | migrated | 仅派发到目标 entity bus 的事件。 |
 | `SkilmeAI.GameOS.Runtime.Event.IGlobalEvent` | marker interface | migrated | 仅派发到 world bus 的事件。 |
@@ -32,10 +50,10 @@
 | `SkilmeAI.GameOS.Runtime.Event.WorldEvents` | static class | migrated | `WorldEvents.World` 是进程级 world bus 静态访问点。 |
 | `SkilmeAI.GameOS.Runtime.Event.EventBusObservation` | class | migrated | 订阅、发布计数、reentry 阻断、handler 异常和 dump 导出。 |
 | `SkilmeAI.GameOS.Runtime.Event.EventDataChangeSink` | class | migrated | Data 变更到 IEventBus 的桥，发布 `Runtime.Events.Core.DataPropertyChanged`。 |
-| `SkilmeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | 最小 Entity 契约。 |
-| `SkilmeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity。 |
+| `SkilmeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | Runtime Entity legacy interface；只暴露身份、Runtime Data 和事件，不承载业务逻辑。 |
+| `SkilmeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity 身份容器，不是 archetype entity。 |
 | `SkilmeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数。 |
-| `SkilmeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | 最小 Entity 生命周期注册表。 |
+| `SkilmeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | Runtime Entity 生命周期注册表；不是 ECS world registry / query API。 |
 | `SkilmeAI.GameOS.Runtime.Relationship.RelationshipConstraint` | enum | migrated | 关系写入约束。 |
 | `SkilmeAI.GameOS.Runtime.Relationship.ParentDestroyPolicy` | enum | migrated | 父实体销毁时对子实体的处理策略。 |
 | `SkilmeAI.GameOS.Runtime.Relationship.RelationshipType` | static class | migrated | GameOS 内置关系类型。 |
@@ -45,14 +63,14 @@
 | `SkilmeAI.GameOS.Runtime.Schedule.GameFlowState` | enum | migrated | 游戏流程状态。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.OverlayFlags` | enum | migrated | 项目覆盖层标记。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.SimulationState` | enum | migrated | 项目模拟状态。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.SystemGroup` | enum | migrated | 系统分组。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.SystemTag` | enum | migrated | 系统标签。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.SystemGroup` | enum | migrated | Schedule Process 分组；`System` 为 legacy compatibility name。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.SystemTag` | enum | migrated | Schedule Process 标签；`System` 为 legacy compatibility name。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.ProjectStateService` | class | migrated | 项目状态服务。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.SystemRunCondition` | class | migrated | 系统运行条件。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.ScheduleCategory` | enum | bootstrap | Schedule DataKey 分类：System / Preset / Spawn。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.ScheduleDataKeys` | static class | bootstrap | 系统配置、系统预设和 Spawn config 使用的 Runtime DataKey。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.IRuntimeSystem` | interface | migrated | 系统生命周期协议。 |
-| `SkilmeAI.GameOS.Runtime.Schedule.IRuntimeCommandHandler<TRequest,TResult>` | interface | migrated | 系统命令处理协议。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.SystemRunCondition` | class | migrated | Runtime Process 运行条件；`System` 为 schedule compatibility name。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.ScheduleCategory` | enum | bootstrap | Schedule DataKey 分类：System / Preset / Spawn；`System` 分类名暂为 legacy authoring category。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.ScheduleDataKeys` | static class | bootstrap | Runtime Process 配置、preset 和 Spawn config 使用的 Runtime DataKey。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.IRuntimeSystem` | interface | migrated | Runtime Process 生命周期协议的 legacy compatibility name。 |
+| `SkilmeAI.GameOS.Runtime.Schedule.IRuntimeCommandHandler<TRequest,TResult>` | interface | migrated | Runtime Process 命令处理协议。 |
 | `SkilmeAI.GameOS.Runtime.Schedule.RuntimeSchedule` | class | migrated | 纯 C# Runtime 调度器。 |
 | `SkilmeAI.GameOS.Runtime.Resource.ResourceCategory` | enum | migrated | 资源分类。 |
 | `SkilmeAI.GameOS.Runtime.Resource.ResourceData` | record struct | migrated | 资源映射条目。 |
@@ -103,14 +121,14 @@
 | `SkilmeAI.GameOS.Capabilities.Movement.AIControlledMovementStrategy` | class | migrated | 消费 AI 方向和速度倍率 DataKey 的 AI 常驻移动策略。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.ParabolaMovementStrategy` | class | migrated | 纯 C# 抛物线轨迹策略。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.CircularArcMovementStrategy` | class | migrated | 纯 C# 圆弧轨迹策略。 |
-| `SkilmeAI.GameOS.Capabilities.Movement.MovementSystem` | class | migrated | 纯 C# Movement 调度系统，负责 Start / Stop / Tick / 位置积分 / 停止事件。 |
+| `SkilmeAI.GameOS.Capabilities.Movement.MovementSystem` | class | migrated | 纯 C# Movement Runtime Process，负责 Start / Stop / Tick / 位置积分 / 停止事件；类名保留 `System` 兼容。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.MovementStopReason` | enum | migrated | Movement 停止原因。 |
 | `SkilmeAI.GameOS.Capabilities.Movement.MovementStopContext` | record struct | migrated | Movement 停止事件上下文。 |
 | `SkilmeAI.GameOS.Capabilities.Collision.CollisionLayers` | static class | migrated | 旧项目 2D 碰撞层常量。 |
 | `SkilmeAI.GameOS.Capabilities.Collision.CollisionDataKeys` | static class | bootstrap | Collision 运行时 DataKey：CollisionLayer / CollisionMask / Team / CollisionRadius。 |
 | `SkilmeAI.GameOS.Capabilities.Collision.CollisionFilterPolicy` | record struct | bootstrap | layer/mask、自身和同队过滤策略。 |
 | `SkilmeAI.GameOS.Capabilities.Collision.CollisionContact` | record struct | bootstrap | 纯运行时碰撞接触 payload。 |
-| `SkilmeAI.GameOS.Capabilities.Collision.CollisionSystem` | class | bootstrap | 纯 C# 碰撞过滤和 Entered / Exited 事件发布。 |
+| `SkilmeAI.GameOS.Capabilities.Collision.CollisionSystem` | class | bootstrap | 纯 C# Collision Runtime Process / service-like executor，负责过滤和事件发布；类名保留 `System` 兼容。 |
 | `SkilmeAI.GameOS.Capabilities.Damage.DamageDataKeys` | static class | bootstrap | Damage 运行时 DataKey：CurrentHp / MaxHp / IsDead / IsInvulnerable / Armor / Shield / DodgeChance / CritRate / CritDamage / DamageTakenMultiplier / LifeSteal / ContactDamage / ContactDamageInterval / Damage 统计键。 |
 | `SkilmeAI.GameOS.Capabilities.Damage.DamageType` | enum | bootstrap | 伤害类型：Physical / Magical / True。 |
 | `SkilmeAI.GameOS.Capabilities.Damage.DamageTags` | enum flags | bootstrap | 伤害标签：Attack / Ability / Contact / Persistent / Area / Projectile。 |
@@ -212,7 +230,7 @@
 | `SkilmeAI.GameOS.GodotBridge.GodotEntity` | Node | migrated | 可挂场景的 GameOS Entity 基类。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotEntity2D` | Node2D | migrated | 可挂 2D 场景的 GameOS Entity 基类，会把初始 Node2D Position 写入 Movement Data。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotAreaEntity2D` | Area2D | bootstrap | 可挂 2D 物理场景的 GameOS Entity 基类，会同步 Position 和 Collision layer/mask 到 Runtime Data。 |
-| `SkilmeAI.GameOS.GodotBridge.IGodotComponent` | interface | migrated | Godot Node Component 生命周期协议。 |
+| `SkilmeAI.GameOS.GodotBridge.IGodotComponent` | interface | migrated | GodotBridge Adapter 生命周期协议的 legacy compatibility name；不是 ECS data component。 |
 | `SkilmeAI.GameOS.GodotBridge.GameOSGodotBridge` | static class | migrated | SceneTree 与 Runtime 生命周期桥接入口。 |
 | `SkilmeAI.GameOS.GodotBridge.GodotNodeRegistry` | static class | migrated | Godot Node 到稳定运行时 Id 的注册表。 |
 | `SkilmeAI.GameOS.GodotBridge.GameOSTimerDriver` | Node | migrated | 用 `_Process` 驱动 `TimerManager.Instance.Tick`。 |

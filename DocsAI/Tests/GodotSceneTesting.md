@@ -18,12 +18,18 @@ BrotatoLike 保留薄封装：
 /home/slime/Code/SkilmeAI/Games/BrotatoLike/Tools/analyze-godot-scene-logs.sh
 ```
 
+游戏仓里的 `SkilmeAI/` 是框架仓 git submodule 镜像。当前初始开发阶段，框架仓新增或修改 `Scenes/Validation/...`、`Src/SceneTests/...` 后，默认选 BrotatoLike 作为承载游戏，并直接同步到 `Games/BrotatoLike/SkilmeAI/` 工作树以跑通验证。后续多游戏 / 成品阶段不默认同步所有游戏，改按每个游戏的框架版本策略更新 submodule 指针，再选择对应承载游戏跑验证。
+
+承载游戏 wrapper 的 scan roots 必须包含游戏自身 `Scenes,Src` 和框架镜像 `SkilmeAI/Scenes,SkilmeAI/Src`；承载游戏 `.csproj` 需要排除框架源码但重新包含 `SkilmeAI/Src/SceneTests/**/*.cs`。
+
 ## 常用命令
 
 ```bash
 cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh list
+Tools/run-godot-scene.sh run res://SkilmeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SkilmeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
@@ -54,7 +60,7 @@ Tools/analyze-godot-scene-logs.sh
 - `combined.log`
 - `artifacts/logs/scene-log.jsonl`
 
-需要看 Godot 打印记录时，优先打开 analyzer 输出的 `combinedLog`；原始 stdout 在同一 attempt 目录的 `stdout.log`。Observation 日志验证场景还会写 `artifacts/observation-log-validation.json`。
+需要看 Godot 打印记录时，优先打开 analyzer 输出的 `combinedLog`；原始 stdout 在同一 attempt 目录的 `stdout.log`。Runtime/Data 场景写 `artifacts/runtime-data-validation.json`，Runtime/Event 场景写 `artifacts/runtime-event-validation.json`，Observation 日志验证场景还会写 `artifacts/observation-log-validation.json`。
 
 ## 判定规则
 

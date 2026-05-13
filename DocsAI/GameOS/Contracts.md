@@ -5,7 +5,16 @@
 
 ## 当前契约
 
-当前框架已建立构建边界、发布身份，并迁入 Runtime 最小内核：Data / Event / Entity / Relationship / Schedule / Resource / Pool / Timer，GodotBridge 第一版和 Node 池化 / 碰撞隔离扩展第一段，以及 Movement / Collision / Damage / Ability / Feature / AI / Attack / Projectile / Effect Capability 第一批。
+当前框架已建立构建边界、发布身份，并迁入 Runtime 最小内核：Runtime Data / Event / Runtime Entity / Relationship / RuntimeSchedule / Resource / Pool / Timer，GodotBridge Adapter 第一版和 Node 池化 / 碰撞隔离扩展第一段，以及 Movement / Collision / Damage / Ability / Feature / AI / Attack / Projectile / Effect Capability 第一批。
+
+术语护栏：
+
+- `Runtime Entity` 是稳定运行时对象身份容器，最小契约为 `EntityId + Runtime Data + entity-scoped Events`；它不是 archetype entity，不承载业务逻辑，也不是继承式 Actor 根类。
+- `Runtime Data / DataKey` 是状态契约；不要把运行时数据称为 ECS Component，也不要新增裸 string/object 数据入口。
+- `Capability` 是玩法组合和所有权单元；Gameplay 行为优先进入 Capability service、tool、handler、DataKey、Event 或 selector。
+- `GodotBridge Adapter` 是 Godot Node 生命周期、输入、物理、资源和表现桥接角色；`IGodotComponent`、`Godot*Component`、`AttackComponent` 等现有符号是 legacy compatibility name，不是传统 ECS data component。
+- `Runtime Process` / `Schedule Process` 是 `RuntimeSchedule` 管理的调度执行单元；`IRuntimeSystem`、`SystemConfig`、`SystemRunCondition`、`MovementSystem` 等现有符号是 schedule compatibility name，不是 ECS query system。
+- `ECS / Entity / Component / System` 只作为历史迁移、外部对照、拒绝清单或 legacy searchability 词使用。新设计不得默认引入 world query、archetype storage 或 generic query system。
 
 已存在的稳定入口：
 
@@ -22,8 +31,12 @@
 - `SkilmeAI.GameOS.Runtime.Event.WorldEvents`
 - `SkilmeAI.GameOS.Runtime.Event.EventBusObservation`
 - `SkilmeAI.GameOS.Runtime.Data.Data`
-- `SkilmeAI.GameOS.Runtime.Data.DataMeta`
-- `SkilmeAI.GameOS.Runtime.Data.DataRegistry`
+- `SkilmeAI.GameOS.Runtime.Data.DataKey<T>`
+- `SkilmeAI.GameOS.Runtime.Data.IDataKey`
+- `SkilmeAI.GameOS.Runtime.Data.DataSlot<T>`
+- `SkilmeAI.GameOS.Runtime.Data.DataCatalog`
+- `SkilmeAI.GameOS.Runtime.Data.DataKeyRegistry`
+- `SkilmeAI.GameOS.Runtime.Data.FrameworkDataKeys`
 - `SkilmeAI.GameOS.Runtime.Data.DataModifier`
 - `SkilmeAI.GameOS.Runtime.Data.IDataChangeSink`
 - `SkilmeAI.GameOS.Runtime.Data.RuntimeDataSnapshot`
@@ -111,14 +124,15 @@
 
 ## Runtime Data 契约
 
-- `Data` 是运行时动态状态容器，支持基础值、计算键、数值修改器、分类重置和 `LoadFromConfig`。
-- `DataMeta` 描述运行时键的类型、默认值、数值边界、选项、分类、迁移许可和计算函数。
-- `DataRegistry` 只注册运行时元数据，不承担 Authoring 数据表职责。
+- `Data` 是运行时 typed 状态容器，构造时绑定 frozen `DataCatalog`，主存储使用 catalog key id + typed slot。
+- `DataKey<T>` 是业务读写唯一正式入口，承载 stable key、runtime default、分类、数值边界、modifier/computed 标记和 typed dependencies。
+- `DataSlot<T>` 是内部存储单元，负责 base value、default fallback、modifier list、computed dirty/cache 和 typed set/get。
+- `DataCatalog` 是 framework/profile/test scoped contract，负责 stable key resolve、key id lookup、enabled capability metadata 和 snapshot loader 边界。
+- `Get / Set / TryGet / Has / Remove / GetBase / Add / Multiply / AddModifier / RemoveModifier / ResetByCategory / GetAll` 的正式业务入口均使用 `DataKey<T>`；stable string 只允许出现在 DB、snapshot、manifest、observation、debug dump 和 catalog resolve 边界。
 - `IDataChangeSink` 是 Data 到外部通知的解耦接口。
 - `EventDataChangeSink` 将 `DataChangedEventData` 包装成 `Runtime.Events.Core.DataPropertyChanged` 事件并通过目标 `IEventBus.Publish` 派发。
-- `RuntimeEntity` 默认创建 `EntityEventBus`，并让 `Data` 通过 `EventDataChangeSink` 接入 `Entity.Events`。
-- `DataKeyAttribute` 只负责 authoring config property 到 runtime key 的映射。
-- `RuntimeDataSnapshot` 只消费 DataOS 生成的 JSON snapshot，不在运行时热路径访问 SQLite；它可以按 `table + id/name` 找记录、把字段写入 `Data`，并把资源映射注册到 `ResourceCatalog`。
+- `RuntimeEntity` 默认创建 `EntityEventBus`，并让 `Data` 通过 `EventDataChangeSink` 接入 `Entity.Events`；`EntitySpawnConfig.DataCatalog` 可指定 profile catalog。
+- `RuntimeDataSnapshot` 只消费 DataOS 生成的 typed JSON snapshot，不在运行时热路径访问 SQLite；它先校验 manifest / descriptors / catalog，再按 resolved `DataKey<T>` typed apply records，并把 profile 允许的资源映射注册到 `ResourceCatalog`。
 
 ## Runtime Event 契约
 
@@ -132,10 +146,11 @@
 
 ## Runtime Entity 契约
 
-- `IEntity` 只暴露 `EntityId`、`Data`、`Events`，不承载业务逻辑。
+- `IEntity` 是 `Runtime Entity` 的 legacy public symbol，只暴露 `EntityId`、`Data`、`Events`，不承载业务逻辑。
+- `RuntimeEntity` 是运行时对象身份容器，由 Capability、Relationship、RuntimeSchedule 和 GodotBridge Adapter 操作；不要通过子类继承或在 `IEntity` 上增加行为方法来实现玩法。
 - `EntityManager` 当前是纯 C# 最小生命周期注册表，支持 `Spawn / Register / Destroy / Get / GetAll / Clear / BindParentRelationships`。
 - `EntitySpawnConfig` 支持 `ParentEntityId / AutoAddParentRelation / ParentDestroyPolicy / ParentRelationTypes`，生成阶段可自动绑定归属关系。
-- Godot Node Entity 和 Component 生命周期第一版已进入 GodotBridge；对象池、碰撞隔离和复杂组件缓存后续继续迁。
+- Godot Node Entity 和 GodotBridge Adapter 生命周期第一版已进入 GodotBridge；对象池、碰撞隔离和复杂 adapter 缓存后续继续迁。`Component` 字样只作为现有类名兼容。
 
 ## Runtime Relationship 契约
 
@@ -147,11 +162,11 @@
 
 ## Runtime Schedule 契约
 
-- `RuntimeSchedule` 是纯 C# 调度器，负责系统描述符、配置、依赖、人工启用状态、运行条件和生命周期。
+- `RuntimeSchedule` 是纯 C# 调度器，负责 Runtime Process / Schedule Process 描述符、配置、依赖、人工启用状态、运行条件和生命周期。
 - `ProjectStateService` 维护 `GameFlowState / OverlayFlags / SimulationState` 三域状态。
-- `SystemRunCondition` 把流程、覆盖层、模拟状态门禁前置到调度层。
-- `IRuntimeSystem` 是生命周期协议；`IRuntimeCommandHandler<TRequest,TResult>` 是命令入口协议。
-- `ScheduleDataKeys` 覆盖系统配置、系统预设和 Spawn config 的第一批 DataOS authoring 字段；当前不自动装载 RuntimeSchedule，游戏侧仍需显式消费 snapshot。
+- `SystemRunCondition` 是 schedule compatibility symbol，把流程、覆盖层、模拟状态门禁前置到调度层。
+- `IRuntimeSystem` 是 Runtime Process 生命周期协议的 legacy compatibility name；`IRuntimeCommandHandler<TRequest,TResult>` 是命令入口协议。
+- `ScheduleDataKeys` 覆盖 process/system 配置、preset 和 Spawn config 的第一批 DataOS authoring 字段；当前不自动装载 RuntimeSchedule，游戏侧仍需显式消费 snapshot。
 
 ## Runtime Resource 契约
 
@@ -194,8 +209,8 @@
 
 - `GodotEntity` 是可挂场景的 `Node + IEntity` 基类，进入 SceneTree 时注册到 `EntityManager` 和 `GodotNodeRegistry`，离开 SceneTree 时注销并清理 Runtime Entity。
 - `GodotEntity2D` 是可挂 2D 场景的 `Node2D + IEntity` 基类，额外接入 Movement `Position` 初始同步。
-- `IGodotComponent` 是 Godot Component 生命周期协议；`GameOSGodotBridge.RegisterComponents` 会递归扫描子节点，识别实现 `IGodotComponent` 或类型名以 `Component` 结尾的节点。
-- Entity-Component 组合关系统一写入 `RelationshipType.EntityToComponent`。
+- `IGodotComponent` 是 GodotBridge Adapter 生命周期协议的 legacy compatibility name；`GameOSGodotBridge.RegisterComponents` 会递归扫描子节点，识别实现 `IGodotComponent` 或类型名以 `Component` 结尾的节点。
+- Entity-Component 组合关系是 legacy relationship name，统一写入 `RelationshipType.EntityToComponent`，语义是 Runtime Entity 到 GodotBridge Adapter 的绑定。
 - `GodotNodeRegistry` 只保存运行时注册表，不替代 SceneTree，也不持有业务状态。
 - `GameOSTimerDriver._Process` 不分配对象，不使用 LINQ，只把 Godot delta 传给 `TimerManager.Tick`。
 - `GodotMovementDriver._Process` 推进 `MovementSystem.Tick`，并同步已注册 `Node2D + IEntity` 的运行时位置；需要固定步长或测试时可关闭 `AutoTick` 并手动调用 `TickMovement(delta)`。
@@ -304,7 +319,7 @@
 
 ## 后续契约分层
 
-- Runtime 契约：Entity / Component / Event / Relationship / Schedule / Pool / Timer / Resource。
+- Runtime 契约：Runtime Entity / Runtime Data / Event / Relationship / RuntimeSchedule / Pool / Timer / Resource；`Component` 和 `System` 只作为 GodotBridge / Schedule 兼容符号解释。
 - Capability 契约：Movement / Collision / Damage / Ability / Feature / AIBehavior / Projectile / Spawn / UIHud。
 - Validation 契约：build、scene test、capability test、regression gate。
 - Observation 契约：logs、dump、trace、snapshot、reports。

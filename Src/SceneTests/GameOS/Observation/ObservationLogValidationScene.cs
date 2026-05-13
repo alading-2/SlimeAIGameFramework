@@ -16,6 +16,7 @@ public partial class ObservationLogValidationScene : Node
     private const string ArtifactFileName = "observation-log-validation.json";
     private const string LogContext = "ObservationLogValidation";
 
+    /// <inheritdoc />
     public override void _Ready()
     {
         GameOSLog.Configure(new GameOSLogOptions

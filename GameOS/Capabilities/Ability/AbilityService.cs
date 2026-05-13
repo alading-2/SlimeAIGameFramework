@@ -210,7 +210,7 @@ public sealed class AbilityService
 
     private AbilityExecutedResult ExecuteFeatureOrDamage(AbilityCastContext context)
     {
-        var handlerId = context.Ability.Data.Get<string>(AbilityDataKeys.FeatureHandlerId, string.Empty);
+        var handlerId = context.Ability.Data.Get(AbilityDataKeys.FeatureHandlerId, string.Empty);
         if (string.IsNullOrEmpty(handlerId))
         {
             return ExecuteDamage(context);

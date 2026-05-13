@@ -1,5 +1,6 @@
 namespace SkilmeAI.GameOS.Runtime.Entity;
 
+using SkilmeAI.GameOS.Runtime.Data;
 using SkilmeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
@@ -13,9 +14,9 @@ public readonly record struct EntitySpawnConfig
     public string? EntityId { get; init; }
 
     /// <summary>
-    /// 可选 Authoring 配置对象，生成后会加载到实体 Data。
+    /// 可选 DataCatalog；为空时使用框架默认 catalog。
     /// </summary>
-    public object? Config { get; init; }
+    public DataCatalog? DataCatalog { get; init; }
 
     /// <summary>
     /// 可选父实体 Id；填入后生成阶段会自动绑定归属关系。

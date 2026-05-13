@@ -18,6 +18,7 @@
 - `git status --short`。
 - 如果涉及 Capability，检查 `CapabilityIndex.md` 是否需要同步。
 - 如果涉及计划状态，检查 roadmap 或对应状态文档是否需要同步。
+- 如果是新功能，检查是否已有专项 Runtime test 或独立 Godot 验证场景；没有时必须说明原因。
 
 ## 汇报字段
 
@@ -70,7 +71,21 @@ Tools/run-dataos-validate.sh
 
 Godot 场景：
 
-当前阶段不运行。需要用户确认 Godot 环境可运行后，再按 BrotatoLike scene runner 执行。
+```bash
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+Tools/run-godot-scene.sh run res://Scenes/Validation/<Area>/<Layer>/<Scene>.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+如果本轮只需要回归 smoke：
+
+```bash
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+`run-main-smoke` 不能替代新功能专项验证场景。Godot 环境不可用、耗时过长或用户要求跳过时，最终汇报必须写明未运行的具体命令和原因。
 
 ## 多轮失败时如何复盘
 
