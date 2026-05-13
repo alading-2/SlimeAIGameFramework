@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// Runtime 系统命令处理器协议。

@@ -15,7 +15,7 @@
 - 小内核，可选能力：Runtime kernel 保持少入口；功能进入 Capability、DataOS、GodotBridge 或游戏 adapter。
 - 纯 Runtime / tooling 优先使用 C# 标准库和框架 API。JSON、普通文件、集合处理、时间、随机数等非引擎职责不要用 Godot helper。
 - GodotBridge 只做引擎适配：`Node`、`SceneTree`、Physics、Input、Resource、可视化实例化和场景生命周期。
-- 术语优先：SkilmeAI 是 `AI-first GameOS / Capability Composition Runtime`，不是传统 ECS 框架。`Entity / Component / System` 命名敏感任务必须先读 `DocsAI/GameOS/Overview.md#术语表` 和 ECS 边界 ADR。
+- 术语优先：SlimeAI 是 `AI-first GameOS / Capability Composition Runtime`，不是传统 ECS 框架。`Entity / Component / System` 命名敏感任务必须先读 `DocsAI/GameOS/Overview.md#术语表` 和 ECS 边界 ADR。
 
 ## 执行顺序
 
@@ -43,8 +43,8 @@
 
 新功能不能只以“代码能编译”结束。结束前必须检查：
 
-- 是否有专项测试入口。纯 Runtime / Capability 行为优先补 `Tests/SkilmeAI.GameOS.Tests/`；涉及 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧胶水时，必须在 BrotatoLike 新增独立 Godot 验证场景，遵守 `DocsAI/Tests/GodotSceneValidation.md` 的目录、README、PASS/FAIL marker 和 artifact 规则。
-- 框架级 Godot 验证场景写在框架仓 `Scenes/Validation/...` / `Src/SceneTests/...`；跑 Godot 前必须选定承载游戏。当前初始开发阶段默认 BrotatoLike，并直接把新增/修改的场景和脚本同步到 `Games/BrotatoLike/SkilmeAI/` submodule 工作树；后续多游戏 / 成品阶段不默认同步所有游戏，改按各游戏版本策略更新 submodule 指针，并确认承载游戏 wrapper 扫描 `SkilmeAI/Scenes,SkilmeAI/Src`。
+- 是否有专项测试入口。纯 Runtime / Capability 行为优先补 `Tests/SlimeAI.GameOS.Tests/`；涉及 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧胶水时，必须在 BrotatoLike 新增独立 Godot 验证场景，遵守 `DocsAI/Tests/GodotSceneValidation.md` 的目录、README、PASS/FAIL marker 和 artifact 规则。
+- 框架级 Godot 验证场景写在框架仓 `Scenes/Validation/...` / `Src/SceneTests/...`；跑 Godot 前必须选定承载游戏。当前初始开发阶段默认 BrotatoLike，并直接把新增/修改的场景和脚本同步到 `Games/BrotatoLike/SlimeAI/` submodule 工作树；后续多游戏 / 成品阶段不默认同步所有游戏，改按各游戏版本策略更新 submodule 指针，并确认承载游戏 wrapper 扫描 `SlimeAI/Scenes,SlimeAI/Src`。
 - `run-main-smoke`、普通 `Scenes/Main.tscn` 或 playable acceptance 只能作为回归补充，不能替代新功能专项场景。
 - DataOS 新字段必须更新 schema / migration / seed 或 snapshot generator / validator / Runtime loader 中对应的断言；descriptor mirror 必须匹配 Runtime `DataKey<T>` 类型和默认值。
 - Runtime Data 新代码必须使用 `DataKey<T>` + active `DataCatalog`，不新增旧 string/object/DataMeta/DataRegistry 业务入口。
@@ -53,7 +53,7 @@
 
 ## 外部资料使用
 
-优先读本地 `Engine/Docs/FrameworkAnalysis/Reports/`。外部框架只筛选可服务 AI 的机制：
+优先读本地 `Resources/Engine/Docs/FrameworkAnalysis/Reports/`。外部框架只筛选可服务 AI 的机制：
 
 - Bevy / Flecs / Unity Entities / Unreal GAS 的能力组织、阶段、deferred command、authoring-to-runtime 和验证产物可参考。
 - 不复制外部 ECS 存储、通用 query DSL、动态插件生命周期或复杂 tag/attribute 栈。

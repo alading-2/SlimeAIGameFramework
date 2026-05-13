@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// 调用 AbilityService 推进自动施法。

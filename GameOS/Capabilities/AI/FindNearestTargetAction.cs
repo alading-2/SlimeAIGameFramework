@@ -1,9 +1,9 @@
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// 从 Runtime Entity 快照中查找最近目标。

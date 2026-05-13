@@ -1,7 +1,7 @@
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Orbit 策略：围绕固定圆心输出切向速度。

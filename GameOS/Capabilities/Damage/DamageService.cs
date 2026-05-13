@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// Damage Capability 最小运行时服务，作为生命值扣减和伤害事件的统一入口。

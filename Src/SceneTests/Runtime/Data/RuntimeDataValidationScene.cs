@@ -1,25 +1,25 @@
 using System.Collections.Generic;
 using System.IO;
 using Godot;
-using SkilmeAI.GameOS.Observation;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Events.Core;
-using RuntimeData = SkilmeAI.GameOS.Runtime.Data.Data;
-using RuntimeDataCatalog = SkilmeAI.GameOS.Runtime.Data.DataCatalog;
-using RuntimeDataKey = SkilmeAI.GameOS.Runtime.Data.DataKey;
-using RuntimeDataKeyFloat = SkilmeAI.GameOS.Runtime.Data.DataKey<float>;
-using RuntimeDataKeyInt = SkilmeAI.GameOS.Runtime.Data.DataKey<int>;
-using RuntimeDataModifier = SkilmeAI.GameOS.Runtime.Data.DataModifier;
-using RuntimeModifierType = SkilmeAI.GameOS.Runtime.Data.ModifierType;
+using SlimeAI.GameOS.Observation;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Events.Core;
+using RuntimeData = SlimeAI.GameOS.Runtime.Data.Data;
+using RuntimeDataCatalog = SlimeAI.GameOS.Runtime.Data.DataCatalog;
+using RuntimeDataKey = SlimeAI.GameOS.Runtime.Data.DataKey;
+using RuntimeDataKeyFloat = SlimeAI.GameOS.Runtime.Data.DataKey<float>;
+using RuntimeDataKeyInt = SlimeAI.GameOS.Runtime.Data.DataKey<int>;
+using RuntimeDataModifier = SlimeAI.GameOS.Runtime.Data.DataModifier;
+using RuntimeModifierType = SlimeAI.GameOS.Runtime.Data.ModifierType;
 
-namespace SkilmeAI.SceneTests.Runtime.Data;
+namespace SlimeAI.SceneTests.Runtime.Data;
 
 /// <summary>
 /// GameOS Runtime/Data 的 Godot headless 验证场景。
 /// </summary>
 public partial class RuntimeDataValidationScene : Node
 {
-    private const string ScenePath = "res://SkilmeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn";
+    private const string ScenePath = "res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn";
     private const string ArtifactFileName = "runtime-data-validation.json";
     private const string LogContext = "RuntimeDataValidation";
 
@@ -66,8 +66,8 @@ public partial class RuntimeDataValidationScene : Node
             ArtifactFileName,
             new[]
             {
-                "SkilmeAI.GameOS.Runtime.Data",
-                "SkilmeAI.GameOS.Runtime.Entity for Data-to-Event bridge check",
+                "SlimeAI.GameOS.Runtime.Data",
+                "SlimeAI.GameOS.Runtime.Entity for Data-to-Event bridge check",
                 "Games/BrotatoLike Godot scene runner"
             },
             new[]

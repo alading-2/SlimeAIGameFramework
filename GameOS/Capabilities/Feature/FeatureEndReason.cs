@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Feature;
+namespace SlimeAI.GameOS.Capabilities.Feature;
 
 /// <summary>
 /// Feature 单次运行结束原因。

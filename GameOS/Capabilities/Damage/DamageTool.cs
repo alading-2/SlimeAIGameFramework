@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Timer;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Timer;
 
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 多目标和周期伤害工具。

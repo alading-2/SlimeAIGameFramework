@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Unit;
+namespace SlimeAI.GameOS.Capabilities.Unit;
 
 /// <summary>
 /// Unit 表现层 DataKey 分类。

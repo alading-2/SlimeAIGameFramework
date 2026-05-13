@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Feature;
+namespace SlimeAI.GameOS.Capabilities.Feature;
 
 /// <summary>
 /// 可授予能力定义。

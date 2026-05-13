@@ -4,7 +4,7 @@
 
 ## C# 优先边界
 
-SkilmeAI 的纯 Runtime、DataOS tooling、验证入口和普通数据处理优先使用 C# 标准库与框架 API，不默认使用 Godot helper：
+SlimeAI 的纯 Runtime、DataOS tooling、验证入口和普通数据处理优先使用 C# 标准库与框架 API，不默认使用 Godot helper：
 
 - JSON 读写优先 `System.Text.Json`。
 - 普通文件和目录优先 `System.IO`。
@@ -56,7 +56,7 @@ Godot 加载 C# 脚本的完整路径：
 
 ### ProjectReference 场景脚本解析失败
 
-- 被引用 class library 的 `GodotProjectDir` 是其自己的 csproj 目录（如 `../../SkilmeAI/GameOS/`）。
+- 被引用 class library 的 `GodotProjectDir` 是其自己的 csproj 目录（如 `../../SlimeAI/GameOS/`）。
 - source generator 生成的路径如 `res://Capabilities/...`，这个 `res://` 不在主游戏项目的 `res://` 空间里。
 - `Main.cs:154` 只扫描主 assembly，被引用 assembly 的 `[ScriptPathAttribute]` 根本不会被登记。
 - 结论：**ProjectReference 的 `.cs` 不能作为 Godot 脚本资源附加到场景节点**。
@@ -67,11 +67,11 @@ Godot 加载 C# 脚本的完整路径：
 
 ### addons/ 源码级复用可行
 
-如果把框架源码物理放到游戏项目的 `addons/SkilmeAI/` 或 `SkilmeAI/` 子目录下：
+如果把框架源码物理放到游戏项目的 `addons/SlimeAI/` 或 `SlimeAI/` 子目录下：
 - 默认 `**/*.cs` glob 把这些 `.cs` 编译进**主 assembly**。
-- source generator 基于主 csproj 的 `GodotProjectDir` 生成路径，如 `res://SkilmeAI/GameOS/GodotBridge/GodotEntity2D.cs`。
+- source generator 基于主 csproj 的 `GodotProjectDir` 生成路径，如 `res://SlimeAI/GameOS/GodotBridge/GodotEntity2D.cs`。
 - `ScriptManagerBridge` 扫描主 assembly 时登记这些路径。
-- `.tscn` 里 `ExtResource("Script", path="res://SkilmeAI/...")` 能正确解析。
+- `.tscn` 里 `ExtResource("Script", path="res://SlimeAI/...")` 能正确解析。
 - 结论：**源码级复用（submodule / subtree / 物理复制）是唯一可行的场景共享方式**。
 
 ## 改引擎评估
@@ -108,7 +108,7 @@ NuGet 包的 `.cs` 在运行时可作为**基类/组件**被代码继承（`.NET
 - **代码继承**：`.NET` 的 assembly 加载机制。ProjectReference 的 type 对主项目完全可见。`class MyEntity : GodotEntity2D` 完全合法。
 - **场景挂载**：Godot 的 `ScriptManagerBridge` 通过 `[ScriptPathAttribute]` 建立 `res://` → `Type` 映射。这个映射只在主 assembly 内建立，被引用 assembly 的 attribute 被忽略。
 
-**结论**：NuGet / ProjectReference 适合共享**可代码实例化的基类和工具类**，不适合共享**需要被场景直接挂载的脚本**。因此 SkilmeAI 采用 `git submodule` 源码级复用（框架源码物理嵌入游戏 `res://` 空间，统一编译进游戏主 assembly），而非 NuGet / 外部 ProjectReference。
+**结论**：NuGet / ProjectReference 适合共享**可代码实例化的基类和工具类**，不适合共享**需要被场景直接挂载的脚本**。因此 SlimeAI 采用 `git submodule` 源码级复用（框架源码物理嵌入游戏 `res://` 空间，统一编译进游戏主 assembly），而非 NuGet / 外部 ProjectReference。
 
 ## 换语言能解决问题吗？
 

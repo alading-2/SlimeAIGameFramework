@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Relationship;
+namespace SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// GameOS 内置关系类型。

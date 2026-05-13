@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// GodotBridge 当前注册状态快照。

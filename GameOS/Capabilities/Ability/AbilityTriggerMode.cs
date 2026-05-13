@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Capabilities.Ability;
+namespace SlimeAI.GameOS.Capabilities.Ability;
 
 /// <summary>
 /// 技能触发模式。

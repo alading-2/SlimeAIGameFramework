@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Collision;
+namespace SlimeAI.GameOS.Capabilities.Collision;
 
 /// <summary>
 /// CollisionSystem 的基础过滤策略。

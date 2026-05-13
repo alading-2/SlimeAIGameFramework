@@ -1,7 +1,7 @@
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// 运动策略接口，只负责把移动参数转换为速度和朝向意图。

@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// 选择节点：任一子节点成功则成功。

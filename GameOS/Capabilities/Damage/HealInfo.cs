@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 单次治疗上下文。

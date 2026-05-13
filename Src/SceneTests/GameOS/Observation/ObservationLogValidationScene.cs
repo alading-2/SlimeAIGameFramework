@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Godot;
-using SkilmeAI.GameOS.Observation;
+using SlimeAI.GameOS.Observation;
 
-namespace SkilmeAI.SceneTests.GameOS.Observation;
+namespace SlimeAI.SceneTests.GameOS.Observation;
 
 /// <summary>
 /// GameOS Observation 日志能力的 Godot headless 验证场景。
 /// </summary>
 public partial class ObservationLogValidationScene : Node
 {
-    private const string ScenePath = "res://SkilmeAI/Scenes/Validation/GameOS/Observation/ObservationLogValidation.tscn";
+    private const string ScenePath = "res://SlimeAI/Scenes/Validation/GameOS/Observation/ObservationLogValidation.tscn";
     private const string ArtifactFileName = "observation-log-validation.json";
     private const string LogContext = "ObservationLogValidation";
 
@@ -38,7 +38,7 @@ public partial class ObservationLogValidationScene : Node
             ArtifactFileName,
             new[]
             {
-                "SkilmeAI.GameOS.Observation logging",
+                "SlimeAI.GameOS.Observation logging",
                 "Games/BrotatoLike Godot scene runner"
             },
             new[]

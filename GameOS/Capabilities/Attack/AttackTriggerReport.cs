@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Damage;
 
-namespace SkilmeAI.GameOS.Capabilities.Attack;
+namespace SlimeAI.GameOS.Capabilities.Attack;
 
 /// <summary>
 /// 普通攻击请求报告。

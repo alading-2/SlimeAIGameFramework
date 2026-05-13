@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 使用 Godot Physics 2D 做 Movement 碰撞 broadphase 查询。

@@ -1,8 +1,8 @@
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 桥接独立 `Area2D` Hurtbox 节点到 `Collision.Events.HurtboxEntered` / `HurtboxExited`。

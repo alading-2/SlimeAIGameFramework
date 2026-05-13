@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Relationship;
+namespace SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// Entity 之间的一条有向关系记录。

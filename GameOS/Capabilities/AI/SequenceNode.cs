@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// 顺序节点：全部成功才成功。

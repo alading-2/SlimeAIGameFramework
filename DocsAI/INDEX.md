@@ -1,12 +1,12 @@
-# SkilmeAI DocsAI 索引
+# SlimeAI DocsAI 索引
 
 ## 入口路径
 
-SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路径进入：
+SlimeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路径进入：
 
 ```text
-/home/slime/Code/SkilmeAI/AGENTS.md
-  -> SkilmeAI/DocsAI/INDEX.md
+/home/slime/Code/SlimeAI/AGENTS.md
+  -> SlimeAI/DocsAI/INDEX.md
   -> domain 文档
   -> owner skill / 项目脚本
   -> 验证 artifact
@@ -38,12 +38,12 @@ SkilmeAI 是 AI-first GameOS 框架仓库。AI 执行框架任务时按固定路
 | --- | --- | --- |
 | 新功能、功能扩展、迁移旧逻辑、框架重构 | `Agent/Protocols/AIFeatureDevelopmentProtocol.md`、`Framework/Principles.md` | `.codex/skills/ai-feature-development`、对应 owner skill、必要时 OpenSpec；结束前按功能收尾闸门补测试场景 / artifact / DocsAI |
 | 框架方向、边界、是否该做 | `Framework/Overview.md`、`Framework/Principles.md` | `DocsAI/Agent/Protocols/FrameworkVsGameBoundary.md` |
-| Godot C# 场景/脚本加载约束 | `Framework/GodotCSharpConstraints.md` | 引擎源码 `Engine/Engine/godot-4.6.2-stable/modules/mono/` |
+| Godot C# 场景/脚本加载约束 | `Framework/GodotCSharpConstraints.md` | 引擎源码 `Resources/Engine/Engine/godot-4.6.2-stable/modules/mono/` |
 | 多游戏架构、submodule 工作流 | `Framework/MultiGameLayout.md` | 游戏仓 `.gitmodules`、`BrotatoLike.csproj` |
 | Runtime / Data / Event / Entity / Schedule | `GameOS/Contracts.md`、`GameOS/ApiIndex.md` | `project-index`、`ecs-*`、`tools` skills |
 | ECS / Entity / Component / System / Capability 命名敏感任务 | `GameOS/Overview.md#术语表`、`ArchitectureDecisionRecords)/深度分析：AI-first GameOS 与 ECS 概念边界.md` | 使用 AI-first GameOS / Capability Composition Runtime 术语；legacy code symbol 只按兼容名处理，不直接做 public API rename |
 | Capability 修改 | `GameOS/Capabilities/CapabilityIndex.md` | 对应 `GameOS/Capabilities/<Name>/Contract.md`、`Debug.md` 和 owner skill |
-| Runtime 纯逻辑测试 | `Tests/RuntimeTests.md` | `Tests/SkilmeAI.GameOS.Tests/`、`Tools/run-tests.sh`；不启动 Godot |
+| Runtime 纯逻辑测试 | `Tests/RuntimeTests.md` | `Tests/SlimeAI.GameOS.Tests/`、`Tools/run-tests.sh`；不启动 Godot |
 | GodotBridge / 场景验证 | `Tests/GodotSceneTesting.md` | `godot-scene-test` skill、BrotatoLike Tools wrapper |
 | DataOS schema / snapshot / validator | `DataOS/Overview.md`、`DataOS/SnapshotManifest.md` | `data-authoring` skill |
 | Agent 协议 / 长任务 / 完成汇报 | `Agent/Overview.md` | `DocsAI/Agent/Protocols/*.md` |
@@ -61,6 +61,6 @@ openspec/changes/<change>/
 
 ## 文档事实源
 
-- 框架长期知识只写入 `SkilmeAI/DocsAI/`。
-- 源码目录中的 `.md` 只允许是 `AGENTS.md`、skill 文档、包/工具操作指针，或 OpenSpec/Engine/游戏侧文档。
+- 框架长期知识只写入 `SlimeAI/DocsAI/`。
+- 源码目录中的 `.md` 只允许是 `AGENTS.md`、skill 文档、包/工具操作指针，或 OpenSpec/Resources/Engine/游戏侧文档。
 - `.codex/skills` 是唯一 skill 源，只保存技能路由和命令入口，长期说明链接回 DocsAI。

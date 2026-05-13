@@ -1,10 +1,10 @@
 using System;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Collision.Events;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Collision.Events;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot 2D 碰撞节点到 Collision Capability 的桥接工具。

@@ -1,9 +1,9 @@
 using Godot;
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Event;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 可直接挂到 Godot 场景的 GameOS Entity 基类。

@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Runtime.Event;
+namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// Runtime 事件总线契约。唯一 API 表面：Publish / Subscribe / ExportObservation。

@@ -1,6 +1,6 @@
 using System.Text.Json;
-using SkilmeAI.GameOS.Observation;
-using SkilmeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Observation;
+using SlimeAI.GameOS.Runtime.Event;
 
 internal static class EventBusTests
 {

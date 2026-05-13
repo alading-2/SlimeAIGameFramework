@@ -1,10 +1,10 @@
-# 从 brotato-my 迁移到 SkilmeAI
+# 从 brotato-my 迁移到 SlimeAI
 
 > 日期：2026-05-06
 > 状态：Phase 01-09 已完成，Phase 10-11 待开始
-> 术语说明：本文中的 `ECS` 仅指旧仓库历史来源和迁移对照，不代表 SkilmeAI 当前框架身份；当前定位见 `GameOS/Overview.md#术语表` 和 ECS 边界 ADR。
+> 术语说明：本文中的 `ECS` 仅指旧仓库历史来源和迁移对照，不代表 SlimeAI 当前框架身份；当前定位见 `GameOS/Overview.md#术语表` 和 ECS 边界 ADR。
 > 来源仓库：`/home/slime/Code/Godot/Games/MyGames/brotato-my`
-> 目标工作区：`/home/slime/Code/SkilmeAI/`
+> 目标工作区：`/home/slime/Code/SlimeAI/`
 
 ---
 
@@ -21,7 +21,7 @@
 | 没有 DataOS 层 | 数据 authoring、runtime snapshot、验证门禁全部缺失 |
 | 没有对象池和碰撞隔离 | 高频对象 `new`/`QueueFree` 导致性能问题和物理时序 bug |
 
-迁移目标：**建立 SkilmeAI GameOS 框架**，把通用 Runtime、Capabilities、DataOS、Validation 和 Observation 从游戏中拆分出来，让游戏仓库只保留游戏特定内容。
+迁移目标：**建立 SlimeAI GameOS 框架**，把通用 Runtime、Capabilities、DataOS、Validation 和 Observation 从游戏中拆分出来，让游戏仓库只保留游戏特定内容。
 
 ---
 
@@ -30,8 +30,8 @@
 ### 2.1 新仓库工作区骨架
 
 ```text
-/home/slime/Code/SkilmeAI/
-  SkilmeAI/                    # AI 框架主仓库（repo）
+/home/slime/Code/SlimeAI/
+  SlimeAI/                    # AI 框架主仓库（repo）
     GameOS/Runtime/            # 纯 C# 内核
     GameOS/Capabilities/       # 能力包
     GameOS/GodotBridge/        # Godot 适配层
@@ -40,7 +40,7 @@
     Agent/                     # AI 协议文档
     DocsAI/                    # 架构文档
 
-  Engine/                      # Godot 源码目录
+  Resources/Engine/                      # Godot 源码目录
     godot-4.6.2-stable/
 
   Games/
@@ -53,7 +53,7 @@
 
 ### 2.2 Runtime 内核（8 个系统）
 
-从旧仓库 `Src/ECS/Base/` 迁入 `SkilmeAI/GameOS/Runtime/`：
+从旧仓库 `Src/ECS/Base/` 迁入 `SlimeAI/GameOS/Runtime/`：
 
 | 系统 | 旧路径 | 新路径 | 说明 |
 |------|--------|--------|------|
@@ -68,7 +68,7 @@
 
 ### 2.3 Capability（10 个能力包）
 
-从旧仓库 `Src/ECS/Base/System/` 和 `Component/` 迁入 `SkilmeAI/GameOS/Capabilities/`，每个 Capability 建立标准模板：
+从旧仓库 `Src/ECS/Base/System/` 和 `Component/` 迁入 `SlimeAI/GameOS/Capabilities/`，每个 Capability 建立标准模板：
 
 | Capability | 旧路径 | 状态 | 说明 |
 |------------|--------|------|------|
@@ -106,7 +106,7 @@
 
 ### 2.5 GodotBridge（Godot 适配层）
 
-旧仓库中散落在 `Src/ECS/Base/Entity/` 和 `Component/` 中的 Godot 耦合代码 → 新 `SkilmeAI/GameOS/GodotBridge/`：
+旧仓库中散落在 `Src/ECS/Base/Entity/` 和 `Component/` 中的 Godot 耦合代码 → 新 `SlimeAI/GameOS/GodotBridge/`：
 
 | 组件 | 说明 |
 |------|------|
@@ -188,7 +188,7 @@ Games/BrotatoLike/
 ```
 Phase 00：冻结旧仓库定位
 Phase 01：资产盘点（00_Inventory.md）
-Phase 02：建立新工作区骨架（/home/slime/Code/SkilmeAI/）
+Phase 02：建立新工作区骨架（/home/slime/Code/SlimeAI/）
 Phase 03：迁移 Runtime 内核（Entity/Event/Data/Relationship/Schedule/Pool/Timer/Resource）
 Phase 04：迁移第一批 Capability（Movement/Collision/Damage/Feature/Ability）
 Phase 05：迁移第二批 Capability（AI/Projectile/Attack/Effect）
@@ -246,7 +246,7 @@ brotato-my/
 
 ### 5.1 近期（Phase 10）
 
-- 删除 SkilmeAI 仓库中的 `MigrationInput/` 旧文件
+- 删除 SlimeAI 仓库中的 `MigrationInput/` 旧文件
 - 建立旧结构归档清单和最终验证门禁
 - 旧仓库 `brotato-my` 只作为迁移输入和历史对照
 
@@ -272,13 +272,13 @@ brotato-my/
 
 ```bash
 # 框架验证
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh      # dotnet build
 Tools/run-tests.sh      # Runtime 行为测试
 Tools/run-pack.sh       # 本地 NuGet 包
 
 # 游戏验证
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh              # dotnet build
 Tools/run-godot-smoke.sh        # Godot headless smoke（PASS 条件：bridge + pool + dataos + main = True）
 Tools/run-dataos-snapshot.sh    # 生成 runtime snapshot
@@ -289,6 +289,6 @@ Tools/run-dataos-snapshot.sh    # 生成 runtime snapshot
 ## 7. 参考
 
 - 旧仓库迁移计划材料：旧 `brotato-my` 历史架构记录。
-- 框架当前计划入口：`/home/slime/Code/SkilmeAI/openspec/changes/<change>/`
-- 框架当前规范基线：`/home/slime/Code/SkilmeAI/openspec/specs/`
-- 框架项目状态：`/home/slime/Code/SkilmeAI/SkilmeAI/DocsAI/ProjectState.md`
+- 框架当前计划入口：`/home/slime/Code/SlimeAI/openspec/changes/<change>/`
+- 框架当前规范基线：`/home/slime/Code/SlimeAI/openspec/specs/`
+- 框架项目状态：`/home/slime/Code/SlimeAI/SlimeAI/DocsAI/ProjectState.md`

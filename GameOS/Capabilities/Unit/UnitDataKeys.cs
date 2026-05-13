@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Data;
 
-namespace SkilmeAI.GameOS.Capabilities.Unit;
+namespace SlimeAI.GameOS.Capabilities.Unit;
 
 /// <summary>
 /// Unit 表现层使用的运行时 DataKey。

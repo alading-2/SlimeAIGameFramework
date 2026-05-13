@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/GameOS/">
+    <Project Path="GameOS/SlimeAI.GameOS.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/SlimeAI.GameOS.Tests/SlimeAI.GameOS.Tests.csproj" />
+  </Folder>
+</Solution>

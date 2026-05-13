@@ -1,8 +1,8 @@
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Effect;
+namespace SlimeAI.GameOS.Capabilities.Effect;
 
 /// <summary>
 /// Effect Capability 使用的运行时 DataKey。

@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// 通用朝向控制参数；只描述视觉朝向，不参与位移和碰撞。

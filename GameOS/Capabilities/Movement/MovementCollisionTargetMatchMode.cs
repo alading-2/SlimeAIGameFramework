@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement 碰撞目标匹配模式。

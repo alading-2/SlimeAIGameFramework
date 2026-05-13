@@ -1,14 +1,14 @@
 # Data 系统专项调研报告
 
 > 日期：2026-05-12
-> 任务：用户提出 SkilmeAI Runtime Data / DataMeta / DataKey 全面重构。要求：
+> 任务：用户提出 SlimeAI Runtime Data / DataMeta / DataKey 全面重构。要求：
 > 1. 不做兼容；数据/事件是框架根基，必须做好。
 > 2. DataDescriptor 装饰字段（DisplayName / Description / IconPath / IsPercentage）保留，但应考虑写进 DataOS 数据库。
 > 3. authoring DB 和生成的 snapshot 应统一位置。
 > 4. 按 Capability 裁剪：系统删了，对应数据不加载（指游戏启动前的设置阶段）。
 > 5. AI-first：数据只为 AI 服务，不为人类工程师方便而保留多余字段。
 >
-> 输入证据：本地报告 01-09 + 99 综合；SkilmeAI 当前 Runtime Data / DataMeta / DataRegistry / Capability DataKeys 源码；DataOS schema / generator / validator / RuntimeDataSnapshot 现状；Unreal GAS UPROPERTY meta 与 Unity Inspector binding 行业事实。
+> 输入证据：本地报告 01-09 + 99 综合；SlimeAI 当前 Runtime Data / DataMeta / DataRegistry / Capability DataKeys 源码；DataOS schema / generator / validator / RuntimeDataSnapshot 现状；Unreal GAS UPROPERTY meta 与 Unity Inspector binding 行业事实。
 >
 > 本报告不写代码，只产出设计事实和可执行方向；基于这份报告开后续 OpenSpec change。
 
@@ -51,7 +51,7 @@
 
 **关键事实**：装饰元数据**只服务 authoring time + 编辑器 / UI binding**。三家引擎都把它附在字段上（reflection metadata 或 attribute），但**没有任何一家把它放进运行时业务热路径**。
 
-SkilmeAI 当前的 `DataMeta` 把装饰字段和 runtime 行为字段（Type / DefaultValue / SupportModifiers / Compute）揉在一起，违反 authoring/runtime 边界。本地报告 `06-UnityCsReference` 3.5 节、`07-Unity-Entities-Samples` 3.2 节都明确指出这条边界。
+SlimeAI 当前的 `DataMeta` 把装饰字段和 runtime 行为字段（Type / DefaultValue / SupportModifiers / Compute）揉在一起，违反 authoring/runtime 边界。本地报告 `06-UnityCsReference` 3.5 节、`07-Unity-Entities-Samples` 3.2 节都明确指出这条边界。
 
 **改进方向**：
 
@@ -105,7 +105,7 @@ runtime 层（C# 静态注册）
 | Bevy | `DefaultPlugins` vs `MinimalPlugins`；Cargo feature 编译期裁剪；`PluginGroup` 运行期启用 | 01 报告 3.1 |
 | Flecs | module / import；ChildOf 等内建 trait；examples 中 scene / inventory / facts 分离 | 02 报告 3 |
 | Unreal Modular Game Features | 每个 GameFeature 是独立 plugin + PrimaryDataAsset；启用时执行 actions（注册 abilities、加载 data） | 09 报告 3.6 |
-| SkilmeAI GenreProfile | 每个 GenreProfile 声明默认能力、候选能力、DataOS preset | 99 综合 3.3 |
+| SlimeAI GenreProfile | 每个 GenreProfile 声明默认能力、候选能力、DataOS preset | 99 综合 3.3 |
 
 **实现路径**：
 
@@ -188,12 +188,12 @@ public interface IData
 
 ### 3.2 Q4：DataOS 物理布局统一 — 结论 `Adopt Now`
 
-**用户判断成立**。当前 DataOS 在 `SkilmeAI/DataOS/`，snapshot 在某个生成产物路径；多份调研都建议两者紧邻：
+**用户判断成立**。当前 DataOS 在 `SlimeAI/DataOS/`，snapshot 在某个生成产物路径；多份调研都建议两者紧邻：
 
 **目标结构**：
 
 ```text
-SkilmeAI/
+SlimeAI/
 └─ DataOS/
    ├─ Schemas/                  # 静态 schema 与迁移
    │   ├─ 001_initial.sql
@@ -220,7 +220,7 @@ Games/BrotatoLike/
 **关键原则**：
 - authoring DB 文件和 snapshot 同目录祖先（`DataOS/`），AI 路由稳定。
 - 生成 manifest 同步落地：snapshot version、source hash、enabled capabilities、validation report id。
-- 框架 default 和游戏 seed 分仓：框架默认在 SkilmeAI 仓，游戏覆盖在游戏仓。99 综合 6.3 已要求 `framework default → genre preset → game override → game seed` 链。
+- 框架 default 和游戏 seed 分仓：框架默认在 SlimeAI 仓，游戏覆盖在游戏仓。99 综合 6.3 已要求 `framework default → genre preset → game override → game seed` 链。
 
 ## 4. 不重构原则与 AI-first 取舍
 
@@ -299,7 +299,7 @@ Games/BrotatoLike/
    - 验证：每个 Capability 单元测试通过、跨 Capability smoke 通过。
 
 2. **`define-dataos-physical-layout`**
-   - 固化 `SkilmeAI/DataOS/{Schemas,Authoring,Snapshots,Generators,Validators}` 布局。
+   - 固化 `SlimeAI/DataOS/{Schemas,Authoring,Snapshots,Generators,Validators}` 布局。
    - 框架 default DB 进仓库；snapshot 输出位置统一。
 
 3. **`define-capability-manifest-and-trimming`**
@@ -319,23 +319,23 @@ Games/BrotatoLike/
 | 不采纳项 | 原因 |
 |---|---|
 | 用 Unreal `UPROPERTY meta` 那种 string-keyed metadata 设计 | C# 无原生 reflection metadata；改用 typed column 表更直接 |
-| 用 ScriptableObject / .asset 文件存装饰 | SkilmeAI 已用 SQLite + JSON snapshot，不引入 Godot Resource 编辑器依赖 |
+| 用 ScriptableObject / .asset 文件存装饰 | SlimeAI 已用 SQLite + JSON snapshot，不引入 Godot Resource 编辑器依赖 |
 | 用 codegen 生成 `*DataKeys.cs`（方案 C） | 优先方案 B（双源校验），降低生成器复杂度 |
 | 把 Description 翻译成 i18n key 系统 | 第一阶段只保留 `display_name`、`description` 单列；翻译后再加列 |
 | `IsPercentage` 改成 `Unit` 枚举（Percentage / Time / Distance / Currency） | YAGNI；当前只确认 Percentage 一种特殊处理；未来按需扩列 |
 
-## 10. SkilmeAI 影响矩阵
+## 10. SlimeAI 影响矩阵
 
-| SkilmeAI 域 | 影响 | 等级 | 后续文件 |
+| SlimeAI 域 | 影响 | 等级 | 后续文件 |
 |---|---|---|---|
-| GameOS Runtime | `IData / DataKey<T>` API 全 typed 重写；`Get/Set/TryGet` 不再要 `<T>` 参数 | `Adopt Now` | `SkilmeAI/GameOS/Runtime/Data/*` |
-| GameOS Runtime | DataMeta 拆成 runtime `DataKey<T>` + authoring `Descriptor`；DataRegistry 接受 snapshot.descriptors | `Adopt Now` | `SkilmeAI/GameOS/Runtime/Data/DataMeta.cs / DataRegistry.cs / DataDescriptor.cs (新)` |
-| Capability | 每个 `*DataKeys.cs` 改写：去掉装饰字段，只留 typed handle；Capability 启动注册 Compute | `Adopt Now` | `SkilmeAI/GameOS/Capabilities/*/*DataKeys.cs` |
-| DataOS | 新增 `data_key_descriptor` 表 + `capability_manifest` 表；schema 迁移 | `Adopt Now` | `SkilmeAI/DataOS/Schemas/*.sql` |
-| DataOS | 物理布局统一：`DataOS/{Schemas,Authoring,Snapshots,Generators,Validators}` | `Adopt Now` | `SkilmeAI/DataOS/README.md` |
-| DataOS | snapshot generator 支持 `--enabled-capabilities`；输出 manifest 字段固化 | `Adopt Now` | `SkilmeAI/DataOS/Generators/*` |
-| DataOS | validator 校验：DataKey vs Descriptor 一致、Capability 依赖完整、profile 内引用闭合 | `Adopt Now` | `SkilmeAI/DataOS/Validators/*` |
-| GodotBridge | UI / HUD binder 通过 DataDescriptorRegistry 查装饰（不通过 Data） | `Adopt Now` | `SkilmeAI/GameOS/GodotBridge/HUD/*` |
-| Validation | 新增 typed Data API smoke、Capability 裁剪 smoke、Descriptor 一致性测试 | `Adopt Now` | `SkilmeAI/Tests/SkilmeAI.GameOS.Tests/*` |
-| Observation | DataDescriptorRegistry dump、Capability 启用列表 dump、snapshot manifest dump | `Adopt Later` | `SkilmeAI/GameOS/Observation/Contract.md` |
-| Agent Protocol | 新增禁止事项："不要在 C# 中 hardcode DisplayName / Description"；改 DataKey 装饰只能改 DB | `Adopt Now` | `SkilmeAI/Agent/Protocols/*` |
+| GameOS Runtime | `IData / DataKey<T>` API 全 typed 重写；`Get/Set/TryGet` 不再要 `<T>` 参数 | `Adopt Now` | `SlimeAI/GameOS/Runtime/Data/*` |
+| GameOS Runtime | DataMeta 拆成 runtime `DataKey<T>` + authoring `Descriptor`；DataRegistry 接受 snapshot.descriptors | `Adopt Now` | `SlimeAI/GameOS/Runtime/Data/DataMeta.cs / DataRegistry.cs / DataDescriptor.cs (新)` |
+| Capability | 每个 `*DataKeys.cs` 改写：去掉装饰字段，只留 typed handle；Capability 启动注册 Compute | `Adopt Now` | `SlimeAI/GameOS/Capabilities/*/*DataKeys.cs` |
+| DataOS | 新增 `data_key_descriptor` 表 + `capability_manifest` 表；schema 迁移 | `Adopt Now` | `SlimeAI/DataOS/Schemas/*.sql` |
+| DataOS | 物理布局统一：`DataOS/{Schemas,Authoring,Snapshots,Generators,Validators}` | `Adopt Now` | `SlimeAI/DataOS/README.md` |
+| DataOS | snapshot generator 支持 `--enabled-capabilities`；输出 manifest 字段固化 | `Adopt Now` | `SlimeAI/DataOS/Generators/*` |
+| DataOS | validator 校验：DataKey vs Descriptor 一致、Capability 依赖完整、profile 内引用闭合 | `Adopt Now` | `SlimeAI/DataOS/Validators/*` |
+| GodotBridge | UI / HUD binder 通过 DataDescriptorRegistry 查装饰（不通过 Data） | `Adopt Now` | `SlimeAI/GameOS/GodotBridge/HUD/*` |
+| Validation | 新增 typed Data API smoke、Capability 裁剪 smoke、Descriptor 一致性测试 | `Adopt Now` | `SlimeAI/Tests/SlimeAI.GameOS.Tests/*` |
+| Observation | DataDescriptorRegistry dump、Capability 启用列表 dump、snapshot manifest dump | `Adopt Later` | `SlimeAI/GameOS/Observation/Contract.md` |
+| Agent Protocol | 新增禁止事项："不要在 C# 中 hardcode DisplayName / Description"；改 DataKey 装饰只能改 DB | `Adopt Now` | `SlimeAI/Agent/Protocols/*` |

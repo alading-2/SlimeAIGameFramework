@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 伤害统计处理器。

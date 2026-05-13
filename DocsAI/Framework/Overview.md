@@ -1,8 +1,8 @@
-# SkilmeAI Framework Overview
+# SlimeAI Framework Overview
 
 ## 定位
 
-SkilmeAI 是 `AI-first GameOS` 框架，不是通用游戏引擎，也不是传统 ECS 框架。它的运行时架构定位为 `Capability Composition Runtime`：面向 Godot 4.6 C# 项目，提供可由 AI 稳定路由和验证的运行时内核、可选 Capability、数据快照、观察日志、Agent 协议和游戏适配边界。
+SlimeAI 是 `AI-first GameOS` 框架，不是通用游戏引擎，也不是传统 ECS 框架。它的运行时架构定位为 `Capability Composition Runtime`：面向 Godot 4.6 C# 项目，提供可由 AI 稳定路由和验证的运行时内核、可选 Capability、数据快照、观察日志、Agent 协议和游戏适配边界。
 
 核心结构：
 
@@ -30,7 +30,7 @@ Small Runtime Kernel
 
 ## 当前事实源
 
-- 长期文档：`SkilmeAI/DocsAI/`
+- 长期文档：`SlimeAI/DocsAI/`
 - 实施计划：`openspec/changes/<change>/`
 - Skill 源头：`.codex/skills/`
 - 游戏侧文档：`Games/BrotatoLike/DocsAI/`

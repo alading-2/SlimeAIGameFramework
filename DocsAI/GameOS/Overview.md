@@ -1,6 +1,6 @@
 # GameOS
 
-`GameOS` 是 SkilmeAI 的 AI-first GameOS 框架层，运行时架构是 `Capability Composition Runtime`。它借鉴组合式架构，但不把 SkilmeAI 定位成传统 ECS 框架；新文档和新 API 设计应优先使用 Runtime Entity、Runtime Data / DataKey、Capability、GodotBridge Adapter 和 Runtime Process 这些术语。
+`GameOS` 是 SlimeAI 的 AI-first GameOS 框架层，运行时架构是 `Capability Composition Runtime`。它借鉴组合式架构，但不把 SlimeAI 定位成传统 ECS 框架；新文档和新 API 设计应优先使用 Runtime Entity、Runtime Data / DataKey、Capability、GodotBridge Adapter 和 Runtime Process 这些术语。
 
 ## 子域
 
@@ -26,7 +26,7 @@
 
 ## 当前状态
 
-已创建 `SkilmeAI.GameOS` 最小可构建包，当前包含 Data / Event / Entity / Relationship / Schedule / Resource / Pool / Timer 纯 C# Runtime 最小内核，并已迁入 GodotBridge 第一版、Movement / Collision / Damage / Ability / Feature / AI / Attack 第一批，以及 Projectile / Effect 纯 Runtime 生成、Projectile 命中生命周期、穿透 / 生命周期扩展和 Effect 动画播放第一段。
+已创建 `SlimeAI.GameOS` 最小可构建包，当前包含 Data / Event / Entity / Relationship / Schedule / Resource / Pool / Timer 纯 C# Runtime 最小内核，并已迁入 GodotBridge 第一版、Movement / Collision / Damage / Ability / Feature / AI / Attack 第一批，以及 Projectile / Effect 纯 Runtime 生成、Projectile 命中生命周期、穿透 / 生命周期扩展和 Effect 动画播放第一段。
 
 GodotBridge 当前包含：
 
@@ -39,7 +39,7 @@ GodotBridge 当前包含：
 ## 构建
 
 ```bash
-dotnet build GameOS/SkilmeAI.GameOS.csproj
+dotnet build GameOS/SlimeAI.GameOS.csproj
 Tools/run-build.sh
 ```
 
@@ -48,4 +48,4 @@ Tools/run-build.sh
 - `Contracts.md`
 - `ApiIndex.md`
 - `DebugGuide.md`
-- `SkilmeAI.GameOS.Migration.md`
+- `SlimeAI.GameOS.Migration.md`

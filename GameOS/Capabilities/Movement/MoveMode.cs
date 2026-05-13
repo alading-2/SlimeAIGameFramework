@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement Capability 当前迁入的移动模式。

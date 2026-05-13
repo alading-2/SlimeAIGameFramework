@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// AI 行为节点返回状态。

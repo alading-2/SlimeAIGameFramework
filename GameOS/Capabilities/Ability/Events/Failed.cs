@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Event;
 
-namespace SkilmeAI.GameOS.Capabilities.Ability.Events;
+namespace SlimeAI.GameOS.Capabilities.Ability.Events;
 
 /// <summary>技能触发失败。AbilityService 是唯一 producer。</summary>
 public readonly record struct Failed(

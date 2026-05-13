@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Relationship;
+namespace SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// 父实体销毁时，直接归属子实体的处理策略。

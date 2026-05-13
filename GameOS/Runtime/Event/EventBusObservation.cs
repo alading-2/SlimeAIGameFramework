@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 
-namespace SkilmeAI.GameOS.Runtime.Event;
+namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// 每总线实例的事件可观测数据。记录订阅、发布、同类型嵌套阻断和 handler 异常。

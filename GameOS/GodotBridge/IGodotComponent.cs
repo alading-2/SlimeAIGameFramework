@@ -1,7 +1,7 @@
 using Godot;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot Node Component 的最小生命周期协议。

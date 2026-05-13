@@ -34,7 +34,7 @@
 框架侧：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```
@@ -42,9 +42,9 @@ Tools/run-tests.sh
 游戏侧：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SkilmeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
 
@@ -82,7 +82,7 @@ scene runner 会把 artifact 写入：
 字段：
 
 - `status`: `pass` 或 `fail`。
-- `scene`: `res://SkilmeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`。
+- `scene`: `res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`。
 - `layer`: `Runtime/Data`。
 - `checks`: 检查项数组，每项包含 `name`、`status`、`category`、`details`。
 - `logs`: 与 stdout 同源的关键日志条目。

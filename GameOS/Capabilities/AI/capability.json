@@ -37,7 +37,7 @@
   ],
   "testScenes": [],
   "validationCommands": [
-    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build",
-    "cd /home/slime/Code/SkilmeAI/SkilmeAI && Tools/run-tests.sh"
+    "cd /home/slime/Code/SlimeAI/SlimeAI && dotnet build",
+    "cd /home/slime/Code/SlimeAI/SlimeAI && Tools/run-tests.sh"
   ]
 }

@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Effect;
+namespace SlimeAI.GameOS.Capabilities.Effect;
 
 /// <summary>
 /// 效果生成结果。

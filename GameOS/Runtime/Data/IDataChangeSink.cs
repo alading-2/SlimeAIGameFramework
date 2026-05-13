@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// Minimal bridge used by Data before the Event runtime is migrated.

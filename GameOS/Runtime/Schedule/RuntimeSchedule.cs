@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 纯 C# Runtime 调度器，负责系统实例、依赖、运行条件和生命周期。

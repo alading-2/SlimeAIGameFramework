@@ -1,7 +1,7 @@
 using System;
-using SkilmeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Capabilities.Movement;
 
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// 确定性巡逻动作：在巡逻中心两侧切换目标点，并向 Movement 写入 AI 移动意图。

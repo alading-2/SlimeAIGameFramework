@@ -30,7 +30,7 @@
 
 ## Snapshot 契约
 
-生成的 JSON 由 `SkilmeAI.GameOS.Runtime.Data.RuntimeDataSnapshot` 消费：
+生成的 JSON 由 `SlimeAI.GameOS.Runtime.Data.RuntimeDataSnapshot` 消费：
 
 - `manifest` 记录 `schemaVersion / generatedAtUtc / profile / catalogId / enabledCapabilities / descriptorCount / recordCount / resourceCount / validation`。
 - `descriptors[]` 是 active profile 的 DataKey descriptor mirror；每个 active snapshot field 必须有且只有一个 descriptor。

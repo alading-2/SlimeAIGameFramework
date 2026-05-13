@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text;
 
-namespace SkilmeAI.GameOS.Observation;
+namespace SlimeAI.GameOS.Observation;
 
 /// <summary>
 /// 单条结构化 GameOS 观测日志。

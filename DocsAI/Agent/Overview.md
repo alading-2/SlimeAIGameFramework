@@ -1,6 +1,6 @@
 # Agent
 
-`Agent` 存放 SkilmeAI 的通用 AI 工作流协议文档。可执行 skill 的唯一源头在仓库根 `.codex/skills/`。
+`Agent` 存放 SlimeAI 的通用 AI 工作流协议文档。可执行 skill 的唯一源头在仓库根 `.codex/skills/`。
 
 ## 子域
 

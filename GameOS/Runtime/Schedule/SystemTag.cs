@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 系统逻辑标签，用于预设装载、查询和调试展示。

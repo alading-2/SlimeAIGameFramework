@@ -1,4 +1,4 @@
-# SkilmeAI.GameOS Contracts
+# SlimeAI.GameOS Contracts
 
 > Version: 0.1.0-alpha.0
 > Status: runtime-minimum
@@ -18,109 +18,109 @@
 
 已存在的稳定入口：
 
-- `SkilmeAI.GameOS.Runtime.GameOSInfo.FrameworkId`
-- `SkilmeAI.GameOS.Runtime.GameOSInfo.Version`
-- `SkilmeAI.GameOS.Runtime.GameOSInfo.Stage`
-- `SkilmeAI.GameOS.Runtime.Event.IEvent`
-- `SkilmeAI.GameOS.Runtime.Event.IEntityEvent`
-- `SkilmeAI.GameOS.Runtime.Event.IGlobalEvent`
-- `SkilmeAI.GameOS.Runtime.Event.IBroadcastEvent`
-- `SkilmeAI.GameOS.Runtime.Event.IEventBus`
-- `SkilmeAI.GameOS.Runtime.Event.EntityEventBus`
-- `SkilmeAI.GameOS.Runtime.Event.WorldEventBus`
-- `SkilmeAI.GameOS.Runtime.Event.WorldEvents`
-- `SkilmeAI.GameOS.Runtime.Event.EventBusObservation`
-- `SkilmeAI.GameOS.Runtime.Data.Data`
-- `SkilmeAI.GameOS.Runtime.Data.DataKey<T>`
-- `SkilmeAI.GameOS.Runtime.Data.IDataKey`
-- `SkilmeAI.GameOS.Runtime.Data.DataSlot<T>`
-- `SkilmeAI.GameOS.Runtime.Data.DataCatalog`
-- `SkilmeAI.GameOS.Runtime.Data.DataKeyRegistry`
-- `SkilmeAI.GameOS.Runtime.Data.FrameworkDataKeys`
-- `SkilmeAI.GameOS.Runtime.Data.DataModifier`
-- `SkilmeAI.GameOS.Runtime.Data.IDataChangeSink`
-- `SkilmeAI.GameOS.Runtime.Data.RuntimeDataSnapshot`
-- `SkilmeAI.GameOS.Runtime.Event.EventDataChangeSink`
-- `SkilmeAI.GameOS.Runtime.Entity.IEntity`
-- `SkilmeAI.GameOS.Runtime.Entity.RuntimeEntity`
-- `SkilmeAI.GameOS.Runtime.Entity.EntityManager`
-- `SkilmeAI.GameOS.Runtime.Relationship.RelationshipManager`
-- `SkilmeAI.GameOS.Runtime.Relationship.RelationshipType`
-- `SkilmeAI.GameOS.Runtime.Relationship.RelationshipLifecycle`
-- `SkilmeAI.GameOS.Runtime.Schedule.RuntimeSchedule`
-- `SkilmeAI.GameOS.Runtime.Schedule.ProjectStateService`
-- `SkilmeAI.GameOS.Runtime.Schedule.SystemRunCondition`
-- `SkilmeAI.GameOS.Runtime.Schedule.ScheduleDataKeys`
-- `SkilmeAI.GameOS.Runtime.Resource.ResourceCatalog`
-- `SkilmeAI.GameOS.Runtime.Resource.ResourceManagement`
-- `SkilmeAI.GameOS.Runtime.Pool.ObjectPool<T>`
-- `SkilmeAI.GameOS.Runtime.Pool.ObjectPoolManager`
-- `SkilmeAI.GameOS.Runtime.Pool.IObjectPool`
-- `SkilmeAI.GameOS.Runtime.Timer.TimerManager`
-- `SkilmeAI.GameOS.Runtime.Timer.GameTimer`
-- `SkilmeAI.GameOS.Capabilities.Movement.Vector2Value`
-- `SkilmeAI.GameOS.Capabilities.Movement.MovementDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Movement.MoveMode`
-- `SkilmeAI.GameOS.Capabilities.Movement.MovementParams`
-- `SkilmeAI.GameOS.Capabilities.Movement.IMovementStrategy`
-- `SkilmeAI.GameOS.Capabilities.Movement.MovementStrategyRegistry`
-- `SkilmeAI.GameOS.Capabilities.Movement.MovementSystem`
-- `SkilmeAI.GameOS.Capabilities.Movement.MovementStopReason`
-- `SkilmeAI.GameOS.Capabilities.Movement.MovementStopContext`
-- `SkilmeAI.GameOS.GodotBridge.GodotEntity`
-- `SkilmeAI.GameOS.GodotBridge.GodotEntity2D`
-- `SkilmeAI.GameOS.GodotBridge.IGodotComponent`
-- `SkilmeAI.GameOS.GodotBridge.GameOSGodotBridge`
-- `SkilmeAI.GameOS.GodotBridge.GodotNodeRegistry`
-- `SkilmeAI.GameOS.GodotBridge.GameOSTimerDriver`
-- `SkilmeAI.GameOS.GodotBridge.GodotMovementDriver`
-- `SkilmeAI.GameOS.GodotBridge.GodotNodePool<T>`
-- `SkilmeAI.GameOS.GodotBridge.GodotNodePoolConfig`
-- `SkilmeAI.GameOS.GodotBridge.GodotNodePoolManager`
-- `SkilmeAI.GameOS.GodotBridge.GodotCollisionIsolation`
-- `SkilmeAI.GameOS.GodotBridge.GodotAttackComponent`
-- `SkilmeAI.GameOS.GodotBridge.AttackComponent`
-- `SkilmeAI.GameOS.GodotBridge.GodotUnitAnimationComponent`
-- `SkilmeAI.GameOS.GodotBridge.GodotAIComponent`
-- `SkilmeAI.GameOS.GodotBridge.GodotProjectileEffectSpawner`
-- `SkilmeAI.GameOS.Capabilities.Damage.DamageService`
-- `SkilmeAI.GameOS.Capabilities.Damage.IDamageProcessor`
-- `SkilmeAI.GameOS.Capabilities.Damage.DamageDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Damage.DamageInfo`
-- `SkilmeAI.GameOS.Capabilities.Damage.DamageResult`
-- `SkilmeAI.GameOS.Capabilities.Damage.HealService`
-- `SkilmeAI.GameOS.Capabilities.Damage.DamageTool`
-- `SkilmeAI.GameOS.Capabilities.Ability.AbilityService`
-- `SkilmeAI.GameOS.Capabilities.Ability.AbilityDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Feature.FeatureService`
-- `SkilmeAI.GameOS.Capabilities.Feature.FeatureDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Feature.FeatureDefinition`
-- `SkilmeAI.GameOS.Capabilities.Feature.IFeatureHandler`
-- `SkilmeAI.GameOS.Capabilities.Feature.FeatureHandlerRegistry`
-- `SkilmeAI.GameOS.Capabilities.AI.AIService`
-- `SkilmeAI.GameOS.Capabilities.AI.AIDataKeys`
-- `SkilmeAI.GameOS.Capabilities.AI.BehaviorNode`
-- `SkilmeAI.GameOS.Capabilities.AI.IsTargetInRangeCondition`
-- `SkilmeAI.GameOS.Capabilities.AI.RequestAttackAction`
-- `SkilmeAI.GameOS.Capabilities.AI.PatrolAction`
-- `SkilmeAI.GameOS.Capabilities.AI.EnemyBehaviorBlocks`
-- `SkilmeAI.GameOS.Capabilities.AI.EnemyBehaviorTreeBuilder`
-- `SkilmeAI.GameOS.Capabilities.Attack.AttackDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Attack.AttackService`
-- `SkilmeAI.GameOS.Capabilities.Attack.AttackState`
-- `SkilmeAI.GameOS.Capabilities.Attack.AttackCancelReason`
-- `SkilmeAI.GameOS.Capabilities.Projectile.ProjectileDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Projectile.ProjectileTool`
-- `SkilmeAI.GameOS.Capabilities.Projectile.ProjectileMovementOptions`
-- `SkilmeAI.GameOS.Capabilities.Effect.EffectDataKeys`
-- `SkilmeAI.GameOS.Capabilities.Effect.EffectTool`
-- `SkilmeAI.GameOS.Capabilities.Unit.UnitDataKeys`
-- `SkilmeAI.GameOS.Observation.GameOSLog`
-- `SkilmeAI.GameOS.Observation.GameOSContextLog`
-- `SkilmeAI.GameOS.Observation.GameOSLogEntry`
-- `SkilmeAI.GameOS.Observation.IGameOSLogSink`
-- `SkilmeAI.GameOS.Observation.GameOSObservationSession`
-- `SkilmeAI.GameOS.Observation.SceneValidationSession`
+- `SlimeAI.GameOS.Runtime.GameOSInfo.FrameworkId`
+- `SlimeAI.GameOS.Runtime.GameOSInfo.Version`
+- `SlimeAI.GameOS.Runtime.GameOSInfo.Stage`
+- `SlimeAI.GameOS.Runtime.Event.IEvent`
+- `SlimeAI.GameOS.Runtime.Event.IEntityEvent`
+- `SlimeAI.GameOS.Runtime.Event.IGlobalEvent`
+- `SlimeAI.GameOS.Runtime.Event.IBroadcastEvent`
+- `SlimeAI.GameOS.Runtime.Event.IEventBus`
+- `SlimeAI.GameOS.Runtime.Event.EntityEventBus`
+- `SlimeAI.GameOS.Runtime.Event.WorldEventBus`
+- `SlimeAI.GameOS.Runtime.Event.WorldEvents`
+- `SlimeAI.GameOS.Runtime.Event.EventBusObservation`
+- `SlimeAI.GameOS.Runtime.Data.Data`
+- `SlimeAI.GameOS.Runtime.Data.DataKey<T>`
+- `SlimeAI.GameOS.Runtime.Data.IDataKey`
+- `SlimeAI.GameOS.Runtime.Data.DataSlot<T>`
+- `SlimeAI.GameOS.Runtime.Data.DataCatalog`
+- `SlimeAI.GameOS.Runtime.Data.DataKeyRegistry`
+- `SlimeAI.GameOS.Runtime.Data.FrameworkDataKeys`
+- `SlimeAI.GameOS.Runtime.Data.DataModifier`
+- `SlimeAI.GameOS.Runtime.Data.IDataChangeSink`
+- `SlimeAI.GameOS.Runtime.Data.RuntimeDataSnapshot`
+- `SlimeAI.GameOS.Runtime.Event.EventDataChangeSink`
+- `SlimeAI.GameOS.Runtime.Entity.IEntity`
+- `SlimeAI.GameOS.Runtime.Entity.RuntimeEntity`
+- `SlimeAI.GameOS.Runtime.Entity.EntityManager`
+- `SlimeAI.GameOS.Runtime.Relationship.RelationshipManager`
+- `SlimeAI.GameOS.Runtime.Relationship.RelationshipType`
+- `SlimeAI.GameOS.Runtime.Relationship.RelationshipLifecycle`
+- `SlimeAI.GameOS.Runtime.Schedule.RuntimeSchedule`
+- `SlimeAI.GameOS.Runtime.Schedule.ProjectStateService`
+- `SlimeAI.GameOS.Runtime.Schedule.SystemRunCondition`
+- `SlimeAI.GameOS.Runtime.Schedule.ScheduleDataKeys`
+- `SlimeAI.GameOS.Runtime.Resource.ResourceCatalog`
+- `SlimeAI.GameOS.Runtime.Resource.ResourceManagement`
+- `SlimeAI.GameOS.Runtime.Pool.ObjectPool<T>`
+- `SlimeAI.GameOS.Runtime.Pool.ObjectPoolManager`
+- `SlimeAI.GameOS.Runtime.Pool.IObjectPool`
+- `SlimeAI.GameOS.Runtime.Timer.TimerManager`
+- `SlimeAI.GameOS.Runtime.Timer.GameTimer`
+- `SlimeAI.GameOS.Capabilities.Movement.Vector2Value`
+- `SlimeAI.GameOS.Capabilities.Movement.MovementDataKeys`
+- `SlimeAI.GameOS.Capabilities.Movement.MoveMode`
+- `SlimeAI.GameOS.Capabilities.Movement.MovementParams`
+- `SlimeAI.GameOS.Capabilities.Movement.IMovementStrategy`
+- `SlimeAI.GameOS.Capabilities.Movement.MovementStrategyRegistry`
+- `SlimeAI.GameOS.Capabilities.Movement.MovementSystem`
+- `SlimeAI.GameOS.Capabilities.Movement.MovementStopReason`
+- `SlimeAI.GameOS.Capabilities.Movement.MovementStopContext`
+- `SlimeAI.GameOS.GodotBridge.GodotEntity`
+- `SlimeAI.GameOS.GodotBridge.GodotEntity2D`
+- `SlimeAI.GameOS.GodotBridge.IGodotComponent`
+- `SlimeAI.GameOS.GodotBridge.GameOSGodotBridge`
+- `SlimeAI.GameOS.GodotBridge.GodotNodeRegistry`
+- `SlimeAI.GameOS.GodotBridge.GameOSTimerDriver`
+- `SlimeAI.GameOS.GodotBridge.GodotMovementDriver`
+- `SlimeAI.GameOS.GodotBridge.GodotNodePool<T>`
+- `SlimeAI.GameOS.GodotBridge.GodotNodePoolConfig`
+- `SlimeAI.GameOS.GodotBridge.GodotNodePoolManager`
+- `SlimeAI.GameOS.GodotBridge.GodotCollisionIsolation`
+- `SlimeAI.GameOS.GodotBridge.GodotAttackComponent`
+- `SlimeAI.GameOS.GodotBridge.AttackComponent`
+- `SlimeAI.GameOS.GodotBridge.GodotUnitAnimationComponent`
+- `SlimeAI.GameOS.GodotBridge.GodotAIComponent`
+- `SlimeAI.GameOS.GodotBridge.GodotProjectileEffectSpawner`
+- `SlimeAI.GameOS.Capabilities.Damage.DamageService`
+- `SlimeAI.GameOS.Capabilities.Damage.IDamageProcessor`
+- `SlimeAI.GameOS.Capabilities.Damage.DamageDataKeys`
+- `SlimeAI.GameOS.Capabilities.Damage.DamageInfo`
+- `SlimeAI.GameOS.Capabilities.Damage.DamageResult`
+- `SlimeAI.GameOS.Capabilities.Damage.HealService`
+- `SlimeAI.GameOS.Capabilities.Damage.DamageTool`
+- `SlimeAI.GameOS.Capabilities.Ability.AbilityService`
+- `SlimeAI.GameOS.Capabilities.Ability.AbilityDataKeys`
+- `SlimeAI.GameOS.Capabilities.Feature.FeatureService`
+- `SlimeAI.GameOS.Capabilities.Feature.FeatureDataKeys`
+- `SlimeAI.GameOS.Capabilities.Feature.FeatureDefinition`
+- `SlimeAI.GameOS.Capabilities.Feature.IFeatureHandler`
+- `SlimeAI.GameOS.Capabilities.Feature.FeatureHandlerRegistry`
+- `SlimeAI.GameOS.Capabilities.AI.AIService`
+- `SlimeAI.GameOS.Capabilities.AI.AIDataKeys`
+- `SlimeAI.GameOS.Capabilities.AI.BehaviorNode`
+- `SlimeAI.GameOS.Capabilities.AI.IsTargetInRangeCondition`
+- `SlimeAI.GameOS.Capabilities.AI.RequestAttackAction`
+- `SlimeAI.GameOS.Capabilities.AI.PatrolAction`
+- `SlimeAI.GameOS.Capabilities.AI.EnemyBehaviorBlocks`
+- `SlimeAI.GameOS.Capabilities.AI.EnemyBehaviorTreeBuilder`
+- `SlimeAI.GameOS.Capabilities.Attack.AttackDataKeys`
+- `SlimeAI.GameOS.Capabilities.Attack.AttackService`
+- `SlimeAI.GameOS.Capabilities.Attack.AttackState`
+- `SlimeAI.GameOS.Capabilities.Attack.AttackCancelReason`
+- `SlimeAI.GameOS.Capabilities.Projectile.ProjectileDataKeys`
+- `SlimeAI.GameOS.Capabilities.Projectile.ProjectileTool`
+- `SlimeAI.GameOS.Capabilities.Projectile.ProjectileMovementOptions`
+- `SlimeAI.GameOS.Capabilities.Effect.EffectDataKeys`
+- `SlimeAI.GameOS.Capabilities.Effect.EffectTool`
+- `SlimeAI.GameOS.Capabilities.Unit.UnitDataKeys`
+- `SlimeAI.GameOS.Observation.GameOSLog`
+- `SlimeAI.GameOS.Observation.GameOSContextLog`
+- `SlimeAI.GameOS.Observation.GameOSLogEntry`
+- `SlimeAI.GameOS.Observation.IGameOSLogSink`
+- `SlimeAI.GameOS.Observation.GameOSObservationSession`
+- `SlimeAI.GameOS.Observation.SceneValidationSession`
 
 ## Runtime Data 契约
 
@@ -141,7 +141,7 @@
 - `EntityEventBus` 承载实体级事件；`IBroadcastEvent` 会在 Publish 后自动转发到注入的 `WorldEventBus`。反向违规（`IEntityEvent` 到 world bus、`IGlobalEvent` 到 entity bus）会 `log Error` 并 return，不派发。
 - 同类型嵌套 Publish 被阻断：per-bus 检测到正在派发的 `T` 时记录 reentry、log Error、return；跨类型级联和不同 bus 上的同类型 Publish 仍允许。
 - 订阅顺序等于注册顺序；退订唯一路径是 Dispose 由 `Subscribe` 返回的 token。handler 异常被 `EventBusObservation` 捕获，不会中断其他 handler。
-- `WorldEvents.World` 是进程级 world bus 的静态访问点；Capability 事件按目录组织在 `SkilmeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SkilmeAI/GameOS/Runtime/Events/{Core,Global}/`。
+- `WorldEvents.World` 是进程级 world bus 的静态访问点；Capability 事件按目录组织在 `SlimeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SlimeAI/GameOS/Runtime/Events/{Core,Global}/`。
 - `ExportObservation` 写 `eventbus-dump.json`，字段覆盖 `schemaVersion`、`busName`、`generatedAtUtc`、`subscriptions`、`emittedCounts`、`sameTypeReentryBlockedCounts`、`handlerExceptions`、`handlerRegistrationOrder`。
 
 ## Runtime Entity 契约
@@ -279,7 +279,7 @@
 - `FeatureDefinition` 当前包含 `FeatureId / HandlerId / Modifiers`；纯属性 Feature 可以只配置 `FeatureModifierEntry`，复杂逻辑通过 `IFeatureHandler` 扩展。
 - `FeatureService.Grant` 会把 `FeatureModifierEntry` 转成 `DataModifier` 写入 Owner Data，Modifier source 标记为 Feature 实体；`Remove` 通过 `Data.RemoveModifiersBySource(feature)` 回滚。
 - `FeatureHandlerRegistry` 以完整 `HandlerId` 查询 handler，不使用分组作为运行时查找键。
-- `GameEventType.Feature` 已删除；Feature 事件 payload 位于 `SkilmeAI/GameOS/Capabilities/Feature/Events/`，覆盖 `Granted / Removed / Enabled / Disabled / Activated / Executed / Ended`。
+- `GameEventType.Feature` 已删除；Feature 事件 payload 位于 `SlimeAI/GameOS/Capabilities/Feature/Events/`，覆盖 `Granted / Removed / Enabled / Disabled / Activated / Executed / Ended`。
 - `FeatureDataKeys` 当前覆盖 Feature Id / HandlerId / 描述 / 分类 / 启用状态和 modifier authoring 字段；复杂 Feature action 仍通过 handler 扩展。
 
 ## AI Capability 契约

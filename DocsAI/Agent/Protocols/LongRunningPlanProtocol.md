@@ -18,7 +18,7 @@
 
 开始前读取：
 
-- `SkilmeAI/DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`
+- `SlimeAI/DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`
 - 当前 roadmap change 的 `README.md`、`proposal.md`、`design.md`、`specs/**/*.md`、`tasks.md`
 - 当前 child change 的全部 OpenSpec artifacts
 - 受影响模块的协议文档，例如 `CapabilityChangeProtocol.md` 或 `FrameworkVsGameBoundary.md`
@@ -51,14 +51,14 @@
 每轮至少验证当前 OpenSpec change：
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate <change-id> --strict
 ```
 
 框架代码或核心文档变更后：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```

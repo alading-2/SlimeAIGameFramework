@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Event;
-using SkilmeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Events.Core;
 
-namespace SkilmeAI.GameOS.Runtime.Relationship;
+namespace SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// Runtime Entity 关系图，基于父索引、子索引和类型索引做低成本查询。

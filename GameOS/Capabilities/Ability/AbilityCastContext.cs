@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Ability;
+namespace SlimeAI.GameOS.Capabilities.Ability;
 
 /// <summary>
 /// 单次技能触发上下文。

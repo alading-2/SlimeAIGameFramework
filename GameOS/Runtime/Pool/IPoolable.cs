@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Pool;
+namespace SlimeAI.GameOS.Runtime.Pool;
 
 /// <summary>
 /// Optional lifecycle contract for pooled objects.

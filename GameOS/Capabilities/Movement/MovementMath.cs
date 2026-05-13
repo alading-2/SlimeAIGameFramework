@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement Capability 内部数学工具。

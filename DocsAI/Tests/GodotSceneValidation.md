@@ -7,7 +7,7 @@
 
 GameOS 基础层验证采用“框架规格 + 游戏承载”模式：
 
-- `SkilmeAI/GameOS/Validation/` 定义验证契约、命名规则、artifact 字段和判定规则。
+- `SlimeAI/GameOS/Validation/` 定义验证契约、命名规则、artifact 字段和判定规则。
 - `Games/BrotatoLike` 承载实际可运行的 Godot `.tscn` 场景，因为 `res://` 绑定当前 `project.godot` root。
 
 该体系用于补齐纯 C# 测试之外的 Godot headless 运行证据。当前已覆盖 `Runtime/Data` 和 `Runtime/Event`；后续按基础层顺序扩展：
@@ -29,9 +29,9 @@ Entity -> Pool -> Timer -> Resource -> Schedule -> Relationship -> Observation
 当前 Runtime/Data 场景固定为：
 
 ```text
-Games/BrotatoLike/SkilmeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn
-Games/BrotatoLike/SkilmeAI/Scenes/Validation/Runtime/Data/README.md
-Games/BrotatoLike/SkilmeAI/Src/SceneTests/Runtime/Data/RuntimeDataValidationScene.cs
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Data/README.md
+Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Data/RuntimeDataValidationScene.cs
 ```
 
 当前 Runtime/Event 场景固定为：
@@ -157,9 +157,9 @@ GameOS Runtime Event validation FAIL
 
 基础层场景允许最小必要依赖，但必须在 README 和 artifact 中标注。
 
-- Runtime/Data 核心断言只依赖 `SkilmeAI.GameOS.Runtime.Data`。
+- Runtime/Data 核心断言只依赖 `SlimeAI.GameOS.Runtime.Data`。
 - 使用 `RuntimeEntity` 或 `DataPropertyChanged` 的检查必须标注为 Data-to-Event bridge 检查。
-- EventBus 核心断言只依赖 `SkilmeAI.GameOS.Runtime.Event`。
+- EventBus 核心断言只依赖 `SlimeAI.GameOS.Runtime.Event`。
 - 使用 `RuntimeEntity` 或 `Data.Set` 的检查必须标注为跨层桥接检查。
 - `WorldEvents.World` 使用前后必须 Clear，避免污染同进程后续场景。
 - 游戏侧代码只能作为 Godot 承载和 runner 接入，不应引入 BrotatoLike 玩法行为作为基础层通过条件。

@@ -1,6 +1,6 @@
 # Tests
 
-`Tests/SkilmeAI.GameOS.Tests/` 是 SkilmeAI.GameOS 的纯 C# Runtime 行为测试项目。
+`Tests/SlimeAI.GameOS.Tests/` 是 SlimeAI.GameOS 的纯 C# Runtime 行为测试项目。
 
 它可以理解为不启动 Godot 的最小 GameOS 运行沙盘：手动创建 Runtime Entity、写入 DataKey、调用 Runtime service，并断言结果。
 
@@ -15,7 +15,7 @@
 ## 命令
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-tests.sh
 ```
 

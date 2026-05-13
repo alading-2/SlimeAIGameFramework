@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Collision;
+namespace SlimeAI.GameOS.Capabilities.Collision;
 
 /// <summary>
 /// GameOS 2D 碰撞层常量。

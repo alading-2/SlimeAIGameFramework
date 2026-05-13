@@ -1,9 +1,9 @@
 using System;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 桥接 Entity 根节点 `Area2D` 的碰撞信号到 `Collision.Events.Entered` / `Exited`。

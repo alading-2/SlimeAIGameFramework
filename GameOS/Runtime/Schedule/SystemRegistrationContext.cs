@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 系统注册上下文。

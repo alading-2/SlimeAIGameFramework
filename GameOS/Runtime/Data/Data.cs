@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// Runtime typed data container.

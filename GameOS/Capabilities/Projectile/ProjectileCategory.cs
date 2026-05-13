@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Projectile;
+namespace SlimeAI.GameOS.Capabilities.Projectile;
 
 /// <summary>
 /// Projectile Capability DataKey 分类。

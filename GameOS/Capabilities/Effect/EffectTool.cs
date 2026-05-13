@@ -1,10 +1,10 @@
 using System;
-using SkilmeAI.GameOS.Capabilities.Effect.Events;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Relationship;
+using SlimeAI.GameOS.Capabilities.Effect.Events;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Relationship;
 
-namespace SkilmeAI.GameOS.Capabilities.Effect;
+namespace SlimeAI.GameOS.Capabilities.Effect;
 
 /// <summary>
 /// Effect Capability 最小 Runtime 入口，负责生成效果实体并写入运行时 Data。

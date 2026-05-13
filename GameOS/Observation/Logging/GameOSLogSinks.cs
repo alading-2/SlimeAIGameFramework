@@ -2,7 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Godot;
 
-namespace SkilmeAI.GameOS.Observation;
+namespace SlimeAI.GameOS.Observation;
 
 /// <summary>
 /// 接收 GameOS 观测日志条目的 sink 协议。

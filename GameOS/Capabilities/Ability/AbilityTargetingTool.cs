@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Ability;
+namespace SlimeAI.GameOS.Capabilities.Ability;
 
 /// <summary>
 /// Ability 目标上下文辅助工具。调用方显式使用它准备 CastContext，AbilityService 不做统一索敌。

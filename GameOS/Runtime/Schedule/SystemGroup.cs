@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 系统挂载分组。纯 Runtime 阶段只用于排序、查询和 Debug。

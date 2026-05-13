@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
-using SkilmeAI.GameOS.Runtime.Resource;
+using SlimeAI.GameOS.Runtime.Resource;
 
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// DataOS 生成的 typed runtime snapshot。

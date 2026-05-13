@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-namespace SkilmeAI.GameOS.Runtime.Resource;
+namespace SlimeAI.GameOS.Runtime.Resource;
 
 /// <summary>
 /// 资源加载门面；运行时代码应使用这里而不是直接调用 GD.Load。

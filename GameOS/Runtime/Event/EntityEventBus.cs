@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Observation;
+using SlimeAI.GameOS.Observation;
 
-namespace SkilmeAI.GameOS.Runtime.Event;
+namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// 实体级事件总线。支持 IEntityEvent、IBroadcastEvent；对 IBroadcastEvent 自动转发到 WorldEventBus。

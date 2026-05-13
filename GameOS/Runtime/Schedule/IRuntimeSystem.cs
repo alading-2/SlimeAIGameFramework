@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// Schedule 托管系统的最小生命周期协议。

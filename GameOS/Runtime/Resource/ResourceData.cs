@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Resource;
+namespace SlimeAI.GameOS.Runtime.Resource;
 
 /// <summary>
 /// Resource map entry.

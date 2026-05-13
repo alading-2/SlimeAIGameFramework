@@ -6,7 +6,7 @@
 
 ## 定位
 
-`Survivor2D` 是 SkilmeAI 的第一个 GenreProfile。它定义一个幸存者 / 类 Brotato 2D 俯视游戏通常需要哪些 GameOS Capability、DataOS preset、activation actions 和验证命令。
+`Survivor2D` 是 SlimeAI 的第一个 GenreProfile。它定义一个幸存者 / 类 Brotato 2D 俯视游戏通常需要哪些 GameOS Capability、DataOS preset、activation actions 和验证命令。
 
 本文件不是 runtime loader，不改变 public API。第一版只定义 profile 边界，后续是否实现 C# profile loader 需要单独 OpenSpec change。
 
@@ -14,7 +14,7 @@ BrotatoLike 是第一验证游戏，不是 profile 默认内容来源。
 
 ## 默认能力候选
 
-根据 `SkilmeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`，首批能力当前均为 `Experimental`。它们可以作为 `Survivor2D` 默认能力候选，但不能标记为 `Supported`。
+根据 `SlimeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`，首批能力当前均为 `Experimental`。它们可以作为 `Survivor2D` 默认能力候选，但不能标记为 `Supported`。
 
 | Capability | Profile role | 当前状态 | 说明 |
 | --- | --- | --- | --- |
@@ -82,7 +82,7 @@ DataOS record 存在不等于玩法迁移完成。资源路径状态和行为完
 核心框架：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 Tools/run-dataos-validate.sh

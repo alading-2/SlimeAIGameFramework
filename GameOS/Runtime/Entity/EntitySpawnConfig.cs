@@ -1,7 +1,7 @@
-namespace SkilmeAI.GameOS.Runtime.Entity;
+namespace SlimeAI.GameOS.Runtime.Entity;
 
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Relationship;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// 纯 Runtime Entity 生成参数。

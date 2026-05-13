@@ -1,7 +1,7 @@
 using System;
-using SkilmeAI.GameOS.Capabilities.Damage.Events;
+using SlimeAI.GameOS.Capabilities.Damage.Events;
 
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 治疗服务，作为恢复生命值的统一入口。

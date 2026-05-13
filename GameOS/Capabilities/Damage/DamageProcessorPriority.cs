@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 默认 Damage 处理器优先级。

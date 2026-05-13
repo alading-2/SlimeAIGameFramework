@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Observation;
+namespace SlimeAI.GameOS.Observation;
 
 /// <summary>
 /// GameOS 观测日志的全局入口。

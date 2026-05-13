@@ -1,14 +1,14 @@
 using System;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Capabilities.Movement.Events;
-using SkilmeAI.GameOS.Capabilities.Projectile.Events;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
-using SkilmeAI.GameOS.Runtime.Relationship;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Capabilities.Movement.Events;
+using SlimeAI.GameOS.Capabilities.Projectile.Events;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Relationship;
 
-namespace SkilmeAI.GameOS.Capabilities.Projectile;
+namespace SlimeAI.GameOS.Capabilities.Projectile;
 
 /// <summary>
 /// Projectile Capability 最小 Runtime 入口，负责生成投射物实体并写入运行时 Data。

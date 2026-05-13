@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot AI bridge 内置行为树类型。

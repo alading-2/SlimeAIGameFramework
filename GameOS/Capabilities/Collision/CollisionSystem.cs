@@ -1,8 +1,8 @@
 using System;
-using SkilmeAI.GameOS.Capabilities.Collision.Events;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision.Events;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Collision;
+namespace SlimeAI.GameOS.Capabilities.Collision;
 
 /// <summary>
 /// Collision Capability 纯 C# 事件和过滤系统。

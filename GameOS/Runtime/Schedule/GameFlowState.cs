@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 游戏流程状态。配置侧可按位组合，运行时快照只允许单一流程状态。

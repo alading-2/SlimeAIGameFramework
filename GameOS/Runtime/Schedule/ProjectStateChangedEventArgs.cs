@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 项目状态切换事件参数。

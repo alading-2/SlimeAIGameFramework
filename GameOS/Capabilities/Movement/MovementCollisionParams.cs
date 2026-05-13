@@ -1,7 +1,7 @@
 using System;
-using SkilmeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Collision;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// 单次 Movement 的纯运行时碰撞策略配置。

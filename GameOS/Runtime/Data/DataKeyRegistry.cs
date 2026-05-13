@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// DataKey 全局索引，只负责稳定键名和 key id 分配，不承载业务访问入口。

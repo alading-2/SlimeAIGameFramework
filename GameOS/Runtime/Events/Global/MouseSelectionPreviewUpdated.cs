@@ -1,7 +1,7 @@
 using Godot;
-using SkilmeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Event;
 
-namespace SkilmeAI.GameOS.Runtime.Events.Global;
+namespace SlimeAI.GameOS.Runtime.Events.Global;
 
 /// <summary>鼠标框选预览更新。</summary>
 public readonly record struct MouseSelectionPreviewUpdated(

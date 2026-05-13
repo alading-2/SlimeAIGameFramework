@@ -23,6 +23,6 @@
   "systems": [],
   "testScenes": [],
   "validationCommands": [
-    "cd /home/slime/Code/SkilmeAI/SkilmeAI && dotnet build"
+    "cd /home/slime/Code/SlimeAI/SlimeAI && dotnet build"
   ]
 }

@@ -1,8 +1,8 @@
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Movement;
 
-namespace SkilmeAI.GameOS.Capabilities.Projectile;
+namespace SlimeAI.GameOS.Capabilities.Projectile;
 
 /// <summary>
 /// Projectile 飞行和命中生命周期参数。

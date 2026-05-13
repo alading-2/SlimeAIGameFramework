@@ -7,6 +7,6 @@
     <NoWarn>$(NoWarn);CS8785</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../GameOS/SkilmeAI.GameOS.csproj" />
+    <ProjectReference Include="../../GameOS/SlimeAI.GameOS.csproj" />
   </ItemGroup>
 </Project>

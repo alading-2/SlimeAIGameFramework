@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement 纯运行时碰撞策略，负责过滤、去重、计数和首次命中扫描。

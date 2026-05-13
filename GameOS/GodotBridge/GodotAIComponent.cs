@@ -1,9 +1,9 @@
 using Godot;
-using SkilmeAI.GameOS.Capabilities.AI;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.AI;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot AI bridge：驱动纯 Runtime 行为树 Tick，并把 AI 参数写入 Entity Data。

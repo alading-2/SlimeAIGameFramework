@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 系统描述符，只保存 SystemId 和实例工厂。

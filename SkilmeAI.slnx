@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/GameOS/">
-    <Project Path="GameOS/SkilmeAI.GameOS.csproj" />
-  </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="Tests/SkilmeAI.GameOS.Tests/SkilmeAI.GameOS.Tests.csproj" />
-  </Folder>
-</Solution>

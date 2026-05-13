@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Attack;
+namespace SlimeAI.GameOS.Capabilities.Attack;
 
 /// <summary>
 /// Attack Capability DataKey 分类。

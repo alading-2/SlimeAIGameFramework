@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Attack;
+namespace SlimeAI.GameOS.Capabilities.Attack;
 
 /// <summary>
 /// 普通攻击请求结果。

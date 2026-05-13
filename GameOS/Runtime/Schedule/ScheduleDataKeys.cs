@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Data;
 
-namespace SkilmeAI.GameOS.Runtime.Schedule;
+namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// Schedule 和系统预设 authoring 使用的运行时 DataKey。

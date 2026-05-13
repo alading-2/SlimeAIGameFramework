@@ -2,7 +2,7 @@
 
 > 更新日期：2026-05-09  
 > 状态：生效候选  
-> 适用范围：所有可能同时触及 `SkilmeAI/` 框架路径和 `Games/BrotatoLike/` 游戏路径的任务。
+> 适用范围：所有可能同时触及 `SlimeAI/` 框架路径和 `Games/BrotatoLike/` 游戏路径的任务。
 
 ## 什么时候用
 
@@ -25,14 +25,14 @@ Kernel / Capability / GenreProfile / GameAdapter / GameContent / DataOS / GodotB
 
 通用必读：
 
-- `SkilmeAI/DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`
-- `SkilmeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
+- `SlimeAI/DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`
+- `SlimeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
 - 当前 OpenSpec change 的 `proposal.md`、`design.md`、`specs/**/*.md`、`tasks.md`
 
 框架任务再读：
 
-- `SkilmeAI/DocsAI/GameOS/Contracts.md`
-- `SkilmeAI/DocsAI/GameOS/ApiIndex.md`
+- `SlimeAI/DocsAI/GameOS/Contracts.md`
+- `SlimeAI/DocsAI/GameOS/ApiIndex.md`
 - 相关 Capability 的 `Contract.md` / `Debug.md`
 - 相关 `.codex/skills/*/SKILL.md`
 
@@ -40,7 +40,7 @@ Kernel / Capability / GenreProfile / GameAdapter / GameContent / DataOS / GodotB
 
 - `Games/BrotatoLike/DocsAI/GameProjectState.md`
 - `Games/BrotatoLike/DocsAI/MigrationLedger.md` 或对应 OpenSpec change
-- 旧行为来源：`Else/brotato-my/` 或已复制到游戏仓库的 migration input
+- 旧行为来源：`Resources/Else/brotato-my/` 或已复制到游戏仓库的 migration input
 
 ## 所有权判断
 
@@ -74,14 +74,14 @@ Kernel / Capability / GenreProfile / GameAdapter / GameContent / DataOS / GodotB
 文档和 OpenSpec：
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate <change-id> --strict
 ```
 
 核心框架：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```
@@ -89,7 +89,7 @@ Tools/run-tests.sh
 DataOS：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-dataos-validate.sh
 ```
 

@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Data;
 
-namespace SkilmeAI.GameOS.Capabilities.Collision;
+namespace SlimeAI.GameOS.Capabilities.Collision;
 
 /// <summary>
 /// Collision Capability 使用的运行时 DataKey。

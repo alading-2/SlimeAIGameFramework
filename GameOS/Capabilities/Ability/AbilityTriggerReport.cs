@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Ability;
+namespace SlimeAI.GameOS.Capabilities.Ability;
 
 /// <summary>
 /// 技能触发报告。

@@ -1,7 +1,7 @@
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Event;
 
-namespace SkilmeAI.GameOS.Capabilities.Attack.Events;
+namespace SlimeAI.GameOS.Capabilities.Attack.Events;
 
 /// <summary>请求中断攻击。AI 或玩家输入层是 producer。</summary>
 public readonly record struct CancelRequested(

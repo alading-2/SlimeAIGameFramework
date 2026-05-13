@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Pool;
+namespace SlimeAI.GameOS.Runtime.Pool;
 
 /// <summary>
 /// Runtime object pool statistics.

@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// GameOS 运行时二维向量值，避免 Capability 内核直接依赖 Godot 类型。

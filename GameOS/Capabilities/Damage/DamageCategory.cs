@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// Damage Capability DataKey 分类。

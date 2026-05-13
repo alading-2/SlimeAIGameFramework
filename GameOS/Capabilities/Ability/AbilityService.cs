@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Ability.Events;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Feature;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Timer;
+using SlimeAI.GameOS.Capabilities.Ability.Events;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Feature;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Timer;
 
-namespace SkilmeAI.GameOS.Capabilities.Ability;
+namespace SlimeAI.GameOS.Capabilities.Ability;
 
 /// <summary>
 /// Ability Capability 最小运行时服务，负责正式技能触发提交。

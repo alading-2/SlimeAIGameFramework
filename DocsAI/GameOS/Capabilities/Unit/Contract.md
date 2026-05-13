@@ -70,7 +70,7 @@ Unit DataKey 主要是配置型，在 DataOS seed 中定义，Runtime 读取。
 ## 10. 如何测试
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 dotnet build
 ```
 

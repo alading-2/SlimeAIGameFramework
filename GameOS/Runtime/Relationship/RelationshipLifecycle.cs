@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Relationship;
+namespace SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// 归属关系生命周期数据工具。

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Feature;
+namespace SlimeAI.GameOS.Capabilities.Feature;
 
 /// <summary>
 /// Feature 生命周期上下文。

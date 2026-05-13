@@ -1,7 +1,7 @@
 using Godot;
-using SkilmeAI.GameOS.Runtime.Pool;
+using SlimeAI.GameOS.Runtime.Pool;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Convenience entry points for Godot Node pools.

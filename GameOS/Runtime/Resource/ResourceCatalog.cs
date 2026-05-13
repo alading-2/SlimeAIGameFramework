@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Resource;
+namespace SlimeAI.GameOS.Runtime.Resource;
 
 /// <summary>
 /// Runtime 资源键注册表。

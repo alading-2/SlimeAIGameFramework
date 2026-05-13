@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Observation;
+namespace SlimeAI.GameOS.Observation;
 
 /// <summary>
 /// 捕获单次 scene runner 注入的观测路径。

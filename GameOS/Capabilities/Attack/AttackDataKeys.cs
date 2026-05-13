@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Data;
 
-namespace SkilmeAI.GameOS.Capabilities.Attack;
+namespace SlimeAI.GameOS.Capabilities.Attack;
 
 /// <summary>
 /// Attack Capability 使用的运行时 DataKey。

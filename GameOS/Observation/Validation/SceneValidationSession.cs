@@ -2,7 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SkilmeAI.GameOS.Observation;
+namespace SlimeAI.GameOS.Observation;
 
 /// <summary>
 /// Godot validation scene 的检查项与 artifact helper。

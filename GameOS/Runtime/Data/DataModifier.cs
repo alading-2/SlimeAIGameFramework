@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// Numeric modifier operation.

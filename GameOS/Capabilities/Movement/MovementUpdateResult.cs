@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement Strategy 的单帧更新结果。

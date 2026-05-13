@@ -26,7 +26,7 @@
 - Schedule
 - Relationship（目标查询）
 
-事件目录：`SkilmeAI/GameOS/Capabilities/AI/Events/`（本 Capability 不发布独立事件，直接写入 AI DataKey 并向目标 Entity 发布 `Attack.Requested`；目录可缺省）
+事件目录：`SlimeAI/GameOS/Capabilities/AI/Events/`（本 Capability 不发布独立事件，直接写入 AI DataKey 并向目标 Entity 发布 `Attack.Requested`；目录可缺省）
 
 ## 4. 需要哪些其他 Capability
 
@@ -87,7 +87,7 @@
 ## 10. 如何测试
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-tests.sh
 ```
 

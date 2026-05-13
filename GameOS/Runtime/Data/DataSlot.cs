@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// DataSlot 的非泛型内部桥。

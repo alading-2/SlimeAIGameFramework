@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Ability;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Ability;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// AI 行为树 Tick 上下文。调用方可以复用同一个实例以避免高频分配。

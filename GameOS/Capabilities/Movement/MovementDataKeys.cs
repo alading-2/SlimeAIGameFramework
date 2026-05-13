@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Data;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement Capability 使用的运行时 DataKey。

@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Collision;
+namespace SlimeAI.GameOS.Capabilities.Collision;
 
 /// <summary>
 /// 一次运行时碰撞接触。

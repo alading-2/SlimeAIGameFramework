@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Entity;
+namespace SlimeAI.GameOS.Runtime.Entity;
 
 /// <summary>
 /// Runtime Entity 最小契约。
@@ -18,5 +18,5 @@ public interface IEntity
     /// <summary>
     /// 实体局部事件总线，用于组件式通信。
     /// </summary>
-    SkilmeAI.GameOS.Runtime.Event.IEventBus Events { get; }
+    SlimeAI.GameOS.Runtime.Event.IEventBus Events { get; }
 }

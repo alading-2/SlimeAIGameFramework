@@ -2,21 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Godot;
-using SkilmeAI.GameOS.Observation;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
-using SkilmeAI.GameOS.Runtime.Events.Core;
-using RuntimeDataKey = SkilmeAI.GameOS.Runtime.Data.DataKey;
-using RuntimeDataKeyInt = SkilmeAI.GameOS.Runtime.Data.DataKey<int>;
+using SlimeAI.GameOS.Observation;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Events.Core;
+using RuntimeDataKey = SlimeAI.GameOS.Runtime.Data.DataKey;
+using RuntimeDataKeyInt = SlimeAI.GameOS.Runtime.Data.DataKey<int>;
 
-namespace SkilmeAI.SceneTests.Runtime.Event;
+namespace SlimeAI.SceneTests.Runtime.Event;
 
 /// <summary>
 /// Godot headless scene validation for GameOS Runtime/Event.
 /// </summary>
 public partial class RuntimeEventValidationScene : Node
 {
-    private const string ScenePath = "res://SkilmeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn";
+    private const string ScenePath = "res://SlimeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn";
     private const string ArtifactFileName = "runtime-event-validation.json";
     private const string LogContext = "RuntimeEventValidation";
     private static readonly RuntimeDataKeyInt BridgeValue = RuntimeDataKey.Create("RuntimeEventValidation.Value", 0);
@@ -35,8 +35,8 @@ public partial class RuntimeEventValidationScene : Node
             ArtifactFileName,
             new[]
             {
-                "SkilmeAI.GameOS.Runtime.Event",
-                "SkilmeAI.GameOS.Runtime.Entity for Data-to-Event bridge check",
+                "SlimeAI.GameOS.Runtime.Event",
+                "SlimeAI.GameOS.Runtime.Entity for Data-to-Event bridge check",
                 "Games/BrotatoLike Godot scene runner"
             },
             new[]

@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 伤害标签，可叠加描述来源和表现语义。

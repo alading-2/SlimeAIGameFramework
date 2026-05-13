@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Schedule;
-using MovementEvents = SkilmeAI.GameOS.Capabilities.Movement.Events;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Schedule;
+using MovementEvents = SlimeAI.GameOS.Capabilities.Movement.Events;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement Capability 纯 C# 调度系统。

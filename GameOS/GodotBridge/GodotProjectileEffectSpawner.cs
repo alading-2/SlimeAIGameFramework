@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Effect;
-using SkilmeAI.GameOS.Capabilities.Effect.Events;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Capabilities.Projectile;
-using ProjectileSpawned = SkilmeAI.GameOS.Capabilities.Projectile.Events.Spawned;
-using EffectSpawned = SkilmeAI.GameOS.Capabilities.Effect.Events.Spawned;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Event;
-using SkilmeAI.GameOS.Runtime.Events.Core;
-using SkilmeAI.GameOS.Runtime.Resource;
+using SlimeAI.GameOS.Capabilities.Effect;
+using SlimeAI.GameOS.Capabilities.Effect.Events;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Capabilities.Projectile;
+using ProjectileSpawned = SlimeAI.GameOS.Capabilities.Projectile.Events.Spawned;
+using EffectSpawned = SlimeAI.GameOS.Capabilities.Effect.Events.Spawned;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.Resource;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 监听 Projectile / Effect Runtime 生成事件，并在 Godot SceneTree 中实例化对应视觉节点。

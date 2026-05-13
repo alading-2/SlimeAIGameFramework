@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Runtime.Pool;
+namespace SlimeAI.GameOS.Runtime.Pool;
 
 /// <summary>
 /// Type-safe object pool for pure runtime objects.

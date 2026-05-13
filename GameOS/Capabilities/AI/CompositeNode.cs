@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// AI 组合节点基类。

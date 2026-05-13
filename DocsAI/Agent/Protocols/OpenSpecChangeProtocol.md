@@ -1,4 +1,4 @@
-# SkilmeAI OpenSpec Change Protocol
+# SlimeAI OpenSpec Change Protocol
 
 > 更新日期：2026-05-08  
 > 状态：生效  
@@ -6,7 +6,7 @@
 
 ## 定位
 
-OpenSpec 是 SkilmeAI 框架仓库新的计划事实源。后续可执行计划默认沉淀到 `openspec/changes/<change>/`，完成后把规范要求合入 `openspec/specs/`。
+OpenSpec 是 SlimeAI 框架仓库新的计划事实源。后续可执行计划默认沉淀到 `openspec/changes/<change>/`，完成后把规范要求合入 `openspec/specs/`。
 
 OMX `plan` / `ralplan` 的价值保留为思考、澄清、评审和风险收敛；它们不再作为长期计划文件格式。需要落盘时，应把结论写入 OpenSpec artifact。
 
@@ -29,7 +29,7 @@ openspec/changes/<change>/
 | 测试规格 / 验收场景 | `specs/` 或 `tasks.md` 的验证项 |
 | 执行清单 | `tasks.md` |
 | 迁移账本 | 优先放在 change 内；长期基线再同步到 `DocsAI` 或专门账本文档 |
-| 历史研究与方向沉淀 | 提炼进 `SkilmeAI/DocsAI/` 或 `openspec/specs/`，不保留执行 checklist |
+| 历史研究与方向沉淀 | 提炼进 `SlimeAI/DocsAI/` 或 `openspec/specs/`，不保留执行 checklist |
 
 ## 默认流程
 
@@ -55,21 +55,21 @@ openspec/changes/<change>/
 
 ## 历史计划材料的新角色
 
-旧计划材料只在有长期价值时提炼为 `SkilmeAI/DocsAI/` 文档或 `openspec/specs/` 规范。不要新增孤立执行 checklist，也不要把完成后的 OpenSpec change 历史作为当前 AI 入口保留。
+旧计划材料只在有长期价值时提炼为 `SlimeAI/DocsAI/` 文档或 `openspec/specs/` 规范。不要新增孤立执行 checklist，也不要把完成后的 OpenSpec change 历史作为当前 AI 入口保留。
 
 ## 与现有协议的关系
 
 - `DocsAI/INDEX.md` 是入口索引，不是计划源。
 - `DocsAI/ProjectState.md` 记录当前事实状态，不承载未来任务分解。
 - Capability 的 Contract / Debug Guide 记录稳定接口和验证方式，不替代 change artifact。
-- 游戏侧 BrotatoLike 文档只记录游戏接入状态；框架级设计仍以 SkilmeAI 的 OpenSpec change 为准。
+- 游戏侧 BrotatoLike 文档只记录游戏接入状态；框架级设计仍以 SlimeAI 的 OpenSpec change 为准。
 
 ## 验证记录
 
 文档类 change 至少执行：
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec list --json
 find openspec -maxdepth 4 -type f | sort
 ```
@@ -77,7 +77,7 @@ find openspec -maxdepth 4 -type f | sort
 代码类 change 按影响面执行：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```

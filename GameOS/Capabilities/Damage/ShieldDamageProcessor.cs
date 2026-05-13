@@ -1,6 +1,6 @@
 using System;
 
-namespace SkilmeAI.GameOS.Capabilities.Damage;
+namespace SlimeAI.GameOS.Capabilities.Damage;
 
 /// <summary>
 /// 护盾处理器，优先于护甲吸收最终伤害。

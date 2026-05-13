@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 旧项目 `AttackComponent` 场景名兼容入口。

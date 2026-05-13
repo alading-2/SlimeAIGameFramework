@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Observation;
+using SlimeAI.GameOS.Observation;
 
-namespace SkilmeAI.GameOS.Runtime.Event;
+namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// 进程级事件总线。接受 IGlobalEvent / IBroadcastEvent；拒绝 IEntityEvent-only。

@@ -1,7 +1,7 @@
 using System;
-using SkilmeAI.GameOS.Runtime.Pool;
+using SlimeAI.GameOS.Runtime.Pool;
 
-namespace SkilmeAI.GameOS.Runtime.Timer;
+namespace SlimeAI.GameOS.Runtime.Timer;
 
 /// <summary>
 /// Pooled runtime timer driven by TimerManager.Tick.

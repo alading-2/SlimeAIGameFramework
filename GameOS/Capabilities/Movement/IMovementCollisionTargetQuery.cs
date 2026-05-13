@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// Movement 碰撞候选目标查询接口；Capability 内核只依赖 IEntity。

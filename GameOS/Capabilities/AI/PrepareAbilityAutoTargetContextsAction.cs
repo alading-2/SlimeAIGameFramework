@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Ability;
+using SlimeAI.GameOS.Capabilities.Ability;
 
-namespace SkilmeAI.GameOS.Capabilities.AI;
+namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
 /// 为 AI 自动施法准备带自动索敌结果的 AbilityCastContext。

@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Attack;
+namespace SlimeAI.GameOS.Capabilities.Attack;
 
 /// <summary>
 /// 攻击流程取消原因。

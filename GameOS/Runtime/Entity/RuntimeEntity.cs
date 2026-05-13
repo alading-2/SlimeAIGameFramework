@@ -1,7 +1,7 @@
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Event;
 
-namespace SkilmeAI.GameOS.Runtime.Entity;
+namespace SlimeAI.GameOS.Runtime.Entity;
 
 /// <summary>
 /// 纯 C# Entity，用于 GameOS 测试、工具和非场景运行时代码。

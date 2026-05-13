@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Runtime.Event;
-using SkilmeAI.GameOS.Runtime.Events.Core;
-using SkilmeAI.GameOS.Runtime.Relationship;
+using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.Relationship;
 
-namespace SkilmeAI.GameOS.Runtime.Entity;
+namespace SlimeAI.GameOS.Runtime.Entity;
 
 /// <summary>
 /// Entity 注册表和生命周期门面。

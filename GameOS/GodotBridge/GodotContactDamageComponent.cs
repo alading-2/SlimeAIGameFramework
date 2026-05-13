@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Collision.Events;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Timer;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Collision.Events;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Timer;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot 接触伤害组件：消费 Hurtbox 事件并通过 DamageService 结算伤害。

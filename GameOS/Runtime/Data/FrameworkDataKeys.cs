@@ -1,16 +1,16 @@
-using SkilmeAI.GameOS.Capabilities.AI;
-using SkilmeAI.GameOS.Capabilities.Ability;
-using SkilmeAI.GameOS.Capabilities.Attack;
-using SkilmeAI.GameOS.Capabilities.Collision;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Effect;
-using SkilmeAI.GameOS.Capabilities.Feature;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Capabilities.Projectile;
-using SkilmeAI.GameOS.Capabilities.Unit;
-using SkilmeAI.GameOS.Runtime.Schedule;
+using SlimeAI.GameOS.Capabilities.AI;
+using SlimeAI.GameOS.Capabilities.Ability;
+using SlimeAI.GameOS.Capabilities.Attack;
+using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Effect;
+using SlimeAI.GameOS.Capabilities.Feature;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Capabilities.Projectile;
+using SlimeAI.GameOS.Capabilities.Unit;
+using SlimeAI.GameOS.Runtime.Schedule;
 
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// 框架内置 DataKey 注册入口。

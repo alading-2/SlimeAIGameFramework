@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace SkilmeAI.GameOS.Capabilities.Movement;
+namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
 /// 一次移动的输入参数和运行时统计。

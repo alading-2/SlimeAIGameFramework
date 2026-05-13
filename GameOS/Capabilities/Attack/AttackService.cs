@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using SkilmeAI.GameOS.Capabilities.Attack.Events;
-using SkilmeAI.GameOS.Capabilities.Damage;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Runtime.Entity;
-using SkilmeAI.GameOS.Runtime.Timer;
+using SlimeAI.GameOS.Capabilities.Attack.Events;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.Timer;
 
-namespace SkilmeAI.GameOS.Capabilities.Attack;
+namespace SlimeAI.GameOS.Capabilities.Attack;
 
 /// <summary>
 /// 普通攻击最小 Runtime 服务，消费攻击请求并通过 DamageService 结算。

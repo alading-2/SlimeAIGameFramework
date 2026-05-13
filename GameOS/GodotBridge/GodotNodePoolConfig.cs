@@ -1,6 +1,6 @@
 using Godot;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Configuration for a Godot Node object pool.

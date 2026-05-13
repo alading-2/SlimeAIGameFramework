@@ -26,7 +26,7 @@ Feature 是"做什么"，Ability 是"何时做"。
 - Event
 - Schedule
 
-事件目录：`SkilmeAI/GameOS/Capabilities/Feature/Events/`
+事件目录：`SlimeAI/GameOS/Capabilities/Feature/Events/`
 
 ## 4. 需要哪些其他 Capability
 
@@ -78,7 +78,7 @@ Modifier 通过 Data.Modifier API 写入目标 DataKey。
 ## 10. 如何测试
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-tests.sh
 ```
 

@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Capabilities.Effect;
+namespace SlimeAI.GameOS.Capabilities.Effect;
 
 /// <summary>
 /// Effect Capability DataKey 分类。

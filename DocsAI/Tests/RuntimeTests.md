@@ -2,7 +2,7 @@
 
 ## 定位
 
-`Tests/SkilmeAI.GameOS.Tests/` 是 SkilmeAI.GameOS 的纯 C# Runtime 行为测试入口。它不是打包目录，也不是发布产物目录。
+`Tests/SlimeAI.GameOS.Tests/` 是 SlimeAI.GameOS 的纯 C# Runtime 行为测试入口。它不是打包目录，也不是发布产物目录。
 
 这个测试项目用于在不启动 Godot 的情况下验证 GameOS 核心运行时契约。可以把它理解为框架层的最小运行沙盘：直接创建 Runtime Entity、写入 DataKey、触发 EventBus、Tick Runtime service，然后用断言检查结果。
 
@@ -38,7 +38,7 @@ Runtime 测试不启动 Godot，所以不覆盖：
 当前测试入口是：
 
 ```text
-Tests/SkilmeAI.GameOS.Tests/Program.cs
+Tests/SlimeAI.GameOS.Tests/Program.cs
 ```
 
 它覆盖：
@@ -51,7 +51,7 @@ Tests/SkilmeAI.GameOS.Tests/Program.cs
 ## 命令
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```
@@ -60,12 +60,12 @@ Tools/run-tests.sh
 
 ```bash
 Tools/run-dataos-validate.sh
-dotnet run --project Tests/SkilmeAI.GameOS.Tests/SkilmeAI.GameOS.Tests.csproj
+dotnet run --project Tests/SlimeAI.GameOS.Tests/SlimeAI.GameOS.Tests.csproj
 ```
 
 ## 与构建的关系
 
-- `SkilmeAI.slnx` 包含 `Tests/SkilmeAI.GameOS.Tests/`，所以 `Tools/run-build.sh` 会构建测试项目。
+- `SlimeAI.slnx` 包含 `Tests/SlimeAI.GameOS.Tests/`，所以 `Tools/run-build.sh` 会构建测试项目。
 - `Tools/run-tests.sh` 会执行测试项目。
 
 ## 什么时候补测试

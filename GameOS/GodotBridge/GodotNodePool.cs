@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using SkilmeAI.GameOS.Runtime.Pool;
+using SlimeAI.GameOS.Runtime.Pool;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Object pool for Godot Node instances with SceneTree parking and collision isolation.

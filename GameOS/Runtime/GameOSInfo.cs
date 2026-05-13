@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime;
+namespace SlimeAI.GameOS.Runtime;
 
 /// <summary>
 /// 暴露当前 GameOS 框架身份和迁移阶段。
@@ -8,7 +8,7 @@ public static class GameOSInfo
     /// <summary>
     /// 游戏仓库和生成文档使用的稳定框架 Id。
     /// </summary>
-    public const string FrameworkId = "SkilmeAI.GameOS";
+    public const string FrameworkId = "SlimeAI.GameOS";
 
     /// <summary>
     /// 迁移阶段版本；契约变化时更新。

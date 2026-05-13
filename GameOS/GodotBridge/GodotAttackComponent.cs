@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Attack;
-using SkilmeAI.GameOS.Capabilities.Attack.Events;
-using SkilmeAI.GameOS.Capabilities.Movement;
-using SkilmeAI.GameOS.Capabilities.Unit;
-using SkilmeAI.GameOS.Capabilities.Unit.Events;
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Attack;
+using SlimeAI.GameOS.Capabilities.Attack.Events;
+using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Capabilities.Unit;
+using SlimeAI.GameOS.Capabilities.Unit.Events;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot 普通攻击桥：注册 AttackService，并把节点目标转换为 Runtime 攻击请求。

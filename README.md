@@ -1,6 +1,6 @@
-# SkilmeAI
+# SlimeAI
 
-`SkilmeAI` 是面向 AI 长任务开发游戏的框架主仓库。第一阶段只服务 Godot C# 游戏，不做跨引擎抽象。
+`SlimeAI` 是面向 AI 长任务开发游戏的框架主仓库。第一阶段只服务 Godot C# 游戏，不做跨引擎抽象。
 
 ## 目录
 
@@ -30,4 +30,4 @@ openspec instructions apply --change "<change>" --json
 Tools/run-build.sh
 ```
 
-当前构建目标是 `GameOS/SkilmeAI.GameOS.csproj`。
+当前构建目标是 `GameOS/SlimeAI.GameOS.csproj`。

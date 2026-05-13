@@ -1,6 +1,6 @@
-using SkilmeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Damage;
 
-namespace SkilmeAI.GameOS.Capabilities.Ability;
+namespace SlimeAI.GameOS.Capabilities.Ability;
 
 /// <summary>
 /// 技能执行结果。

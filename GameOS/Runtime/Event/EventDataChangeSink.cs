@@ -1,7 +1,7 @@
-using SkilmeAI.GameOS.Runtime.Data;
-using SkilmeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Events.Core;
 
-namespace SkilmeAI.GameOS.Runtime.Event;
+namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// 把 Data 层的变化桥接到实体 EventBus，发布 Core.DataPropertyChanged 事件。

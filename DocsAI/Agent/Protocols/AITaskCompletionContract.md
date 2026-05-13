@@ -57,7 +57,7 @@ openspec validate <change-id> --strict
 框架代码：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```
@@ -65,14 +65,14 @@ Tools/run-tests.sh
 DataOS：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-dataos-validate.sh
 ```
 
 Godot 场景：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-godot-scene.sh run res://Scenes/Validation/<Area>/<Layer>/<Scene>.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
@@ -80,7 +80,7 @@ Tools/analyze-godot-scene-logs.sh
 如果本轮只需要回归 smoke：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```

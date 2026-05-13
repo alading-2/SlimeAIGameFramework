@@ -28,7 +28,7 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 - Event
 - Schedule
 
-事件目录：`SkilmeAI/GameOS/Capabilities/Ability/Events/`
+事件目录：`SlimeAI/GameOS/Capabilities/Ability/Events/`
 
 ## 4. 需要哪些其他 Capability
 
@@ -77,7 +77,7 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 ## 10. 如何测试
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-tests.sh
 ```
 

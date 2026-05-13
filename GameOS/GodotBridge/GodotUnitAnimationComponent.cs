@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using SkilmeAI.GameOS.Capabilities.Unit;
-using SkilmeAI.GameOS.Capabilities.Unit.Events;
-using SkilmeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Capabilities.Unit;
+using SlimeAI.GameOS.Capabilities.Unit.Events;
+using SlimeAI.GameOS.Runtime.Entity;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// Godot 单位动画桥：消费 Unit 动画事件并驱动 AnimatedSprite2D。

@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Event;
+namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// Runtime 事件的基础 marker interface。所有事件 payload MUST 实现 IEntityEvent / IGlobalEvent / IBroadcastEvent 之一。

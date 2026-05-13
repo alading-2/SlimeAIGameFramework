@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Resource;
+namespace SlimeAI.GameOS.Runtime.Resource;
 
 /// <summary>
 /// Coarse resource categories used by generated or hand-authored resource maps.

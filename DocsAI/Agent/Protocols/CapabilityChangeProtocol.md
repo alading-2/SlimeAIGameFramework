@@ -2,7 +2,7 @@
 
 > 更新日期：2026-05-13  
 > 状态：生效候选  
-> 适用范围：修改 `SkilmeAI/GameOS/Capabilities/`、相关 DataKeys、Events、GodotBridge adapter、Capability tests 或 Capability 文档。
+> 适用范围：修改 `SlimeAI/GameOS/Capabilities/`、相关 DataKeys、Events、GodotBridge adapter、Capability tests 或 Capability 文档。
 
 ## 什么时候用
 
@@ -17,26 +17,26 @@
 
 每次 Capability 修改前必须读：
 
-- `SkilmeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
+- `SlimeAI/DocsAI/GameOS/Capabilities/CapabilityIndex.md`
 - 对应 `.codex/skills/<owner>/SKILL.md`
 - 对应 Capability 的 `capability.json`
 - 对应 Capability 的 `Contract.md`
 - 对应 Capability 的 `Debug.md`
-- `SkilmeAI/DocsAI/GameOS/Contracts.md`
-- `SkilmeAI/DocsAI/GameOS/ApiIndex.md`
-- 相关 tests：通常在 `SkilmeAI/Tests/SkilmeAI.GameOS.Tests/`
+- `SlimeAI/DocsAI/GameOS/Contracts.md`
+- `SlimeAI/DocsAI/GameOS/ApiIndex.md`
+- 相关 tests：通常在 `SlimeAI/Tests/SlimeAI.GameOS.Tests/`
 - 当前 OpenSpec change artifacts
 
 跨边界时追加：
 
-- DataOS 改动读 `SkilmeAI/DocsAI/DataOS/Overview.md` 和 validator/generator。
+- DataOS 改动读 `SlimeAI/DocsAI/DataOS/Overview.md` 和 validator/generator。
 - GodotBridge 改动读 `ecs-component` skill 和相关 bridge component。
 - 游戏 adapter 改动读 `Games/BrotatoLike/DocsAI/GameProjectState.md`。
 
 ## 修改规则
 
 - 新 DataKey 必须通过对应 `*DataKeys.cs` 暴露为 `DataKey<T>` handle，并通过 `FrameworkDataKeys.RegisterAll()` / profile `DataCatalog` 进入 active catalog；authoring metadata 写入 DataOS `data_key_descriptor`，不新增散落字符串访问。
-- 新 Event 按 Capability 放入 `SkilmeAI/GameOS/Capabilities/<Cap>/Events/<Name>.cs`，每个事件为 `readonly record struct` 并实现 `IEntityEvent / IGlobalEvent / IBroadcastEvent` 之一；跨 Capability 的 Runtime 级事件放 `Runtime/Events/{Core,Global}/`。
+- 新 Event 按 Capability 放入 `SlimeAI/GameOS/Capabilities/<Cap>/Events/<Name>.cs`，每个事件为 `readonly record struct` 并实现 `IEntityEvent / IGlobalEvent / IBroadcastEvent` 之一；跨 Capability 的 Runtime 级事件放 `Runtime/Events/{Core,Global}/`。
 - Capability service 只处理本能力职责，不直接吞掉其他 Capability 的状态真相源。
 - Gameplay 行为必须路由到 Capability service、tool、handler、DataKey、Event、selector 或必要的 Runtime Process；不要新增泛型 Component 或裸 System 来拥有玩法行为。
 - 纯 Runtime Capability 不依赖 Godot `Node`、`Vector2` 或资源加载。
@@ -52,21 +52,21 @@
 - 禁止 Capability 内直接调用 `GD.Load`；资源加载放在 ResourceManagement / GodotBridge / 游戏侧。
 - 禁止把 BrotatoLike 专属技能行为写进框架默认 Capability。
 - 禁止把 legacy `stable` 自动当作 `Supported`。
-- 禁止把 SkilmeAI 任务按传统 ECS world / component storage / query system 心智模型改造；除非单独 OpenSpec change 已明确论证并列出验证。
+- 禁止把 SlimeAI 任务按传统 ECS world / component storage / query system 心智模型改造；除非单独 OpenSpec change 已明确论证并列出验证。
 
 ## 验证什么
 
 最低验证：
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate <change-id> --strict
 ```
 
 核心框架代码或 Capability 文档变更：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```
@@ -74,14 +74,14 @@ Tools/run-tests.sh
 DataOS 相关：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SkilmeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-dataos-validate.sh
 ```
 
 GodotBridge 或游戏 adapter 相关：
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh

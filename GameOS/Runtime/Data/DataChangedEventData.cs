@@ -1,4 +1,4 @@
-namespace SkilmeAI.GameOS.Runtime.Data;
+namespace SlimeAI.GameOS.Runtime.Data;
 
 /// <summary>
 /// Payload emitted when a runtime data value changes.

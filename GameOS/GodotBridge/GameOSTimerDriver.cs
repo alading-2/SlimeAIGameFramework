@@ -1,7 +1,7 @@
 using Godot;
-using SkilmeAI.GameOS.Runtime.Timer;
+using SlimeAI.GameOS.Runtime.Timer;
 
-namespace SkilmeAI.GameOS.GodotBridge;
+namespace SlimeAI.GameOS.GodotBridge;
 
 /// <summary>
 /// 用 Godot `_Process` 驱动 GameOS 全局 TimerManager。
