@@ -11,7 +11,7 @@ namespace SlimeAI.GameOS.Runtime.Entity;
 /// </summary>
 public static class EntityManager
 {
-    private static readonly Dictionary<string, IEntity> Entities = new(StringComparer.Ordinal);
+    private static readonly Dictionary<EntityId, IEntity> Entities = new();
 
     /// <summary>
     /// 生成并注册一个纯 Runtime Entity。
@@ -19,9 +19,10 @@ public static class EntityManager
     /// <param name="config">生成参数。</param>
     public static RuntimeEntity Spawn(EntitySpawnConfig config = default)
     {
-        var entity = new RuntimeEntity(
-            string.IsNullOrWhiteSpace(config.EntityId) ? Guid.NewGuid().ToString("N") : config.EntityId,
-            config.DataCatalog);
+        var entityId = config.EntityId.IsEmpty
+            ? EntityId.From(Guid.NewGuid().ToString("N"))
+            : config.EntityId;
+        var entity = new RuntimeEntity(entityId, config.DataCatalog);
 
         Register(entity);
         BindSpawnRelationships(entity.EntityId, config);
@@ -49,7 +50,7 @@ public static class EntityManager
     /// 按 Id 销毁实体。
     /// </summary>
     /// <param name="entityId">稳定运行时实体 Id。</param>
-    public static bool Destroy(string entityId)
+    public static bool Destroy(EntityId entityId)
     {
         if (!Entities.TryGetValue(entityId, out var entity))
         {
@@ -57,7 +58,7 @@ public static class EntityManager
         }
 
         DestroyOwnedChildren(entityId);
-        RelationshipManager.RemoveAllForEntity(entityId);
+        RelationshipManager.RemoveAllForEntity(entityId.Value);
         Entities.Remove(entityId);
         entity.Data.Reset();
         entity.Events.Publish(new EntityDestroyed(entity));
@@ -78,7 +79,7 @@ public static class EntityManager
     /// 按 Id 查找实体。
     /// </summary>
     /// <param name="entityId">稳定运行时实体 Id。</param>
-    public static IEntity? Get(string entityId)
+    public static IEntity? Get(EntityId entityId)
     {
         return Entities.GetValueOrDefault(entityId);
     }
@@ -115,8 +116,8 @@ public static class EntityManager
     /// <param name="parentDestroyPolicy">父实体销毁策略。</param>
     /// <param name="relationTypes">额外业务关系类型。</param>
     public static bool BindParentRelationships(
-        string childEntityId,
-        string parentEntityId,
+        EntityId childEntityId,
+        EntityId parentEntityId,
         bool autoAddParentRelation = true,
         ParentDestroyPolicy parentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively,
         params string[] relationTypes)
@@ -127,16 +128,16 @@ public static class EntityManager
         }
 
         return RelationshipManager.BindParentRelationships(
-            childEntityId,
-            parentEntityId,
+            childEntityId.Value,
+            parentEntityId.Value,
             autoAddParentRelation,
             parentDestroyPolicy,
             relationTypes);
     }
 
-    private static void BindSpawnRelationships(string childEntityId, EntitySpawnConfig config)
+    private static void BindSpawnRelationships(EntityId childEntityId, EntitySpawnConfig config)
     {
-        if (string.IsNullOrWhiteSpace(config.ParentEntityId))
+        if (config.ParentEntityId.IsEmpty)
         {
             return;
         }
@@ -149,19 +150,20 @@ public static class EntityManager
             config.ParentRelationTypes ?? []);
     }
 
-    private static void DestroyOwnedChildren(string parentEntityId)
+    private static void DestroyOwnedChildren(EntityId parentEntityId)
     {
-        var ownedChildren = RelationshipManager.GetChildRelationshipsByParentAndType(parentEntityId, RelationshipType.Parent);
+        var ownedChildren = RelationshipManager.GetChildRelationshipsByParentAndType(parentEntityId.Value, RelationshipType.Parent);
         foreach (var relationship in ownedChildren)
         {
-            var policy = RelationshipLifecycle.ReadParentDestroyPolicy(parentEntityId, relationship.ChildEntityId);
+            var policy = RelationshipLifecycle.ReadParentDestroyPolicy(parentEntityId.Value, relationship.ChildEntityId);
+            var childId = EntityId.From(relationship.ChildEntityId);
             if (policy == ParentDestroyPolicy.DestroyRecursively)
             {
-                Destroy(relationship.ChildEntityId);
+                Destroy(childId);
                 continue;
             }
 
-            RelationshipManager.RemoveRelationship(parentEntityId, relationship.ChildEntityId, RelationshipType.Parent);
+            RelationshipManager.RemoveRelationship(parentEntityId.Value, relationship.ChildEntityId, RelationshipType.Parent);
         }
     }
 }

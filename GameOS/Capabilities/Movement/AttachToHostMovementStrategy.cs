@@ -11,13 +11,13 @@ public sealed class AttachToHostMovementStrategy : IMovementStrategy
     /// <inheritdoc />
     public MovementUpdateResult Update(IEntity entity, Data data, float delta, in MovementParams movementParams)
     {
-        if (delta <= 0f || string.IsNullOrWhiteSpace(movementParams.TargetEntityId))
+        if (delta <= 0f || !movementParams.TargetEntityId.HasValue || movementParams.TargetEntityId.Value.IsEmpty)
         {
             data.Set(MovementDataKeys.Velocity, Vector2Value.Zero);
             return MovementUpdateResult.Complete();
         }
 
-        var target = EntityManager.Get(movementParams.TargetEntityId);
+        var target = EntityManager.Get(movementParams.TargetEntityId.Value);
         if (target == null)
         {
             data.Set(MovementDataKeys.Velocity, Vector2Value.Zero);

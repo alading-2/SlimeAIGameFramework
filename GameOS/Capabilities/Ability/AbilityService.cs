@@ -223,7 +223,7 @@ public sealed class AbilityService
             Feature = context.Ability,
             Definition = new FeatureDefinition
             {
-                FeatureId = context.Ability.EntityId,
+                FeatureId = context.Ability.EntityId.Value,
                 HandlerId = handlerId
             },
             ActivationData = context

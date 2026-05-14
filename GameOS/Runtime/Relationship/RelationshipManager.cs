@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Events.Core;
 
@@ -69,7 +70,7 @@ public static class RelationshipManager
         GetOrCreateSet(ChildIndex, childId).Add(relationshipId);
         GetOrCreateSet(TypeIndex, relationType).Add(relationshipId);
 
-        WorldEvents.World.Publish(new RelationshipAdded(parentId, childId, relationType));
+        WorldEvents.World.Publish(new RelationshipAdded(EntityId.From(parentId), EntityId.From(childId), relationType));
         return true;
     }
 
@@ -95,7 +96,7 @@ public static class RelationshipManager
         CleanupEmptySet(ChildIndex, childId);
         CleanupEmptySet(TypeIndex, relationType);
 
-        WorldEvents.World.Publish(new RelationshipRemoved(parentId, childId, relationType));
+        WorldEvents.World.Publish(new RelationshipRemoved(EntityId.From(parentId), EntityId.From(childId), relationType));
         return true;
     }
 

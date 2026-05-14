@@ -38,7 +38,7 @@
 
 | DataKey | 类型 | 说明 |
 |---------|------|------|
-| AI.TargetEntity | Entity | 当前目标实体 |
+| AI.TargetEntity | DataKey<EntityId?> | 当前目标实体 Id；null 表达未设置 |
 | AI.TargetPosition | Vector2Value | 目标位置 |
 | AI.HasTargetPosition | bool | 是否有目标位置 |
 | AI.IsAttackRequested | bool | 是否请求攻击 |

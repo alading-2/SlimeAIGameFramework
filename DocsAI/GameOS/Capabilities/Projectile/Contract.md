@@ -48,9 +48,9 @@
 | DataKey | 说明 |
 |---------|------|
 | Projectile.ScenePath | 视觉场景路径 |
-| Projectile.SourceEntity | 来源实体 |
-| Projectile.AbilityEntity | 关联技能实体 |
-| Projectile.TargetEntity | 目标实体 |
+| Projectile.SourceEntity | DataKey<EntityId?>；来源实体 Id |
+| Projectile.AbilityEntity | DataKey<EntityId?>；关联技能实体 Id |
+| Projectile.TargetEntity | DataKey<EntityId?>；目标实体 Id |
 | Projectile.Speed | 速度 |
 | Projectile.MaxHitCount | 最大命中次数（-1 无限） |
 | Projectile.MaxLifeTime | 最大存活时间（-1 无限） |

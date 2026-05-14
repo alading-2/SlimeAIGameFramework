@@ -263,7 +263,7 @@ public partial class RuntimeDataValidationScene : Node
 
     private static CheckResult ValidateEntityDataChangeEvent()
     {
-        var entity = new RuntimeEntity("runtime-data-validation-entity", CreateCatalog());
+        var entity = new RuntimeEntity(new EntityId("runtime-data-validation-entity"), CreateCatalog());
         var receivedCount = 0;
         string? stableKey = null;
         object? oldValue = null;

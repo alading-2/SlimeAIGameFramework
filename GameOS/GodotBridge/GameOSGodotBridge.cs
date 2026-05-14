@@ -21,7 +21,7 @@ public static class GameOSGodotBridge
         ArgumentNullException.ThrowIfNull(entityNode);
         ArgumentNullException.ThrowIfNull(entity);
 
-        var nodeRegistered = GodotNodeRegistry.Register(entityNode, entity.EntityId);
+        var nodeRegistered = GodotNodeRegistry.Register(entityNode, entity.EntityId.Value);
         var entityRegistered = EntityManager.Register(entity);
         if (registerComponents && (nodeRegistered || entityRegistered))
         {
@@ -53,7 +53,7 @@ public static class GameOSGodotBridge
         }
 
         var entityDestroyed = destroyRuntimeEntity && EntityManager.Destroy(entity.EntityId);
-        var nodeUnregistered = GodotNodeRegistry.Unregister(entityNode, entity.EntityId);
+        var nodeUnregistered = GodotNodeRegistry.Unregister(entityNode, entity.EntityId.Value);
         return entityDestroyed || nodeUnregistered;
     }
 
@@ -118,7 +118,7 @@ public static class GameOSGodotBridge
 
         var count = 0;
         var componentIds = RelationshipManager.GetChildEntitiesByParentAndType(
-            entity.EntityId,
+            entity.EntityId.Value,
             RelationshipType.EntityToComponent);
 
         for (var i = 0; i < componentIds.Count; i++)
@@ -130,7 +130,7 @@ public static class GameOSGodotBridge
                 component.OnComponentUnregistered(entity, entityNode);
             }
 
-            RelationshipManager.RemoveRelationship(entity.EntityId, componentId, RelationshipType.EntityToComponent);
+            RelationshipManager.RemoveRelationship(entity.EntityId.Value, componentId, RelationshipType.EntityToComponent);
             if (componentNode != null)
             {
                 GodotNodeRegistry.Unregister(componentNode, componentId);
@@ -146,9 +146,9 @@ public static class GameOSGodotBridge
     /// 按 EntityId 查找 Godot Entity 节点。
     /// </summary>
     /// <param name="entityId">稳定运行时 EntityId。</param>
-    public static Node? GetEntityNode(string entityId)
+    public static Node? GetEntityNode(EntityId entityId)
     {
-        return GodotNodeRegistry.GetNodeById(entityId);
+        return GodotNodeRegistry.GetNodeById(entityId.Value);
     }
 
     /// <summary>
@@ -180,7 +180,7 @@ public static class GameOSGodotBridge
         var componentId = GodotNodeRegistry.GetNodeInstanceId(componentNode);
         var nodeRegistered = GodotNodeRegistry.Register(componentNode, componentId);
         var relationRegistered = RelationshipManager.AddRelationship(
-            entity.EntityId,
+            entity.EntityId.Value,
             componentId,
             RelationshipType.EntityToComponent);
 

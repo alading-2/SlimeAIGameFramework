@@ -29,7 +29,7 @@ public static class ProjectileTool
             EntityId = options.EntityId,
             ParentEntityId = options.Source.EntityId,
             AutoAddParentRelation = true,
-            ParentRelationTypes = [RelationshipType.EntityToProjectile, RelationshipType.Source]
+            ParentRelationTypes = [RelationshipType.EntityToProjectile, RelationshipType.Source],
         });
 
         var targetPosition = options.TargetPosition
@@ -37,18 +37,18 @@ public static class ProjectileTool
             ?? options.SpawnPosition;
         var direction = options.Direction ?? (targetPosition - options.SpawnPosition).Normalized();
 
-        projectile.Data.Set(ProjectileDataKeys.SourceEntity, options.Source);
+        projectile.Data.Set(ProjectileDataKeys.SourceEntity, options.Source.EntityId);
         if (options.Ability != null)
         {
-            projectile.Data.Set(ProjectileDataKeys.AbilityEntity, options.Ability);
+            projectile.Data.Set(ProjectileDataKeys.AbilityEntity, options.Ability.EntityId);
         }
 
         if (options.Target != null)
         {
-            projectile.Data.Set(ProjectileDataKeys.TargetEntity, options.Target);
+            projectile.Data.Set(ProjectileDataKeys.TargetEntity, options.Target.EntityId);
             RelationshipManager.AddRelationship(
-                projectile.EntityId,
-                options.Target.EntityId,
+                projectile.EntityId.Value,
+                options.Target.EntityId.Value,
                 RelationshipType.Target);
         }
 
@@ -89,8 +89,9 @@ public static class ProjectileTool
         CollisionDataKeys.RegisterAll();
         options ??= new ProjectileMovementOptions();
 
-        var source = projectile.Data.Get<IEntity?>(ProjectileDataKeys.SourceEntity, null);
-        var target = projectile.Data.Get<IEntity?>(ProjectileDataKeys.TargetEntity, null);
+        var sourceId = projectile.Data.Get<EntityId?>(ProjectileDataKeys.SourceEntity, null);
+        var targetId = projectile.Data.Get<EntityId?>(ProjectileDataKeys.TargetEntity, null);
+        var target = targetId.HasValue ? EntityManager.Get(targetId.Value) : null;
         var direction = projectile.Data.Get<Vector2Value>(ProjectileDataKeys.Direction, Vector2Value.Zero).Normalized();
         var targetPosition = projectile.Data.Get<Vector2Value>(ProjectileDataKeys.TargetPosition, Vector2Value.Zero);
         var speed = options.Speed >= 0f
@@ -114,7 +115,7 @@ public static class ProjectileTool
             Mode = options.Mode,
             Direction = direction,
             TargetPosition = options.StopAtTarget ? targetPosition : null,
-            TargetEntityId = target?.EntityId,
+            TargetEntityId = targetId,
             Speed = speed,
             MaxDuration = ResolveMaxDuration(projectile, options),
             MaxDistance = options.MaxDistance,
@@ -147,7 +148,7 @@ public static class ProjectileTool
         return options.TargetMatchMode;
     }
 
-    private static string? ResolveSpecificTargetEntityId(ProjectileMovementOptions options, IEntity? target)
+    private static EntityId? ResolveSpecificTargetEntityId(ProjectileMovementOptions options, IEntity? target)
     {
         return options.TargetMatchMode == MovementCollisionTargetMatchMode.SpecificEntity
             ? target?.EntityId
@@ -160,7 +161,8 @@ public static class ProjectileTool
         ProjectileMovementOptions options,
         DamageService? damageService)
     {
-        var source = projectile.Data.Get<IEntity?>(ProjectileDataKeys.SourceEntity, null);
+        var sourceId = projectile.Data.Get<EntityId?>(ProjectileDataKeys.SourceEntity, null);
+        var source = sourceId.HasValue ? EntityManager.Get(sourceId.Value) : null;
         var hitCount = projectile.Data.Get<int>(ProjectileDataKeys.HitCount, 0) + 1;
         projectile.Data.Set(ProjectileDataKeys.HitCount, hitCount);
 

@@ -14,7 +14,7 @@ namespace SlimeAI.GameOS.GodotBridge;
 /// </summary>
 public partial class GodotContactDamageComponent : Node, IGodotComponent
 {
-    private readonly Dictionary<string, GameTimer> contactTimers = new(StringComparer.Ordinal);
+    private readonly Dictionary<EntityId, GameTimer> contactTimers = new();
     private IEntity? entity;
     private IDisposable? hurtboxEnteredToken;
     private IDisposable? hurtboxExitedToken;
@@ -122,7 +122,7 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
         });
     }
 
-    private void CancelTimer(string entityId)
+    private void CancelTimer(EntityId entityId)
     {
         if (!contactTimers.TryGetValue(entityId, out var timer))
         {

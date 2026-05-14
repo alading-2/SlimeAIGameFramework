@@ -19,7 +19,7 @@ public sealed class MovementSystem : IRuntimeSystem
         public MovementParams Params { get; set; }
     }
 
-    private readonly Dictionary<string, ActiveMovement> activeMovements = new(StringComparer.Ordinal);
+    private readonly Dictionary<EntityId, ActiveMovement> activeMovements = new();
     private readonly IMovementCollisionTargetQuery collisionTargetQuery;
 
     /// <summary>
@@ -214,7 +214,7 @@ public sealed class MovementSystem : IRuntimeSystem
 
         var position = data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
         var intendedPosition = position + displacement;
-        var dispatchedTargets = new HashSet<string>(StringComparer.Ordinal);
+        var dispatchedTargets = new HashSet<EntityId>();
         while (active.CollisionPolicy.TryAcceptFirstHit(
                    entity,
                    movementParams.Mode,

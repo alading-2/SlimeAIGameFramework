@@ -11,7 +11,7 @@ namespace SlimeAI.GameOS.Capabilities.Movement;
 public sealed class MovementCollisionPolicy
 {
     private readonly CollisionSystem collisionSystem = new();
-    private readonly HashSet<string> acceptedTargets = new(StringComparer.Ordinal);
+    private readonly HashSet<EntityId> acceptedTargets = new();
     private readonly IMovementCollisionTargetQuery targetQuery;
     private MovementCollisionParams? config;
     private int acceptedCollisionCount;
@@ -145,8 +145,10 @@ public sealed class MovementCollisionPolicy
         return currentConfig.TargetMatchMode switch
         {
             MovementCollisionTargetMatchMode.Any => true,
-            MovementCollisionTargetMatchMode.TrackedTargetOnly => target.EntityId == movementParams.TargetEntityId,
-            MovementCollisionTargetMatchMode.SpecificEntity => target.EntityId == currentConfig.SpecificTargetEntityId,
+            MovementCollisionTargetMatchMode.TrackedTargetOnly =>
+                movementParams.TargetEntityId.HasValue && target.EntityId == movementParams.TargetEntityId.Value,
+            MovementCollisionTargetMatchMode.SpecificEntity =>
+                currentConfig.SpecificTargetEntityId.HasValue && target.EntityId == currentConfig.SpecificTargetEntityId.Value,
             _ => false
         };
     }

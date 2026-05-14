@@ -9,9 +9,9 @@ using SlimeAI.GameOS.Runtime.Relationship;
 public readonly record struct EntitySpawnConfig
 {
     /// <summary>
-    /// 调用方传入的实体 Id；为空时自动生成 GUID 字符串。
+    /// 调用方传入的实体 Id；为 <see cref="Entity.EntityId.Empty"/> 时自动生成 GUID 字符串。
     /// </summary>
-    public string? EntityId { get; init; }
+    public EntityId EntityId { get; init; }
 
     /// <summary>
     /// 可选 DataCatalog；为空时使用框架默认 catalog。
@@ -19,9 +19,9 @@ public readonly record struct EntitySpawnConfig
     public DataCatalog? DataCatalog { get; init; }
 
     /// <summary>
-    /// 可选父实体 Id；填入后生成阶段会自动绑定归属关系。
+    /// 可选父实体 Id；为 <see cref="Entity.EntityId.Empty"/> 时不绑定父子关系。
     /// </summary>
-    public string? ParentEntityId { get; init; }
+    public EntityId ParentEntityId { get; init; }
 
     /// <summary>
     /// 是否自动补充 PARENT 关系。

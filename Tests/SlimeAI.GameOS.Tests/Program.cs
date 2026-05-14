@@ -38,6 +38,10 @@ var tests = new (string Name, Action Run)[]
     ("EventBus entity event on world bus rejected", EventBusTests.EntityEventOnWorldBusRejected),
     ("EventBus global event on entity bus rejected", EventBusTests.GlobalEventOnEntityBusRejected),
     ("Entity Data event bridge", TestEntityDataBridge),
+    ("EntityId value equality", EntityIdTests.ValueEqualityWorksAcrossSameKey),
+    ("EntityId empty/default/null all equal", EntityIdTests.EmptyDefaultAndFromNullAllEqual),
+    ("EntityId IsEmpty for null/empty/whitespace", EntityIdTests.IsEmptyTreatsNullAndEmptyAsEmpty),
+    ("EntityId Value preserves underlying string", EntityIdTests.ValuePreservesUnderlyingString),
     ("Entity lifecycle", TestEntityLifecycle),
     ("Relationship graph", TestRelationshipGraph),
     ("Entity parent destroy policy", TestEntityParentDestroyPolicy),
@@ -151,7 +155,7 @@ static void TestEventBus()
 
 static void TestEntityDataBridge()
 {
-    var entity = new RuntimeEntity("entity-data");
+    var entity = new RuntimeEntity(new EntityId("entity-data"));
     DataChangedEventData? received = null;
     entity.Events.Subscribe<DataPropertyChanged>(data => received = data.Change);
 
@@ -169,9 +173,9 @@ static void TestEntityLifecycle()
     var spawnSub = WorldEvents.World.Subscribe<EntitySpawned>(_ => spawned++);
     var destroySub = WorldEvents.World.Subscribe<EntityDestroyed>(_ => destroyed++);
 
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "entity-life" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("entity-life") });
 
-    AssertEqual("entity found", "entity-life", EntityManager.Get("entity-life")?.EntityId);
+    AssertEqual("entity found", new EntityId("entity-life"), EntityManager.Get(new EntityId("entity-life"))?.EntityId);
     AssertEqual("spawned event", 1, spawned);
     AssertEqual("destroy result", true, EntityManager.Destroy(entity));
     AssertEqual("destroyed event", 1, destroyed);
@@ -225,30 +229,30 @@ static void TestEntityParentDestroyPolicy()
 {
     EntityManager.Clear();
 
-    var parent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "parent" });
+    var parent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("parent") });
     var recursiveChild = EntityManager.Spawn(new EntitySpawnConfig
     {
-        EntityId = "child-recursive",
+        EntityId = new EntityId("child-recursive"),
         ParentEntityId = parent.EntityId,
         AutoAddParentRelation = true,
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively
     });
     var detachedChild = EntityManager.Spawn(new EntitySpawnConfig
     {
-        EntityId = "child-detached",
+        EntityId = new EntityId("child-detached"),
         ParentEntityId = parent.EntityId,
         AutoAddParentRelation = true,
         ParentDestroyPolicy = ParentDestroyPolicy.Detach
     });
 
     AssertEqual("recursive child registered", recursiveChild.EntityId, EntityManager.Get(recursiveChild.EntityId)?.EntityId);
-    AssertEqual("detached child policy", ParentDestroyPolicy.Detach, RelationshipLifecycle.ReadParentDestroyPolicy(parent.EntityId, detachedChild.EntityId));
+    AssertEqual("detached child policy", ParentDestroyPolicy.Detach, RelationshipLifecycle.ReadParentDestroyPolicy(parent.EntityId.Value, detachedChild.EntityId.Value));
 
     EntityManager.Destroy(parent);
 
     AssertEqual("recursive child destroyed", null, EntityManager.Get(recursiveChild.EntityId));
     AssertEqual("detached child alive", detachedChild.EntityId, EntityManager.Get(detachedChild.EntityId)?.EntityId);
-    AssertEqual("detached parent relation removed", false, RelationshipManager.HasRelationship(parent.EntityId, detachedChild.EntityId, RelationshipType.Parent));
+    AssertEqual("detached parent relation removed", false, RelationshipManager.HasRelationship(parent.EntityId.Value, detachedChild.EntityId.Value, RelationshipType.Parent));
 
     EntityManager.Clear();
 }
@@ -694,16 +698,16 @@ static string BuildMissingDescriptorSnapshot()
 static void TestCollisionLayerMaskEvent()
 {
     EntityManager.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "collision-source" });
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-source") });
     source.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.Projectile);
     source.Data.Set(CollisionDataKeys.CollisionMask, CollisionLayers.EnemyHurtbox);
     source.Data.Set(CollisionDataKeys.Team, 1);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "collision-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-target") });
     target.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     target.Data.Set(CollisionDataKeys.Team, 2);
 
-    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "collision-same-team" });
+    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-same-team") });
     sameTeam.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     sameTeam.Data.Set(CollisionDataKeys.Team, 1);
 
@@ -734,8 +738,8 @@ static void TestCollisionLayerMaskEvent()
 static void TestDamageServiceAppliesHealth()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-attacker" });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-victim" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-attacker") });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-victim") });
     victim.Data.Set(DamageDataKeys.MaxHp, 20f);
     victim.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
@@ -777,8 +781,8 @@ static void TestDamageServiceAppliesHealth()
 static void TestDamageServiceKilledEvent()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-killer" });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-killed-victim" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-killer") });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-killed-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 5f);
 
     var killedEvents = 0;
@@ -809,8 +813,8 @@ static void TestDamageServiceKilledEvent()
 static void TestDamagePipelineDodge()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-dodge-attacker" });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-dodge-victim" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-dodge-attacker") });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-dodge-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 20f);
     victim.Data.Set(DamageDataKeys.DodgeChance, 100f);
 
@@ -844,11 +848,11 @@ static void TestDamagePipelineDodge()
 static void TestDamagePipelineCriticalArmorAndStats()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-crit-attacker" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-crit-attacker") });
     attacker.Data.Set(DamageDataKeys.CritRate, 100f);
     attacker.Data.Set(DamageDataKeys.CritDamage, 200f);
 
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-crit-victim" });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-crit-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 100f);
     victim.Data.Set(DamageDataKeys.Armor, 15f);
 
@@ -878,8 +882,8 @@ static void TestDamagePipelineCriticalArmorAndStats()
 static void TestDamagePipelineTrueDamageBypassesDodgeAndArmor()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-true-attacker" });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-true-victim" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-true-attacker") });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-true-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 50f);
     victim.Data.Set(DamageDataKeys.DodgeChance, 100f);
     victim.Data.Set(DamageDataKeys.Armor, 100f);
@@ -904,12 +908,12 @@ static void TestDamagePipelineTrueDamageBypassesDodgeAndArmor()
 static void TestDamagePipelineLifesteal()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-lifesteal-attacker" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-lifesteal-attacker") });
     attacker.Data.Set(DamageDataKeys.MaxHp, 30f);
     attacker.Data.Set(DamageDataKeys.CurrentHp, 10f);
     attacker.Data.Set(DamageDataKeys.LifeSteal, 100f);
 
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-lifesteal-victim" });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-lifesteal-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 40f);
 
     var healedEvents = 0;
@@ -940,8 +944,8 @@ static void TestDamagePipelineLifesteal()
 static void TestDamagePipelineShield()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-shield-attacker" });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-shield-victim" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-shield-attacker") });
+    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-shield-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 30f);
     victim.Data.Set(DamageDataKeys.Shield, 8f);
 
@@ -982,8 +986,8 @@ static void TestDamagePipelineShield()
 static void TestHealServiceAppliesAndClamps()
 {
     EntityManager.Clear();
-    var healer = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "heal-service-healer" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "heal-service-target" });
+    var healer = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-healer") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-target") });
     target.Data.Set(DamageDataKeys.MaxHp, 20f);
     target.Data.Set(DamageDataKeys.CurrentHp, 10f);
 
@@ -1016,9 +1020,9 @@ static void TestHealServiceAppliesAndClamps()
 static void TestDamageToolMultiTargetAndPeriodic()
 {
     EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-tool-attacker" });
-    var first = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-tool-first" });
-    var second = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "damage-tool-second" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-attacker") });
+    var first = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-first") });
+    var second = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-second") });
     first.Data.Set(DamageDataKeys.CurrentHp, 20f);
     second.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
@@ -1070,8 +1074,8 @@ static void TestDamageToolMultiTargetAndPeriodic()
 static void TestAbilityServiceInstantDamageCooldownAndCharge()
 {
     EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-firebolt" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-firebolt") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Damage, 5f);
@@ -1079,7 +1083,7 @@ static void TestAbilityServiceInstantDamageCooldownAndCharge()
     ability.Data.Set(AbilityDataKeys.UsesCharges, true);
     ability.Data.Set(AbilityDataKeys.CurrentCharges, 2);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var executedEvents = 0;
@@ -1129,8 +1133,8 @@ static void TestAbilityServiceInstantDamageCooldownAndCharge()
 static void TestAbilityServiceRequiresTarget()
 {
     EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-no-target-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-no-target" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Damage, 5f);
@@ -1157,8 +1161,8 @@ static void TestAbilityServiceRequiresTarget()
 static void TestAbilityServiceAcceptsPointTarget()
 {
     EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-point-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-point" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Point);
 
@@ -1183,8 +1187,8 @@ static void TestAbilityServiceAcceptsPointTarget()
 static void TestAbilityServiceAcceptsEntityOrPointTarget()
 {
     EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-either-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-either" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.EntityOrPoint);
 
@@ -1203,7 +1207,7 @@ static void TestAbilityServiceAcceptsEntityOrPointTarget()
     });
     AssertEqual("ability either point success", AbilityTriggerResult.Success, pointReport.Result);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-either-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-target") });
     var entityReport = AbilityService.Instance.TryTrigger(new AbilityCastContext
     {
         Caster = caster,
@@ -1220,8 +1224,8 @@ static void TestAbilityServicePeriodicDamage()
     EntityManager.Clear();
     var timerManager = new TimerManager("ability-periodic-test-timers");
     var service = new AbilityService(timerManager);
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-periodic-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-periodic" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Damage, 2f);
@@ -1229,7 +1233,7 @@ static void TestAbilityServicePeriodicDamage()
     ability.Data.Set(AbilityDataKeys.DamageRepeatCount, 3);
     ability.Data.Set(AbilityDataKeys.ApplyImmediateDamage, true);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-periodic-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var report = service.TryTrigger(new AbilityCastContext
@@ -1257,21 +1261,21 @@ static void TestAbilityServicePeriodicAutoTrigger()
 {
     EntityManager.Clear();
     var service = new AbilityService(new TimerManager("ability-auto-trigger-test-timers"));
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-auto-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-auto" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TriggerMode, AbilityTriggerMode.Periodic);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Cooldown, 1f);
     ability.Data.Set(AbilityDataKeys.Damage, 3f);
 
-    var manualAbility = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-auto-manual" });
+    var manualAbility = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-manual") });
     manualAbility.Data.Set(AbilityDataKeys.IsEnabled, true);
     manualAbility.Data.Set(AbilityDataKeys.TriggerMode, AbilityTriggerMode.Manual);
     manualAbility.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     manualAbility.Data.Set(AbilityDataKeys.Damage, 100f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-auto-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var context = new AbilityCastContext
@@ -1308,37 +1312,37 @@ static void TestAbilityServicePeriodicAutoTrigger()
 static void TestAbilityTargetingToolFindsNearestEntity()
 {
     EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-caster" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-caster") });
     caster.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     caster.Data.Set(CollisionDataKeys.Team, 1);
 
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-ability" });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-ability") });
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.AutoTargetRange, 5f);
     ability.Data.Set(AbilityDataKeys.AutoTargetMaxTargets, 2);
 
-    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-same-team" });
+    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-same-team") });
     sameTeam.Data.Set(MovementDataKeys.Position, new Vector2Value(1f, 0f));
     sameTeam.Data.Set(CollisionDataKeys.Team, 1);
     sameTeam.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
-    var deadEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-dead-enemy" });
+    var deadEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-dead-enemy") });
     deadEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(2f, 0f));
     deadEnemy.Data.Set(CollisionDataKeys.Team, 2);
     deadEnemy.Data.Set(DamageDataKeys.CurrentHp, 20f);
     deadEnemy.Data.Set(DamageDataKeys.IsDead, true);
 
-    var nearEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-near-enemy" });
+    var nearEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-near-enemy") });
     nearEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 0f));
     nearEnemy.Data.Set(CollisionDataKeys.Team, 2);
     nearEnemy.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
-    var farEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-far-enemy" });
+    var farEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-far-enemy") });
     farEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(4f, 0f));
     farEnemy.Data.Set(CollisionDataKeys.Team, 2);
     farEnemy.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
-    var outOfRangeEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-targeting-out-of-range" });
+    var outOfRangeEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-targeting-out-of-range") });
     outOfRangeEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(8f, 0f));
     outOfRangeEnemy.Data.Set(CollisionDataKeys.Team, 2);
     outOfRangeEnemy.Data.Set(DamageDataKeys.CurrentHp, 20f);
@@ -1362,9 +1366,9 @@ static void TestProjectileToolSpawnsRuntimeEntity()
 {
     EntityManager.Clear();
     WorldEvents.World.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-source" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-ability" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-target" });
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-source") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-ability") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-target") });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
 
     var spawnedEvents = 0;
@@ -1380,7 +1384,7 @@ static void TestProjectileToolSpawnsRuntimeEntity()
         Source = source,
         Ability = ability,
         Target = target,
-        EntityId = "projectile-runtime",
+        EntityId = new EntityId("projectile-runtime"),
         ScenePath = "res://Projectiles/Fireball.tscn",
         SpawnPosition = Vector2Value.Zero,
         Speed = 12f,
@@ -1392,9 +1396,9 @@ static void TestProjectileToolSpawnsRuntimeEntity()
     });
 
     AssertEqual("projectile created", true, result.Created);
-    AssertEqual("projectile registered", result.Projectile.EntityId, EntityManager.Get("projectile-runtime")?.EntityId);
-    AssertEqual("projectile source relationship", true, RelationshipManager.HasRelationship(source.EntityId, result.Projectile.EntityId, RelationshipType.EntityToProjectile));
-    AssertEqual("projectile target relationship", true, RelationshipManager.HasRelationship(result.Projectile.EntityId, target.EntityId, RelationshipType.Target));
+    AssertEqual("projectile registered", result.Projectile.EntityId, EntityManager.Get(new EntityId("projectile-runtime"))?.EntityId);
+    AssertEqual("projectile source relationship", true, RelationshipManager.HasRelationship(source.EntityId.Value, result.Projectile.EntityId.Value, RelationshipType.EntityToProjectile));
+    AssertEqual("projectile target relationship", true, RelationshipManager.HasRelationship(result.Projectile.EntityId.Value, target.EntityId.Value, RelationshipType.Target));
     AssertEqual("projectile scene path", "res://Projectiles/Fireball.tscn", result.Projectile.Data.Get<string>(ProjectileDataKeys.ScenePath));
     AssertEqual("projectile direction", new Vector2Value(1f, 0f), result.Projectile.Data.Get<Vector2Value>(ProjectileDataKeys.Direction));
     AssertNear("projectile speed", 12f, result.Projectile.Data.Get<float>(ProjectileDataKeys.Speed));
@@ -1413,7 +1417,7 @@ static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
 {
     EntityManager.Clear();
     WorldEvents.World.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-pierce-source" });
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-pierce-source") });
     source.Data.Set(CollisionDataKeys.Team, 1);
 
     var firstTarget = CreateProjectileTarget("projectile-pierce-target-1", new Vector2Value(5f, 0f));
@@ -1423,7 +1427,7 @@ static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
     var projectile = ProjectileTool.Spawn(new ProjectileSpawnOptions
     {
         Source = source,
-        EntityId = "projectile-pierce-runtime",
+        EntityId = new EntityId("projectile-pierce-runtime"),
         SpawnPosition = Vector2Value.Zero,
         Direction = new Vector2Value(1f, 0f),
         Speed = 20f,
@@ -1436,7 +1440,7 @@ static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
     projectile.Projectile.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
     projectile.Projectile.Data.Set(CollisionDataKeys.Team, 1);
 
-    var hitTargets = new List<string>();
+    var hitTargets = new List<EntityId>();
     var hitSub = WorldEvents.World.Subscribe<ProjectileEvents.Hit>(data =>
     {
         if (data.Projectile.EntityId == projectile.Projectile.EntityId)
@@ -1468,11 +1472,11 @@ static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()
 static void TestProjectileMovementLifetimeDestroys()
 {
     EntityManager.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-lifetime-source" });
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-lifetime-source") });
     var projectile = ProjectileTool.Spawn(new ProjectileSpawnOptions
     {
         Source = source,
-        EntityId = "projectile-lifetime-runtime",
+        EntityId = new EntityId("projectile-lifetime-runtime"),
         SpawnPosition = Vector2Value.Zero,
         Direction = new Vector2Value(1f, 0f),
         Speed = 5f,
@@ -1494,7 +1498,7 @@ static void TestProjectileMovementLifetimeDestroys()
 
 static IEntity CreateProjectileTarget(string entityId, Vector2Value position)
 {
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = entityId });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId(entityId) });
     target.Data.Set(MovementDataKeys.Position, position);
     target.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     target.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
@@ -1508,10 +1512,10 @@ static void TestProjectileMovementHitDamagesAndDestroys()
 {
     EntityManager.Clear();
     WorldEvents.World.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-hit-source" });
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-hit-source") });
     source.Data.Set(CollisionDataKeys.Team, 1);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "projectile-hit-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-hit-target") });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
     target.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     target.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
@@ -1523,7 +1527,7 @@ static void TestProjectileMovementHitDamagesAndDestroys()
     {
         Source = source,
         Target = target,
-        EntityId = "projectile-hit-runtime",
+        EntityId = new EntityId("projectile-hit-runtime"),
         SpawnPosition = Vector2Value.Zero,
         Speed = 20f,
         Damage = 6f,
@@ -1563,9 +1567,9 @@ static void TestEffectToolSpawnsRuntimeEntity()
 {
     EntityManager.Clear();
     WorldEvents.World.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "effect-source" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "effect-ability" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "effect-target" });
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("effect-source") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("effect-ability") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("effect-target") });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(2f, 3f));
 
     var spawnedEvents = 0;
@@ -1581,7 +1585,7 @@ static void TestEffectToolSpawnsRuntimeEntity()
         Source = source,
         Ability = ability,
         Target = target,
-        EntityId = "effect-runtime",
+        EntityId = new EntityId("effect-runtime"),
         ScenePath = "res://Effects/Impact.tscn",
         Name = "Impact",
         AnimationName = "Effect",
@@ -1590,9 +1594,9 @@ static void TestEffectToolSpawnsRuntimeEntity()
     });
 
     AssertEqual("effect created", true, result.Created);
-    AssertEqual("effect registered", result.Effect.EntityId, EntityManager.Get("effect-runtime")?.EntityId);
-    AssertEqual("effect source relationship", true, RelationshipManager.HasRelationship(source.EntityId, result.Effect.EntityId, RelationshipType.EntityToEffect));
-    AssertEqual("effect target relationship", true, RelationshipManager.HasRelationship(result.Effect.EntityId, target.EntityId, RelationshipType.Target));
+    AssertEqual("effect registered", result.Effect.EntityId, EntityManager.Get(new EntityId("effect-runtime"))?.EntityId);
+    AssertEqual("effect source relationship", true, RelationshipManager.HasRelationship(source.EntityId.Value, result.Effect.EntityId.Value, RelationshipType.EntityToEffect));
+    AssertEqual("effect target relationship", true, RelationshipManager.HasRelationship(result.Effect.EntityId.Value, target.EntityId.Value, RelationshipType.Target));
     AssertEqual("effect scene path", "res://Effects/Impact.tscn", result.Effect.Data.Get<string>(EffectDataKeys.ScenePath));
     AssertEqual("effect name", "Impact", result.Effect.Data.Get<string>(EffectDataKeys.Name));
     AssertEqual("effect animation name", "Effect", result.Effect.Data.Get<string>(EffectDataKeys.AnimationName));
@@ -1608,8 +1612,8 @@ static void TestEffectToolSpawnsRuntimeEntity()
 static void TestFeatureServiceGrantsModifiersAndRemoves()
 {
     EntityManager.Clear();
-    var owner = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "feature-owner" });
-    var feature = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "feature-damage-bonus" });
+    var owner = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-owner") });
+    var feature = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-damage-bonus") });
     owner.Data.Set(DamageDataKeys.ContactDamage, 5f);
 
     var service = new FeatureService();
@@ -1641,8 +1645,8 @@ static void TestFeatureServiceLifecycleHandler()
     var handler = new CountingFeatureHandler("feature.lifecycle");
     FeatureHandlerRegistry.Register(handler);
 
-    var owner = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "feature-lifecycle-owner" });
-    var feature = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "feature-lifecycle" });
+    var owner = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-lifecycle-owner") });
+    var feature = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-lifecycle") });
     var service = new FeatureService();
     var definition = new FeatureDefinition
     {
@@ -1680,13 +1684,13 @@ static void TestAbilityServiceInvokesFeatureHandler()
     var handler = new AbilityFeatureProbeHandler();
     FeatureHandlerRegistry.Register(handler);
 
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-feature-caster" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-feature" });
+    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-caster") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.FeatureHandlerId, handler.FeatureId);
     ability.Data.Set(AbilityDataKeys.Damage, 99f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ability-feature-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var report = AbilityService.Instance.TryTrigger(new AbilityCastContext
@@ -1709,11 +1713,11 @@ static void TestAbilityServiceInvokesFeatureHandler()
 static void TestAIServiceMovesTowardTarget()
 {
     EntityManager.Clear();
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-agent" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-target" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-agent") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-target") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 4f));
-    agent.Data.Set(AIDataKeys.TargetEntity, target);
+    agent.Data.Set<EntityId?>(AIDataKeys.TargetEntity, target.EntityId);
 
     var context = new AIContext { Entity = agent, Delta = 0.1f };
     var action = new MoveToTargetAction(0.75f);
@@ -1735,23 +1739,23 @@ static void TestAIServiceMovesTowardTarget()
 static void TestAIServiceFindsNearestTarget()
 {
     EntityManager.Clear();
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-query-agent" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-agent") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     agent.Data.Set(CollisionDataKeys.Team, 1);
 
-    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-query-same-team" });
+    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-same-team") });
     sameTeam.Data.Set(MovementDataKeys.Position, new Vector2Value(1f, 0f));
     sameTeam.Data.Set(CollisionDataKeys.Team, 1);
 
-    var farEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-query-far-enemy" });
+    var farEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-far-enemy") });
     farEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(8f, 0f));
     farEnemy.Data.Set(CollisionDataKeys.Team, 2);
 
-    var nearEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-query-near-enemy" });
+    var nearEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-near-enemy") });
     nearEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 0f));
     nearEnemy.Data.Set(CollisionDataKeys.Team, 2);
 
-    var deadEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-query-dead-enemy" });
+    var deadEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-dead-enemy") });
     deadEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(2f, 0f));
     deadEnemy.Data.Set(CollisionDataKeys.Team, 2);
     deadEnemy.Data.Set(DamageDataKeys.IsDead, true);
@@ -1764,7 +1768,7 @@ static void TestAIServiceFindsNearestTarget()
     var state = AIService.Instance.Tick(context, root);
 
     AssertEqual("ai query success", AIState.Success, state);
-    AssertEqual("ai query target", nearEnemy, agent.Data.Get<IEntity?>(AIDataKeys.TargetEntity));
+    AssertEqual("ai query target", (EntityId?)nearEnemy.EntityId, agent.Data.Get<EntityId?>(AIDataKeys.TargetEntity));
     AssertEqual("ai query target position", new Vector2Value(3f, 0f), agent.Data.Get<Vector2Value>(AIDataKeys.TargetPosition));
     AssertEqual("ai query has target position", true, agent.Data.Get<bool>(AIDataKeys.HasTargetPosition));
     AssertEqual("ai query move direction", new Vector2Value(1f, 0f), agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
@@ -1781,7 +1785,7 @@ static void TestAIServiceFindsNearestTarget()
 static void TestAIServicePatrolAction()
 {
     EntityManager.Clear();
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-patrol-agent" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-patrol-agent") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     agent.Data.Set(AIDataKeys.PatrolCenter, Vector2Value.Zero);
     agent.Data.Set(AIDataKeys.PatrolRadius, 10f);
@@ -1824,8 +1828,8 @@ static void TestAIServicePatrolAction()
 static void TestAIBehaviorTreeBuilderMeleeAttackPriority()
 {
     EntityManager.Clear();
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-builder-agent" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-builder-target" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-builder-agent") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-builder-target") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     agent.Data.Set(CollisionDataKeys.Team, 1);
     agent.Data.Set(AIDataKeys.AttackRange, 5f);
@@ -1840,7 +1844,7 @@ static void TestAIBehaviorTreeBuilderMeleeAttackPriority()
     var state = AIService.Instance.Tick(context, root);
 
     AssertEqual("ai builder attack running", AIState.Running, state);
-    AssertEqual("ai builder target selected", target, agent.Data.Get<IEntity?>(AIDataKeys.TargetEntity));
+    AssertEqual("ai builder target selected", (EntityId?)target.EntityId, agent.Data.Get<EntityId?>(AIDataKeys.TargetEntity));
     AssertEqual("ai builder attack requested", 1, requested);
     AssertEqual("ai builder attack flag", true, agent.Data.Get<bool>(AIDataKeys.IsAttackRequested));
     AssertEqual("ai builder attack face", new Vector2Value(0.6f, 0.8f), agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
@@ -1852,7 +1856,7 @@ static void TestAIBehaviorTreeBuilderMeleeAttackPriority()
 static void TestAIBehaviorTreeBuilderPatrolFallback()
 {
     EntityManager.Clear();
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-builder-patrol-agent" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-builder-patrol-agent") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     agent.Data.Set(AIDataKeys.PatrolCenter, Vector2Value.Zero);
     agent.Data.Set(AIDataKeys.PatrolRadius, 6f);
@@ -1878,12 +1882,12 @@ static void TestAIBehaviorTreeBuilderPatrolFallback()
 static void TestAIServiceRequestsAttackInRange()
 {
     EntityManager.Clear();
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-attack-agent" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-attack-target" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-attack-agent") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-attack-target") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     agent.Data.Set(AIDataKeys.AttackRange, 5f);
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 4f));
-    agent.Data.Set(AIDataKeys.TargetEntity, target);
+    agent.Data.Set<EntityId?>(AIDataKeys.TargetEntity, target.EntityId);
 
     var requested = 0;
     AttackEvents.Requested? payload = null;
@@ -1923,15 +1927,15 @@ static void TestAIServiceAbilityAutoTriggerAction()
     EntityManager.Clear();
     var abilityTimer = new TimerManager("ai-ability-auto-trigger-test-timers");
     var abilityService = new AbilityService(abilityTimer);
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability-agent" });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability-agent") });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TriggerMode, AbilityTriggerMode.Periodic);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Cooldown, 1f);
     ability.Data.Set(AbilityDataKeys.Damage, 4f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var context = new AIContext
@@ -1971,23 +1975,23 @@ static void TestAIServicePreparesAbilityAutoTargetContexts()
     EntityManager.Clear();
     var abilityTimer = new TimerManager("ai-ability-auto-target-test-timers");
     var abilityService = new AbilityService(abilityTimer);
-    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability-auto-target-agent" });
+    var agent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability-auto-target-agent") });
     agent.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     agent.Data.Set(CollisionDataKeys.Team, 1);
 
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability-auto-target-ability" });
+    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability-auto-target-ability") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TriggerMode, AbilityTriggerMode.Periodic);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.AutoTargetRange, 8f);
     ability.Data.Set(AbilityDataKeys.Damage, 4f);
 
-    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability-auto-target-same-team" });
+    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability-auto-target-same-team") });
     sameTeam.Data.Set(MovementDataKeys.Position, new Vector2Value(1f, 0f));
     sameTeam.Data.Set(CollisionDataKeys.Team, 1);
     sameTeam.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "ai-ability-auto-target-enemy" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-ability-auto-target-enemy") });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(4f, 0f));
     target.Data.Set(CollisionDataKeys.Team, 2);
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
@@ -2025,8 +2029,8 @@ static void TestAttackServiceConsumesRequestAndDamages()
     EntityManager.Clear();
     var timer = new TimerManager("attack-service-instant-test-timers");
     var service = new AttackService(timer, DamageService.Instance);
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "attack-instant-attacker" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "attack-instant-target" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-attacker") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     attacker.Data.Set(AttackDataKeys.Damage, 6f);
     attacker.Data.Set(AttackDataKeys.Range, 20f);
@@ -2068,8 +2072,8 @@ static void TestAttackServiceGatesRangeAndCooldown()
     EntityManager.Clear();
     var timer = new TimerManager("attack-service-gates-test-timers");
     var service = new AttackService(timer, DamageService.Instance);
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "attack-gate-attacker" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "attack-gate-target" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-attacker") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     attacker.Data.Set(AttackDataKeys.Damage, 6f);
     attacker.Data.Set(AttackDataKeys.Range, 4f);
@@ -2112,8 +2116,8 @@ static void TestAttackServiceWindupAndRecoveryTimers()
     EntityManager.Clear();
     var timer = new TimerManager("attack-service-windup-test-timers");
     var service = new AttackService(timer, DamageService.Instance);
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "attack-windup-attacker" });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "attack-windup-target" });
+    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-attacker") });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     attacker.Data.Set(AttackDataKeys.Damage, 5f);
     attacker.Data.Set(AttackDataKeys.Range, 10f);
@@ -2153,7 +2157,7 @@ static void TestAttackServiceWindupAndRecoveryTimers()
 static void TestMovementChargeTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-charge" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-charge") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var movement = new MovementSystem();
@@ -2182,7 +2186,7 @@ static void TestMovementChargeTick()
 static void TestMovementTargetStopEvent()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-target" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-target") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var stopped = 0;
@@ -2215,7 +2219,7 @@ static void TestMovementTargetStopEvent()
 static void TestMovementOrbitTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-orbit" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-orbit") });
     entity.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
 
     var movement = new MovementSystem();
@@ -2243,7 +2247,7 @@ static void TestMovementOrbitTick()
 static void TestMovementSineWaveTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-sine" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-sine") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var movement = new MovementSystem();
@@ -2271,7 +2275,7 @@ static void TestMovementSineWaveTick()
 static void TestMovementBezierCurveTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-bezier" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-bezier") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var movement = new MovementSystem();
@@ -2301,7 +2305,7 @@ static void TestMovementBezierCurveTick()
 static void TestMovementBoomerangTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-boomerang" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-boomerang") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var movement = new MovementSystem();
@@ -2329,9 +2333,9 @@ static void TestMovementBoomerangTick()
 static void TestMovementAttachToHostTick()
 {
     EntityManager.Clear();
-    var host = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-host" });
+    var host = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-host") });
     host.Data.Set(MovementDataKeys.Position, new Vector2Value(20f, 5f));
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-attach" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-attach") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var movement = new MovementSystem();
@@ -2355,7 +2359,7 @@ static void TestMovementAttachToHostTick()
 static void TestMovementPlayerInputTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-player-input" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-player-input") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     entity.Data.Set(MovementDataKeys.MoveSpeed, 12f);
     entity.Data.Set(MovementDataKeys.InputDirection, new Vector2Value(1f, 0f));
@@ -2377,7 +2381,7 @@ static void TestMovementPlayerInputTick()
 static void TestMovementAIControlledTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-ai" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-ai") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     entity.Data.Set(MovementDataKeys.MoveSpeed, 20f);
     entity.Data.Set(MovementDataKeys.AIMoveDirection, new Vector2Value(0f, 1f));
@@ -2399,7 +2403,7 @@ static void TestMovementAIControlledTick()
 static void TestMovementParabolaTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-parabola" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-parabola") });
     entity.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
 
     var movement = new MovementSystem();
@@ -2429,7 +2433,7 @@ static void TestMovementParabolaTick()
 static void TestMovementCircularArcTick()
 {
     EntityManager.Clear();
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-circular-arc" });
+    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-circular-arc") });
     entity.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
 
     var movement = new MovementSystem();
@@ -2460,20 +2464,20 @@ static void TestMovementCircularArcTick()
 static void TestMovementCollisionStopTick()
 {
     EntityManager.Clear();
-    var projectile = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-projectile" });
+    var projectile = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-projectile") });
     projectile.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     projectile.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.Projectile);
     projectile.Data.Set(CollisionDataKeys.CollisionMask, CollisionLayers.EnemyHurtbox);
     projectile.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
     projectile.Data.Set(CollisionDataKeys.Team, 1);
 
-    var enemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-enemy" });
+    var enemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-enemy") });
     enemy.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
     enemy.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     enemy.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
     enemy.Data.Set(CollisionDataKeys.Team, 2);
 
-    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-same-team" });
+    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-same-team") });
     sameTeam.Data.Set(MovementDataKeys.Position, new Vector2Value(4f, 0f));
     sameTeam.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     sameTeam.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
@@ -2534,13 +2538,13 @@ static void TestMovementOrientationParamsDefaults()
 static void TestMovementCollisionNotifyWithoutStop()
 {
     EntityManager.Clear();
-    var projectile = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-notify" });
+    var projectile = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-notify") });
     projectile.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     projectile.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.Projectile);
     projectile.Data.Set(CollisionDataKeys.CollisionMask, CollisionLayers.EnemyHurtbox);
     projectile.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-notify-target" });
+    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-notify-target") });
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(5f, 0f));
     target.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     target.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
@@ -2573,18 +2577,18 @@ static void TestMovementCollisionNotifyWithoutStop()
 static void TestMovementCollisionTargetQueryInjection()
 {
     EntityManager.Clear();
-    var projectile = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-query-projectile" });
+    var projectile = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-query-projectile") });
     projectile.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     projectile.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.Projectile);
     projectile.Data.Set(CollisionDataKeys.CollisionMask, CollisionLayers.EnemyHurtbox);
     projectile.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
 
-    var ignoredNearTarget = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-query-ignored" });
+    var ignoredNearTarget = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-query-ignored") });
     ignoredNearTarget.Data.Set(MovementDataKeys.Position, new Vector2Value(4f, 0f));
     ignoredNearTarget.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     ignoredNearTarget.Data.Set(CollisionDataKeys.CollisionRadius, 1f);
 
-    var queryTarget = EntityManager.Spawn(new EntitySpawnConfig { EntityId = "movement-collision-query-target" });
+    var queryTarget = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("movement-collision-query-target") });
     queryTarget.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
     queryTarget.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     queryTarget.Data.Set(CollisionDataKeys.CollisionRadius, 1f);

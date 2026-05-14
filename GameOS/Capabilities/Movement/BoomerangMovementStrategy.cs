@@ -88,9 +88,9 @@ public sealed class BoomerangMovementStrategy : IMovementStrategy
             return outboundTargetPoint;
         }
 
-        if (!string.IsNullOrWhiteSpace(movementParams.TargetEntityId))
+        if (movementParams.TargetEntityId.HasValue && !movementParams.TargetEntityId.Value.IsEmpty)
         {
-            var target = EntityManager.Get(movementParams.TargetEntityId);
+            var target = EntityManager.Get(movementParams.TargetEntityId.Value);
             if (target != null)
             {
                 return target.Data.Get<Vector2Value>(MovementDataKeys.Position, launchPoint);

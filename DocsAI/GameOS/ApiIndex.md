@@ -50,10 +50,11 @@
 | `SlimeAI.GameOS.Runtime.Event.WorldEvents` | static class | migrated | `WorldEvents.World` 是进程级 world bus 静态访问点。 |
 | `SlimeAI.GameOS.Runtime.Event.EventBusObservation` | class | migrated | 订阅、发布计数、reentry 阻断、handler 异常和 dump 导出。 |
 | `SlimeAI.GameOS.Runtime.Event.EventDataChangeSink` | class | migrated | Data 变更到 IEventBus 的桥，发布 `Runtime.Events.Core.DataPropertyChanged`。 |
-| `SlimeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | Runtime Entity legacy interface；只暴露身份、Runtime Data 和事件，不承载业务逻辑。 |
-| `SlimeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity 身份容器，不是 archetype entity。 |
-| `SlimeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数。 |
-| `SlimeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | Runtime Entity 生命周期注册表；不是 ECS world registry / query API。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntityId` | record struct | migrated | Typed entity 身份 wrapper；`Empty / From(string?) / IsEmpty / Value`，禁止 implicit `string` 转换。 |
+| `SlimeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | Runtime Entity legacy interface；只暴露 typed `EntityId`、Runtime Data 和事件，不承载业务逻辑。 |
+| `SlimeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity 身份容器，构造接受 typed `EntityId`，不是 archetype entity。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数；`EntityId / ParentEntityId` 为 typed `EntityId`，以 `EntityId.Empty` 表达"未指定"。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | Runtime Entity 生命周期注册表，`Spawn / Register / Destroy / Get / Clear / BindParentRelationships` 全部使用 typed `EntityId`；不是 ECS world registry / query API。 |
 | `SlimeAI.GameOS.Runtime.Relationship.RelationshipConstraint` | enum | migrated | 关系写入约束。 |
 | `SlimeAI.GameOS.Runtime.Relationship.ParentDestroyPolicy` | enum | migrated | 父实体销毁时对子实体的处理策略。 |
 | `SlimeAI.GameOS.Runtime.Relationship.RelationshipType` | static class | migrated | GameOS 内置关系类型。 |

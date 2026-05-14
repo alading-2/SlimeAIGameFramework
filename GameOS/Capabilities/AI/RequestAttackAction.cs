@@ -34,7 +34,8 @@ public sealed class RequestAttackAction : BehaviorNode
 
     private static bool TryGetTarget(AIContext context, out IEntity? target, out Vector2Value targetPosition)
     {
-        target = context.Entity.Data.Get<IEntity?>(AIDataKeys.TargetEntity, null);
+        var targetId = context.Entity.Data.Get<EntityId?>(AIDataKeys.TargetEntity, null);
+        target = targetId.HasValue ? EntityManager.Get(targetId.Value) : null;
         if (target != null)
         {
             targetPosition = target.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);

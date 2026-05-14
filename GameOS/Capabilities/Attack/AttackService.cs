@@ -15,7 +15,7 @@ public sealed class AttackService
 {
     private readonly TimerManager timerManager;
     private readonly DamageService damageService;
-    private readonly Dictionary<string, Subscription> subscriptions = new(StringComparer.Ordinal);
+    private readonly Dictionary<EntityId, Subscription> subscriptions = new();
 
     /// <summary>进程级默认 AttackService。</summary>
     public static AttackService Instance { get; } = new(TimerManager.Instance, DamageService.Instance);
@@ -268,7 +268,7 @@ public sealed class AttackService
 
     private static string GetTimerTag(IEntity attacker)
     {
-        return $"attack:{attacker.EntityId}";
+        return $"attack:{attacker.EntityId.Value}";
     }
 
     private sealed record Subscription(

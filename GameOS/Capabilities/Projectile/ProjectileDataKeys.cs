@@ -15,16 +15,16 @@ public static class ProjectileDataKeys
         defaultValue: string.Empty,
         category: ProjectileCategory.Basic);
 
-    /// <summary>发射者实体。</summary>
-    public static readonly DataKey<IEntity?> SourceEntity = DataKey.Create<IEntity?>("Projectile.SourceEntity",
+    /// <summary>发射者实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> SourceEntity = DataKey.Create<EntityId?>("Projectile.SourceEntity",
         category: ProjectileCategory.Runtime);
 
-    /// <summary>关联技能实体。</summary>
-    public static readonly DataKey<IEntity?> AbilityEntity = DataKey.Create<IEntity?>("Projectile.AbilityEntity",
+    /// <summary>关联技能实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> AbilityEntity = DataKey.Create<EntityId?>("Projectile.AbilityEntity",
         category: ProjectileCategory.Runtime);
 
-    /// <summary>目标实体。</summary>
-    public static readonly DataKey<IEntity?> TargetEntity = DataKey.Create<IEntity?>("Projectile.TargetEntity",
+    /// <summary>目标实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> TargetEntity = DataKey.Create<EntityId?>("Projectile.TargetEntity",
         category: ProjectileCategory.Runtime);
 
     /// <summary>生成位置。</summary>

@@ -24,16 +24,16 @@ public static class EffectDataKeys
         defaultValue: string.Empty,
         category: EffectCategory.Basic);
 
-    /// <summary>来源实体。</summary>
-    public static readonly DataKey<IEntity?> SourceEntity = DataKey.Create<IEntity?>("Effect.SourceEntity",
+    /// <summary>来源实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> SourceEntity = DataKey.Create<EntityId?>("Effect.SourceEntity",
         category: EffectCategory.Runtime);
 
-    /// <summary>关联技能实体。</summary>
-    public static readonly DataKey<IEntity?> AbilityEntity = DataKey.Create<IEntity?>("Effect.AbilityEntity",
+    /// <summary>关联技能实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> AbilityEntity = DataKey.Create<EntityId?>("Effect.AbilityEntity",
         category: EffectCategory.Runtime);
 
-    /// <summary>目标实体。</summary>
-    public static readonly DataKey<IEntity?> TargetEntity = DataKey.Create<IEntity?>("Effect.TargetEntity",
+    /// <summary>目标实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> TargetEntity = DataKey.Create<EntityId?>("Effect.TargetEntity",
         category: EffectCategory.Runtime);
 
     /// <summary>效果位置。</summary>

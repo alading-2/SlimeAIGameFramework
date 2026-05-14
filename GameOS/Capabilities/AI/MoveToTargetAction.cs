@@ -37,7 +37,8 @@ public sealed class MoveToTargetAction : BehaviorNode
 
     private static bool TryGetTargetPosition(AIContext context, out Vector2Value targetPosition)
     {
-        var target = context.Entity.Data.Get<IEntity?>(AIDataKeys.TargetEntity, null);
+        var targetId = context.Entity.Data.Get<EntityId?>(AIDataKeys.TargetEntity, null);
+        var target = targetId.HasValue ? EntityManager.Get(targetId.Value) : null;
         if (target != null)
         {
             targetPosition = target.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);

@@ -188,7 +188,7 @@ public partial class RuntimeEventValidationScene : Node
     private static CheckResult ValidateBroadcastRoutesToBothBuses()
     {
         WorldEvents.World.Clear();
-        var entity = new RuntimeEntity("runtime-event-validation-broadcast");
+        var entity = new RuntimeEntity(new EntityId("runtime-event-validation-broadcast"));
         var localCount = 0;
         var globalCount = 0;
 
@@ -211,7 +211,7 @@ public partial class RuntimeEventValidationScene : Node
 
     private static CheckResult ValidateDataToEventBridge()
     {
-        var entity = new RuntimeEntity("runtime-event-validation-data");
+        var entity = new RuntimeEntity(new EntityId("runtime-event-validation-data"));
         var receivedCount = 0;
         string? receivedKey = null;
         object? receivedValue = null;

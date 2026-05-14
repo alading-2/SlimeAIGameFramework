@@ -146,10 +146,14 @@
 
 ## Runtime Entity 契约
 
-- `IEntity` 是 `Runtime Entity` 的 legacy public symbol，只暴露 `EntityId`、`Data`、`Events`，不承载业务逻辑。
+- `EntityId` 是 typed value：`readonly record struct EntityId(string Value)`，定义在 `SlimeAI.GameOS.Runtime.Entity`；不允许 implicit `string ↔ EntityId` 转换，调用方必须 `new EntityId(value)` 或 `EntityId.From(string?)` 显式构造。`EntityId.Empty` 是唯一"无引用"值，`IsEmpty` 同时把 `null` 与 `""` 视为 empty；`default(EntityId) == Empty == From(null) == From("")`。
+- `IEntity` 是 `Runtime Entity` 的 legacy public symbol，只暴露 typed `EntityId`、`Data`、`Events`，不承载业务逻辑。
 - `RuntimeEntity` 是运行时对象身份容器，由 Capability、Relationship、RuntimeSchedule 和 GodotBridge Adapter 操作；不要通过子类继承或在 `IEntity` 上增加行为方法来实现玩法。
-- `EntityManager` 当前是纯 C# 最小生命周期注册表，支持 `Spawn / Register / Destroy / Get / GetAll / Clear / BindParentRelationships`。
-- `EntitySpawnConfig` 支持 `ParentEntityId / AutoAddParentRelation / ParentDestroyPolicy / ParentRelationTypes`，生成阶段可自动绑定归属关系。
+- `EntityManager.Spawn / Register / Destroy / Get / GetAll / Clear / BindParentRelationships` 全部使用 typed `EntityId`；内部以 `Dictionary<EntityId, IEntity>` 索引。`EntityManager.Spawn(EntitySpawnConfig)` 在 `EntityId.Empty` 时分配 `EntityId.From(Guid.NewGuid().ToString("N"))`。
+- `EntitySpawnConfig.EntityId / ParentEntityId` 字段类型为 `EntityId`，以 `EntityId.Empty` 表达"未指定"；其余字段 `AutoAddParentRelation / ParentDestroyPolicy / ParentRelationTypes` 不变。
+- Runtime Events `EntitySpawned / EntityDestroyed` payload 携带 `IEntity Entity`（typed `EntityId` 通过 `Entity.EntityId` 暴露）；`RelationshipAdded / RelationshipRemoved` payload 中 `ParentEntityId / ChildEntityId` 字段类型为 typed `EntityId`，`RelationType` 仍为 string。
+- 业务 entity 引用 DataKey 必须是 `DataKey<EntityId?>`：`Projectile.SourceEntity / AbilityEntity / TargetEntity`、`Effect.SourceEntity / AbilityEntity / TargetEntity`、`AI.TargetEntity`。`DataKey<IEntity?>` 不再作为业务 entity-id 引用类型。
+- `RelationshipManager` 内部 API 仍以 string 为 entity-id（P1 范畴未动）；`EntityManager` 与 capability 在调用 `RelationshipManager` 时通过 `entityId.Value` 适配。
 - Godot Node Entity 和 GodotBridge Adapter 生命周期第一版已进入 GodotBridge；对象池、碰撞隔离和复杂 adapter 缓存后续继续迁。`Component` 字样只作为现有类名兼容。
 
 ## Runtime Relationship 契约

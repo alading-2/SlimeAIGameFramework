@@ -15,7 +15,7 @@ public sealed class GodotPhysicsMovementCollisionTargetQuery : IMovementCollisio
     private const int MaxPhysicsResults = 32;
 
     private readonly List<IEntity> candidates = new();
-    private readonly HashSet<string> candidateIds = new(StringComparer.Ordinal);
+    private readonly HashSet<EntityId> candidateIds = new();
     private readonly MovementCollisionRuntimeTargetQuery runtimeFallback = new();
 
     /// <summary>最近一次查询是否成功访问 Godot Physics。</summary>
@@ -47,7 +47,7 @@ public sealed class GodotPhysicsMovementCollisionTargetQuery : IMovementCollisio
         Vector2Value from,
         Vector2Value intended)
     {
-        if (GodotNodeRegistry.GetNodeById(source.EntityId) is not Node2D sourceNode || !sourceNode.IsInsideTree())
+        if (GodotNodeRegistry.GetNodeById(source.EntityId.Value) is not Node2D sourceNode || !sourceNode.IsInsideTree())
         {
             return;
         }

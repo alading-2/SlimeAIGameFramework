@@ -67,7 +67,7 @@ public sealed class FindNearestTargetAction : BehaviorNode
             return AIState.Failure;
         }
 
-        context.Entity.Data.Set(AIDataKeys.TargetEntity, bestTarget);
+        context.Entity.Data.Set<EntityId?>(AIDataKeys.TargetEntity, bestTarget.EntityId);
         context.Entity.Data.Set(AIDataKeys.TargetPosition, bestTarget.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero));
         context.Entity.Data.Set(AIDataKeys.HasTargetPosition, true);
         return AIState.Success;

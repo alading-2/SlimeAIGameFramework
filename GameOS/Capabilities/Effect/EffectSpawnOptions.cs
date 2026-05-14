@@ -17,8 +17,8 @@ public sealed class EffectSpawnOptions
     /// <summary>目标实体。</summary>
     public IEntity? Target { get; init; }
 
-    /// <summary>效果实体 Id；为空时由 EntityManager 生成。</summary>
-    public string? EntityId { get; init; }
+    /// <summary>效果实体 Id；为 <see cref="Runtime.Entity.EntityId.Empty"/> 时由 EntityManager 生成。</summary>
+    public EntityId EntityId { get; init; }
 
     /// <summary>效果资源路径。</summary>
     public string? ScenePath { get; init; }

@@ -8,7 +8,7 @@ public interface IEntity
     /// <summary>
     /// 稳定运行时实体 Id。
     /// </summary>
-    string EntityId { get; }
+    EntityId EntityId { get; }
 
     /// <summary>
     /// 共享运行时状态容器。

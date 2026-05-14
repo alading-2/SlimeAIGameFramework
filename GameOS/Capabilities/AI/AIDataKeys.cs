@@ -14,8 +14,8 @@ public static class AIDataKeys
         defaultValue: true,
         category: AICategory.Runtime);
 
-    /// <summary>当前目标实体。</summary>
-    public static readonly DataKey<IEntity?> TargetEntity = DataKey.Create<IEntity?>("AI.TargetEntity",
+    /// <summary>当前目标实体 Id；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> TargetEntity = DataKey.Create<EntityId?>("AI.TargetEntity",
         defaultValue: null,
         category: AICategory.Runtime);
 

@@ -43,9 +43,9 @@
 | Effect.ScenePath | 特效场景路径 |
 | Effect.Name | 特效名称 |
 | Effect.AnimationName | 动画名称（空表示自动播放） |
-| Effect.SourceEntity | 来源实体 |
-| Effect.AbilityEntity | 关联技能实体 |
-| Effect.TargetEntity | 目标实体 |
+| Effect.SourceEntity | DataKey<EntityId?>；来源实体 Id |
+| Effect.AbilityEntity | DataKey<EntityId?>；关联技能实体 Id |
+| Effect.TargetEntity | DataKey<EntityId?>；目标实体 Id |
 | Effect.Duration | 持续时间（-1 表示不自动销毁） |
 
 ## 7. 挂载的 Component

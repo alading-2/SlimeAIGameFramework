@@ -30,18 +30,18 @@ public static class EffectTool
         var position = options.Target?.Data.Get<Vector2Value>(MovementDataKeys.Position, options.Position)
             ?? options.Position;
 
-        effect.Data.Set(EffectDataKeys.SourceEntity, options.Source);
+        effect.Data.Set(EffectDataKeys.SourceEntity, options.Source.EntityId);
         if (options.Ability != null)
         {
-            effect.Data.Set(EffectDataKeys.AbilityEntity, options.Ability);
+            effect.Data.Set(EffectDataKeys.AbilityEntity, options.Ability.EntityId);
         }
 
         if (options.Target != null)
         {
-            effect.Data.Set(EffectDataKeys.TargetEntity, options.Target);
+            effect.Data.Set(EffectDataKeys.TargetEntity, options.Target.EntityId);
             RelationshipManager.AddRelationship(
-                effect.EntityId,
-                options.Target.EntityId,
+                effect.EntityId.Value,
+                options.Target.EntityId.Value,
                 RelationshipType.Target);
         }
 

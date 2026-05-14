@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.Capabilities.Movement;
 
@@ -20,7 +21,7 @@ public record struct MovementParams
     public Vector2Value? TargetPosition { get; init; } = null;
 
     /// <summary>可选目标实体 Id，用于 AttachToHost 等运行时跟随语义。</summary>
-    public string? TargetEntityId { get; init; } = null;
+    public EntityId? TargetEntityId { get; init; } = null;
 
     /// <summary>本次移动速度，0 表示回退到 DataKey MoveSpeed。</summary>
     public float Speed { get; init; } = 0f;

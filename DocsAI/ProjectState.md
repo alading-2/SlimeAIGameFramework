@@ -1,6 +1,6 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-13
+> 更新日期：2026-05-14（P2a typed EntityId boundary）
 
 ## 当前阶段
 
@@ -10,6 +10,8 @@ Runtime 事件系统已作为 OpenSpec 基线完成：事件 API 换成 type-key
 
 计划系统已切换到 OpenSpec 口径：框架级功能、重构、架构调整、迁移账本和长期实施任务默认进入 `openspec/changes/<change>/`。完成后的要求合入 `openspec/specs/` 作为当前规范基线；旧执行 checklist 和归档历史不再作为 AI 入口保留。
 
+AI-first 重构第一轮**已开始进入实施**：P2a `refactor-runtime-entity-id-typed-value` 已完成代码改动并通过 `Tools/run-build.sh` / `Tools/run-tests.sh` (83/83) / `Tools/run-dataos-validate.sh`，等待 archive；其余 5 个 active change 仍是 proposal/design/specs/tasks，未改代码。本轮在 `openspec/changes/` 摄入 6 个 active change 骨架，全部 `openspec validate --strict` 通过。①`refactor-runtime-relationship-as-lifecycle-tree`（P1）把 `RelationshipManager` 拆为生命周期 `LifecycleTree` 与 typed `DataKey<EntityId?>` / `DataKey<EntityIdList>` 业务引用，删除弱类型 `RelationshipRecord` 字典与所有业务关系类型；②`refactor-runtime-entity-id-typed-value`（P2a，独立）把 `string EntityId` 升级为 typed `EntityId` record struct，专注 wrapper / authoring constants / GUID 切换；③`refactor-runtime-world-facade`（P2b，依赖 P2a）引入 `RuntimeWorld` facade（`Default` 单例 + `CreateScoped()` sandbox + 固定 dispose 顺序与 reset 语义）；④`refactor-runtime-events-purge-game-leakage`（P3）按三桶分类处理 framework Runtime/Events 中 game-leakage 命名事件——Bucket A 死代码（Wave/Game/MouseSelection）直接删除不迁移、Bucket B 真实调用链（InputUseSkill + GodotPlayerInputComponent）迁到 BrotatoLike、Bucket C 框架使用但命名错的事件保留并重命名，禁止框架仓反向依赖游戏 namespace；⑤`refactor-runtime-command-buffer-with-phases`（P4，依赖 P2a/P2b）引入 `SchedulePhase` enum、`RuntimeCommandBuffer` 7 种 typed command record（不包含 Godot 桥接 instantiate / free）、`EnterGuard(reason)` 保护域，合并 `IRuntimeSystem + SystemConfig + SystemDescriptor + SystemRuntimeInfo` 为 `IRuntimeProcess + ProcessRecord`，新增 `CommandPlaybackReport` typed observation；⑥`enhance-ai-feature-development-skill`（P5，依赖 P1/P2a/P2b/P3/P4 archive）把共性教训内化为 `ai-feature-development` skill 的 9 段骨架与 11 个 reference 文件（refactor 决策树、typed value 设计、rename 流水线、framework/game 边界、structural-change-guard、RuntimeWorld facade、lifecycle vs business reference、spec/code 对齐检查、skill 同步纪律 + 已有 validation-closure / framework-research-filter）。实施顺序按 P2a 优先（提供 typed `EntityId` 基础）→ P2b（提供 `RuntimeWorld` facade）→ P1 / P3 并行（互不依赖）→ P4（依赖 P2a/P2b）→ P5（依赖前 5 个 archive）。
+
 DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、Agent Protocol、Observation 和 Godot 场景测试文档集中在 `SlimeAI/DocsAI/`；源码目录只保留允许例外和操作指针。
 
 AI 新功能开发入口已补齐：新增 `.codex/skills/ai-feature-development` 和 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md`，作为每次写新功能、扩展能力、迁移旧逻辑或重构框架行为前的前置入口；该入口强调 AI 可路由、可验证、可观察优先，不为旧框架兼容保留新入口，并把纯 Runtime / DataOS tooling 的普通数据处理收束到 C# 标准库和框架 API。该入口现已补功能收尾闸门：新功能必须补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态和 owner skill 统一源。
@@ -18,14 +20,16 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 
 ## 下一步
 
-1. 继续扩大 DataOS 迁移范围：旧 DataNew 剩余字段、剩余被动 Feature actions，以及尚未接线的具体 Ability / Feature handler 参数。
-2. 继续把 BrotatoLike 真实 UI、SpawnSystem 专项场景和更细的输入专项测试接入统一 Godot scene runner 和 Observation artifact；普通主场景可玩切片和 smoke 已有 PASS artifact。
-3. 推进 DataOS snapshot 到真实 UI 和更多游戏场景内容；真实主场景 / 生成系统入口已有第一批 DataOS 驱动证据。
-4. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SlimeAI/Resources/Engine/Engine/godot-4.6.2-stable`。
-5. 将后续框架级计划按 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
+1. 推进 AI-first 重构第一轮 6 个 active change 进入实施：先 P2a `refactor-runtime-entity-id-typed-value`（typed `EntityId` wrapper），再 P2b `refactor-runtime-world-facade`（`RuntimeWorld.Default / CreateScoped()` facade，依赖 P2a），并行 P1 `refactor-runtime-relationship-as-lifecycle-tree` 与 P3 `refactor-runtime-events-purge-game-leakage`（互不依赖），再 P4 `refactor-runtime-command-buffer-with-phases`（依赖 P2a/P2b），最后 P5 `enhance-ai-feature-development-skill`（需前 5 个 archive 后引用真实事实）。
+2. 继续扩大 DataOS 迁移范围：旧 DataNew 剩余字段、剩余被动 Feature actions，以及尚未接线的具体 Ability / Feature handler 参数。
+3. 继续把 BrotatoLike 真实 UI、SpawnSystem 专项场景和更细的输入专项测试接入统一 Godot scene runner 和 Observation artifact；普通主场景可玩切片和 smoke 已有 PASS artifact。
+4. 推进 DataOS snapshot 到真实 UI 和更多游戏场景内容；真实主场景 / 生成系统入口已有第一批 DataOS 驱动证据。
+5. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SlimeAI/Resources/Engine/Engine/godot-4.6.2-stable`。
+6. 将后续框架级计划按 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
 
 ## 风险
 
+- P2a typed `EntityId` 已完成框架与 tests 适配，`RelationshipManager` 内部仍是 string-based（P1 范畴未动），调用面通过 `entityId.Value` 适配；`runtime-relationship-as-lifecycle-tree`（P1）将彻底替换 `RelationshipManager` 为 typed `LifecycleTree`。BrotatoLike submodule 同步与 Godot smoke 验证仍待执行。
 - Godot Node 对象池碰撞隔离已有第一版 API，并已通过 BrotatoLike Godot headless smoke；PhysicsServer2D trace 尚未接入。
 - 当前碰撞隔离已覆盖 `CollisionObject2D` 根节点脱树、泊车、layer/mask 清零、Area2D monitoring/monitorable 和 CollisionShape/Polygon 禁用；PhysicsServer2D trace 尚未接入。
 - Relationship / Schedule 已迁入纯 C# 最小内核；ScheduleDataKeys 和 BrotatoLike 第一批系统配置 / 预设 / Spawn config 已进入 DataOS snapshot，但尚未接完整 RuntimeSchedule 自动装载。
@@ -50,6 +54,17 @@ Tools/run-build.sh
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
+
+### P2a typed EntityId 实施验证
+
+```bash
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-build.sh             # PASS
+Tools/run-tests.sh             # 83/83 PASS（含 4 个新增 EntityIdTests）
+Tools/run-dataos-validate.sh   # PASS
+```
+
+BrotatoLike build / Godot smoke 与 submodule 指针更新仍待执行（task 9）。
 
 结果：Runtime 行为测试全部 PASS，DataOS schema / descriptor / manifest 验证 PASS；BrotatoLike build PASS，`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，analyzer 输出 `status: pass`、`firstError: none`。typed loader 曾捕获 `Movement.OrbitTotalAngle` descriptor default drift，修正 seed mirror 后通过。
 

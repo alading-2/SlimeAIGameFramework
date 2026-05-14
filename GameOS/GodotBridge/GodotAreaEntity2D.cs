@@ -36,9 +36,10 @@ public partial class GodotAreaEntity2D : Area2D, IEntity
     public bool AutoRegisterComponents { get; set; } = true;
 
     /// <inheritdoc />
-    public string EntityId => string.IsNullOrWhiteSpace(EntityIdOverride)
-        ? GodotNodeRegistry.GetNodeInstanceId(this)
-        : EntityIdOverride;
+    public EntityId EntityId => EntityId.From(
+        string.IsNullOrWhiteSpace(EntityIdOverride)
+            ? GodotNodeRegistry.GetNodeInstanceId(this)
+            : EntityIdOverride);
 
     /// <inheritdoc />
     public Data Data { get; }

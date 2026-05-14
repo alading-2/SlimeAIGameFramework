@@ -1,5 +1,6 @@
 using System;
 using SlimeAI.GameOS.Capabilities.Collision;
+using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.Capabilities.Movement;
 
@@ -22,7 +23,7 @@ public readonly record struct MovementCollisionParams
     public MovementCollisionTargetMatchMode TargetMatchMode { get; init; } = MovementCollisionTargetMatchMode.Any;
 
     /// <summary>TargetMatchMode 为 SpecificEntity 时使用的目标实体 Id。</summary>
-    public string? SpecificTargetEntityId { get; init; } = null;
+    public EntityId? SpecificTargetEntityId { get; init; } = null;
 
     /// <summary>覆盖移动实体半径，-1 表示读取 CollisionDataKeys.CollisionRadius。</summary>
     public float SourceRadiusOverride { get; init; } = -1f;

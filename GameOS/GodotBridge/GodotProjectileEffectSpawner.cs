@@ -22,7 +22,7 @@ public partial class GodotProjectileEffectSpawner : Node
     private IDisposable? projectileSpawnedToken;
     private IDisposable? effectSpawnedToken;
     private IDisposable? entityDestroyedToken;
-    private readonly HashSet<string> spawnedVisualEntityIds = new(StringComparer.Ordinal);
+    private readonly HashSet<EntityId> spawnedVisualEntityIds = new();
 
     /// <summary>
     /// 是否进入 SceneTree 后自动订阅 Runtime 事件。
@@ -110,13 +110,13 @@ public partial class GodotProjectileEffectSpawner : Node
             return;
         }
 
-        var node = GodotNodeRegistry.GetNodeById(data.Entity.EntityId);
+        var node = GodotNodeRegistry.GetNodeById(data.Entity.EntityId.Value);
         if (node == null)
         {
             return;
         }
 
-        GodotNodeRegistry.Unregister(node, data.Entity.EntityId);
+        GodotNodeRegistry.Unregister(node, data.Entity.EntityId.Value);
         if (node.IsInsideTree() && !node.IsQueuedForDeletion())
         {
             node.QueueFree();
@@ -143,10 +143,10 @@ public partial class GodotProjectileEffectSpawner : Node
         }
 
         var node = scene.Instantiate();
-        node.Name = $"{kind}_{entity.EntityId}";
+        node.Name = $"{kind}_{entity.EntityId.Value}";
         ApplyInitialPosition(node, position);
         parent.AddChild(node);
-        if (GodotNodeRegistry.Register(node, entity.EntityId))
+        if (GodotNodeRegistry.Register(node, entity.EntityId.Value))
         {
             spawnedVisualEntityIds.Add(entity.EntityId);
             return node;
