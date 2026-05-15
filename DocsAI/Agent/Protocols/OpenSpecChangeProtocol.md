@@ -33,6 +33,7 @@ openspec/changes/<change>/
 
 ## 默认流程
 
+0. 任务入口：AI 接到框架功能、重构、迁移或 bugfix 任务后，先读 `ai-feature-development` skill（统一源 `.ai-config/skills/ai/ai-feature-development/SKILL.md`，工具副本 `.codex/skills/ai-feature-development`），再判断是否进入 OpenSpec。
 1. 探索问题：使用 `openspec-explore` 或普通分析，允许读取代码和文档，不直接改实现。
 2. 创建计划：使用 `openspec-propose` 建立 change，并补齐 schema 要求的 artifact。
 3. 实施任务：使用 `openspec-apply-change`，实施前读取 CLI 返回的 `contextFiles`。

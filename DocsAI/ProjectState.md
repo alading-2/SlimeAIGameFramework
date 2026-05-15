@@ -1,6 +1,6 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-15（P4 Runtime CommandBuffer + Phase 已 archived；P5 ai-feature-development skill enhancement 下一步 active）
+> 更新日期：2026-05-15（P5 ai-feature-development skill enhancement 已 archived；第一轮 AI-first Runtime 重构完成）
 
 ## 当前阶段
 
@@ -10,17 +10,17 @@ Runtime 事件系统已作为 OpenSpec 基线完成：事件 API 换成 type-key
 
 计划系统已切换到 OpenSpec 口径：框架级功能、重构、架构调整、迁移账本和长期实施任务默认进入 `openspec/changes/<change>/`。第一轮 AI-first Runtime 大重构的总体纲领和当前进度维护在工作区根 `openspec/Plan/2026-05-15-ai-first-runtime-refactor-plan.md`；完成后的要求合入 `openspec/specs/` 作为当前规范基线；旧执行 checklist 和归档历史不再作为 AI 入口保留。
 
-AI-first 重构第一轮**正在实施**：P2a `refactor-runtime-entity-id-typed-value` 已完成并 archived，typed `EntityId` baseline 已合入 `openspec/specs/runtime-entity-identity/spec.md`；P1 `refactor-runtime-relationship-as-lifecycle-tree` 已完成并 archived，`RelationshipManager / RelationshipType / RelationshipRecord` 已删除，LifecycleTree 与 typed business reference baseline 已合入 `openspec/specs/runtime-relationship-lifecycle/spec.md` 和 `openspec/specs/runtime-business-entity-references/spec.md`；P2b `refactor-runtime-world-facade` 已完成并 archived，`RuntimeWorld.Default / CreateScoped()` 与 world-scoped Entity / Lifecycle / Events / Resources / Pools baseline 已合入 `openspec/specs/runtime-world-container/spec.md`；P3 `refactor-runtime-events-purge-game-leakage` 已完成并 archived，game-leakage cleanup baseline 已合入 `openspec/specs/runtime-event-game-leakage-cleanup/spec.md`，`runtime-event-system` baseline 已强化事件归属边界；P4 `refactor-runtime-command-buffer-with-phases` 已完成并 archived，`SchedulePhase`、`RuntimeCommandBuffer` 8 种 typed command kind（包含 `GodotNodeInstantiate / GodotNodeFree`）、`EnterGuard(reason)` 保护域、`RuntimeWorld.Commands / Schedule` 与 `CommandPlaybackReport` typed observation 已合入 `openspec/specs/runtime-command-buffer/spec.md` 和 `openspec/specs/runtime-schedule-phase/spec.md`。P4 **未做** `IRuntimeSystem -> IRuntimeProcess` rename，也未合并 `SystemConfig + SystemDescriptor + SystemRuntimeInfo`，这两项列入 future backlog。当前下一 active change 为 `enhance-ai-feature-development-skill`（P5），依赖 P1/P2a/P2b/P3/P4 archive 已满足。
+AI-first Runtime 重构第一轮**已完成**：P2a `refactor-runtime-entity-id-typed-value` 已完成并 archived，typed `EntityId` baseline 已合入 `openspec/specs/runtime-entity-identity/spec.md`；P1 `refactor-runtime-relationship-as-lifecycle-tree` 已完成并 archived，`RelationshipManager / RelationshipType / RelationshipRecord` 已删除，LifecycleTree 与 typed business reference baseline 已合入 `openspec/specs/runtime-relationship-lifecycle/spec.md` 和 `openspec/specs/runtime-business-entity-references/spec.md`；P2b `refactor-runtime-world-facade` 已完成并 archived，`RuntimeWorld.Default / CreateScoped()` 与 world-scoped Entity / Lifecycle / Events / Resources / Pools baseline 已合入 `openspec/specs/runtime-world-container/spec.md`；P3 `refactor-runtime-events-purge-game-leakage` 已完成并 archived，game-leakage cleanup baseline 已合入 `openspec/specs/runtime-event-game-leakage-cleanup/spec.md`，`runtime-event-system` baseline 已强化事件归属边界；P4 `refactor-runtime-command-buffer-with-phases` 已完成并 archived，`SchedulePhase`、`RuntimeCommandBuffer` 8 种 typed command kind（包含 `GodotNodeInstantiate / GodotNodeFree`）、`EnterGuard(reason)` 保护域、`RuntimeWorld.Commands / Schedule` 与 `CommandPlaybackReport` typed observation 已合入 `openspec/specs/runtime-command-buffer/spec.md` 和 `openspec/specs/runtime-schedule-phase/spec.md`；P5 `enhance-ai-feature-development-skill` 已完成并 archived，`ai-feature-development-skill` baseline 已合入 `openspec/specs/ai-feature-development-skill/spec.md`，`.ai-config/skills/ai/ai-feature-development/` 现在固定 9 段 SKILL.md 与 11 个 references。P4 **未做** `IRuntimeSystem -> IRuntimeProcess` rename，也未合并 `SystemConfig + SystemDescriptor + SystemRuntimeInfo`，这两项列入 future backlog，后续必须新建 OpenSpec change。
 
 DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、Agent Protocol、Observation 和 Godot 场景测试文档集中在 `SlimeAI/DocsAI/`；源码目录只保留允许例外和操作指针。
 
-AI 新功能开发入口已补齐：新增 `.codex/skills/ai-feature-development` 和 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md`，作为每次写新功能、扩展能力、迁移旧逻辑或重构框架行为前的前置入口；该入口强调 AI 可路由、可验证、可观察优先，不为旧框架兼容保留新入口，并把纯 Runtime / DataOS tooling 的普通数据处理收束到 C# 标准库和框架 API。该入口现已补功能收尾闸门：新功能必须补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态和 owner skill 统一源。
+AI 新功能开发入口已补齐：统一源为 `.ai-config/skills/ai/ai-feature-development/`，同步副本为 `.codex/skills/ai-feature-development` / `.claude/skills/ai-feature-development` / `.windsurf/skills/ai-feature-development`，协议入口为 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md`。P5 后 SKILL.md 固定为 9 段：目标、入口顺序、设计规则、文件修改前、实现优先级、功能收尾、验证、Skill 同步、完成检查；references 固定为 11 个文件，覆盖 validation closure、framework research filter、refactor decision tree、typed value、rename pipeline、framework/game boundary、structural guard、RuntimeWorld facade、lifecycle/business reference、spec/code alignment、skill sync discipline。该入口强调 AI 可路由、可验证、可观察优先，不为旧框架兼容保留新入口；新功能必须补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态和 owner skill 统一源。
 
 GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
 
 ## 下一步
 
-1. 按 `openspec/Plan/2026-05-15-ai-first-runtime-refactor-plan.md` 推进剩余 AI-first Runtime 重构：下一步执行 P5 `enhance-ai-feature-development-skill`。
+1. 第一轮 AI-first Runtime 重构已收尾；后续 `IRuntimeSystem -> IRuntimeProcess`、`SystemConfig + SystemDescriptor + SystemRuntimeInfo` 合并等 backlog 必须新建 OpenSpec change，不得混入普通功能任务。
 2. 继续扩大 DataOS 迁移范围：旧 DataNew 剩余字段、剩余被动 Feature actions，以及尚未接线的具体 Ability / Feature handler 参数。
 3. 继续把 BrotatoLike 真实 UI、SpawnSystem 专项场景和更细的输入专项测试接入统一 Godot scene runner 和 Observation artifact；普通主场景可玩切片和 smoke 已有 PASS artifact。
 4. 推进 DataOS snapshot 到真实 UI 和更多游戏场景内容；真实主场景 / 生成系统入口已有第一批 DataOS 驱动证据。
@@ -167,6 +167,20 @@ openspec validate --specs --strict
 ```
 
 结果：P4 delta specs 已合入 `openspec/specs/runtime-command-buffer/spec.md` 和 `openspec/specs/runtime-schedule-phase/spec.md`；`openspec validate --specs --strict` 输出 `27 passed, 0 failed`。
+
+### P5 ai-feature-development skill enhancement 验证（2026-05-15）
+
+```bash
+cd /home/slime/Code/SkilmeAI
+openspec validate enhance-ai-feature-development-skill --strict
+openspec list --json
+find .ai-config/skills/ai/ai-feature-development/references -type f -name '*.md' | sort
+bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
+openspec archive enhance-ai-feature-development-skill -y
+openspec validate --specs --strict
+```
+
+结果：P5 delta spec 已合入 `openspec/specs/ai-feature-development-skill/spec.md`；`openspec validate --specs --strict` 输出 `28 passed, 0 failed`。`ai-feature-development` 统一源和 `.codex/.claude/.windsurf` 副本均包含 11 个 reference 文件；本变更为 skill / DocsAI / OpenSpec 文档改动，未触及框架代码，未运行框架 build/tests。
 
 结果：Runtime 行为测试全部 PASS，DataOS schema / descriptor / manifest 验证 PASS；BrotatoLike build PASS，`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，analyzer 输出 `status: pass`、`firstError: none`。typed loader 曾捕获 `Movement.OrbitTotalAngle` descriptor default drift，修正 seed mirror 后通过。
 

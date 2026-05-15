@@ -1,6 +1,6 @@
 # Agent
 
-`Agent` 存放 SlimeAI 的通用 AI 工作流协议文档。可执行 skill 的唯一源头在仓库根 `.codex/skills/`。
+`Agent` 存放 SlimeAI 的通用 AI 工作流协议文档。可维护 skill 的唯一源头在工作区根 `.ai-config/skills/`；`.codex/skills/`、`.claude/skills/`、`.windsurf/skills/` 是同步生成副本。
 
 ## 子域
 
@@ -14,6 +14,22 @@
 - `Protocols/OpenSpecChangeProtocol.md`：框架级计划事实源和 change 生命周期协议。
 
 后续长期任务默认进入 `openspec/changes/<change>/`。`plan` / `ralplan` 只作为澄清、评审和风险收敛手段；需要落盘时写入 OpenSpec artifact。
+
+## ai-feature-development reference 清单
+
+统一源路径：`.ai-config/skills/ai/ai-feature-development/`。工具副本路径：`.codex/skills/ai-feature-development/`、`.claude/skills/ai-feature-development/`、`.windsurf/skills/ai-feature-development/`。
+
+- `.ai-config/skills/ai/ai-feature-development/references/validation-closure.md`
+- `.ai-config/skills/ai/ai-feature-development/references/framework-research-filter.md`
+- `.ai-config/skills/ai/ai-feature-development/references/refactor-decision-tree.md`
+- `.ai-config/skills/ai/ai-feature-development/references/typed-value-design.md`
+- `.ai-config/skills/ai/ai-feature-development/references/rename-pipeline.md`
+- `.ai-config/skills/ai/ai-feature-development/references/framework-game-boundary.md`
+- `.ai-config/skills/ai/ai-feature-development/references/structural-change-guard.md`
+- `.ai-config/skills/ai/ai-feature-development/references/runtime-world-facade.md`
+- `.ai-config/skills/ai/ai-feature-development/references/lifecycle-vs-business-reference.md`
+- `.ai-config/skills/ai/ai-feature-development/references/spec-code-alignment-check.md`
+- `.ai-config/skills/ai/ai-feature-development/references/skill-sync-discipline.md`
 
 ## Runtime World 入口
 

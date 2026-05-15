@@ -68,4 +68,4 @@
 - 测试和验证：`DocsAI/Tests/*`、Godot scene artifact 说明。
 - 当前阶段变化：`DocsAI/ProjectState.md`。
 
-Skill 的唯一维护源是工作区 `.ai-config/skills/<category>/<name>/SKILL.md`；修改后运行 `bash Tools/ai-config-sync/sync-ai-config.sh` 生成 `.codex/.claude/.windsurf` 副本，不直接手改副本。
+Skill 的唯一维护源是工作区 `.ai-config/skills/<category>/<name>/SKILL.md`；修改后运行 `bash Workspace/Tools/ai-config-sync/sync-ai-config.sh` 生成 `.codex/.claude/.windsurf` 副本，不直接手改副本。
