@@ -155,6 +155,8 @@ Event dump MUST 能区分：
 - 同类型嵌套被 reentry guard 跳过（per-bus）。
 - handler 抛异常被 `EventBusObservation` 捕获。
 
+EventBus dump 可以记录游戏侧事件类型，但框架 Observation 契约不把游戏专属事件列为 framework API。P3 `refactor-runtime-events-purge-game-leakage` 后，`InputUseSkill / InputPreviousSkill / InputNextSkill` 属于 `Games/BrotatoLike/Src/Game/Event/BrotatoLikeInputEvents.cs`；`MouseSelection* / Wave* / GameStart / GameOver / GamePause / GameResume` 已删除且无替换事件。排查事件缺失时先确认事件归属，不要把 BrotatoLike 事件重新加回 `SlimeAI/GameOS/Runtime/Events/`。
+
 字段：
 
 | 字段 | 类型 | 说明 |

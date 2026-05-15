@@ -100,8 +100,8 @@
 | `SlimeAI.GameOS.Runtime.Pool.ObjectPoolManager` | static class | runtime-world | 对象池注册和归还 static facade，转发到 `RuntimeWorld.Default.Pools`。 |
 | `SlimeAI.GameOS.Runtime.Timer.GameTimer` | class | migrated | 可池化运行时计时器。 |
 | `SlimeAI.GameOS.Runtime.Timer.TimerManager` | class | migrated | 由外部 Tick 驱动的计时器管理器。 |
-| `SlimeAI.GameOS.Runtime.Events.Core` | namespace | migrated | Runtime 基础事件 payload：`EntitySpawned / EntityDestroyed / DataPropertyChanged / LifecycleChildAttached / LifecycleChildDetached / InputUseSkill / InputNextSkill / InputPreviousSkill`。 |
-| `SlimeAI.GameOS.Runtime.Events.Global` | namespace | migrated | 全局低频事件 payload：`WaveStarted / WaveCompleted / GameStart / GamePause / GameResume / GameOver / MouseSelection*`。 |
+| `SlimeAI.GameOS.Runtime.Events.Core` | namespace | migrated | Runtime 基础事件 payload：`EntitySpawned / EntityDestroyed / DataPropertyChanged / LifecycleChildAttached / LifecycleChildDetached`。BrotatoLike 主动技能输入事件已迁出框架，见 `Games/BrotatoLike/Src/Game/Event/BrotatoLikeInputEvents.cs`。 |
+| `SlimeAI.GameOS.Runtime.Events.Global` | namespace | reserved-empty | 当前无 framework-owned 全局 payload。Bucket A 旧事件 `MouseSelectionCompleted / MouseSelectionMissed / MouseSelectionPreviewUpdated / WaveStarted / WaveCompleted / GameStart / GameOver / GamePause / GameResume` 已删除，未在游戏侧创建替换。 |
 | `SlimeAI.GameOS.Capabilities.Movement.Events` | namespace | migrated | Movement Capability 事件 payload：`Started / Stopped / Collision`。 |
 | `SlimeAI.GameOS.Capabilities.Collision.Events` | namespace | bootstrap | Collision Capability 事件 payload：`Entered / Exited / HurtboxEntered / HurtboxExited`。 |
 | `SlimeAI.GameOS.Capabilities.Attack.Events` | namespace | bootstrap | Attack Capability 事件 payload：`Requested / Started / Finished / Cancelled / CancelRequested`。 |

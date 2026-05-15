@@ -161,6 +161,8 @@
 - 同类型嵌套 Publish 被阻断：per-bus 检测到正在派发的 `T` 时记录 reentry、log Error、return；跨类型级联和不同 bus 上的同类型 Publish 仍允许。
 - 订阅顺序等于注册顺序；退订唯一路径是 Dispose 由 `Subscribe` 返回的 token。handler 异常被 `EventBusObservation` 捕获，不会中断其他 handler。
 - `WorldEvents.World` 是 `RuntimeWorld.Default.Events` 的静态访问点；Capability 事件按目录组织在 `SlimeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SlimeAI/GameOS/Runtime/Events/{Core,Global}/`。
+- Framework Runtime/Events 只持有跨游戏 profile 有意义、且 payload 不直接依赖 Godot 引擎类型的事件。带具体游戏玩法术语或 Godot `Vector2 / Rect2 / Node` 等字段的事件必须放在 `Games/<Game>/Src/Game/Event/`；完整决策树见 `DocsAI/Agent/Protocols/FrameworkVsGameBoundary.md#事件归属决策树`。
+- P3 `refactor-runtime-events-purge-game-leakage` 已删除 Bucket A 死代码事件 `MouseSelectionCompleted / MouseSelectionMissed / MouseSelectionPreviewUpdated / WaveStarted / WaveCompleted / GameStart / GameOver / GamePause / GameResume`，未创建游戏侧替换；Bucket B `InputUseSkill / InputPreviousSkill / InputNextSkill` 已迁到 `Games/BrotatoLike/Src/Game/Event/BrotatoLikeInputEvents.cs`。
 - `ExportObservation` 写 `eventbus-dump.json`，字段覆盖 `schemaVersion`、`busName`、`generatedAtUtc`、`subscriptions`、`emittedCounts`、`sameTypeReentryBlockedCounts`、`handlerExceptions`、`handlerRegistrationOrder`。
 
 ## Runtime Entity 契约
