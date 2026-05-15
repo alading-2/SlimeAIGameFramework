@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | `Runtime Entity` | `IEntity`、`RuntimeEntity`、`EntityManager`、`Entity` | 运行时对象身份容器，暴露 `EntityId + Data + Events`；不是 archetype entity 或行为 owner。 |
 | `Runtime World` | `RuntimeWorld`、`RuntimeWorld.Default`、`RuntimeWorld.CreateScoped`、`WorldEvents.World` | GameOS Runtime 状态容器；`Default` 承载旧 static facade，`CreateScoped()` 用于测试沙箱。 |
+| `Runtime CommandBuffer` | `RuntimeCommandBuffer`、`DeferredRuntimeCommand`、`SchedulePhase`、`IStructuralChangeGuard` | guard 内结构变更的 typed deferred queue；phase playback 只播放 CommandBuffer，不 tick capability。 |
 | `Runtime Data / DataKey` | `Data`、`DataKey<T>`、`DataCatalog`、`DataSlot`、历史 `Component` 搜索 | 状态契约和 typed 读写入口；不是 ECS component storage。 |
 | `Capability` | `Movement`、`Damage`、`Ability`、`Feature` 等 Capability API | 玩法组合和所有权单元；行为进入 service、tool、handler、DataKey、Event 或 selector。 |
 | `GodotBridge Adapter` | `IGodotComponent`、`Godot*Component`、`AttackComponent`、`Component` | Godot Node 生命周期/输入/物理/表现桥接；旧符号是 compatibility name，不是传统 ECS data component。 |
@@ -23,7 +24,7 @@
 | `GameOSInfo.FrameworkId` | const string | stable | `SlimeAI.GameOS`。 |
 | `GameOSInfo.Version` | const string | bootstrap | 当前框架版本。 |
 | `GameOSInfo.Stage` | const string | bootstrap | 当前迁移阶段。 |
-| `SlimeAI.GameOS.Runtime.World.RuntimeWorld` | class | runtime-world | GameOS Runtime 世界容器；公开 `Default / CreateScoped / Entities / Lifecycle / Events / Resources / Pools / IsDefault / IsDisposed`。 |
+| `SlimeAI.GameOS.Runtime.World.RuntimeWorld` | class | runtime-world | GameOS Runtime 世界容器；公开 `Default / CreateScoped / Entities / Lifecycle / Events / Resources / Pools / Schedule / Commands / IsDefault / IsDisposed`。 |
 | `RuntimeWorld.Default` | static property | runtime-world | 进程级 eager singleton；现有 static facade 全部转发到此实例。 |
 | `RuntimeWorld.CreateScoped()` | static method | runtime-world | 创建独立 sandbox world；测试和局部运行域优先使用。 |
 | `RuntimeWorld.Entities` | property | runtime-world | 当前 world 的 `IEntityRegistry` 句柄。 |
@@ -31,11 +32,15 @@
 | `RuntimeWorld.Events` | property | runtime-world | 当前 world 的 `IWorldEventBus` 句柄。 |
 | `RuntimeWorld.Resources` | property | runtime-world | 当前 world 的 `IResourceCatalog` 句柄。 |
 | `RuntimeWorld.Pools` | property | runtime-world | 当前 world 的 `IObjectPoolManager` 句柄。 |
+| `RuntimeWorld.Schedule` | property | runtime-world | 当前 world 的 `IRuntimeSchedule` 句柄；phase playback 入口。 |
+| `RuntimeWorld.Commands` | property | runtime-world | 当前 world 的 `IRuntimeCommandBuffer` 句柄；guard 与 deferred command queue。 |
 | `SlimeAI.GameOS.Runtime.World.IEntityRegistry` | interface | internal-only abstraction | RuntimeWorld 组合用实体注册表句柄；不支持外部自定义实现或 mock。 |
 | `SlimeAI.GameOS.Runtime.World.ILifecycleTree` | interface | internal-only abstraction | RuntimeWorld 组合用 lifecycle 树句柄；不支持外部自定义实现或 mock。 |
 | `SlimeAI.GameOS.Runtime.World.IWorldEventBus` | interface | internal-only abstraction | RuntimeWorld 组合用 world event bus 句柄；不支持外部自定义实现或 mock。 |
 | `SlimeAI.GameOS.Runtime.World.IResourceCatalog` | interface | internal-only abstraction | RuntimeWorld 组合用资源目录句柄；不支持外部自定义实现或 mock。 |
 | `SlimeAI.GameOS.Runtime.World.IObjectPoolManager` | interface | internal-only abstraction | RuntimeWorld 组合用对象池管理句柄；不支持外部自定义实现或 mock。 |
+| `SlimeAI.GameOS.Runtime.World.IRuntimeSchedule` | interface | internal-only abstraction | RuntimeWorld 组合用调度句柄，包含现有 schedule API 与 `RunPhase`。 |
+| `SlimeAI.GameOS.Runtime.World.IRuntimeCommandBuffer` | interface | internal-only abstraction | RuntimeWorld 组合用 CommandBuffer 句柄，公开 `Snapshot / Enqueue / Playback / EnterGuard / Clear`。 |
 | `SlimeAI.GameOS.Runtime.Data.Data` | class | typed-contract | 运行时 typed 数据容器，绑定 `DataCatalog`，公开 `DataKey<T>` 读写 API。 |
 | `SlimeAI.GameOS.Runtime.Data.DataKey<T>` | class | typed-contract | 业务 Data 访问入口，定义 stable key、runtime default、类型、分类、modifier/computed 规则。 |
 | `SlimeAI.GameOS.Runtime.Data.IDataKey` | interface | typed-contract | Catalog、snapshot、debug 边界使用的非泛型只读 DataKey 视图。 |
@@ -87,7 +92,17 @@
 | `SlimeAI.GameOS.Runtime.Schedule.ScheduleDataKeys` | static class | bootstrap | Runtime Process 配置、preset 和 Spawn config 使用的 Runtime DataKey。 |
 | `SlimeAI.GameOS.Runtime.Schedule.IRuntimeSystem` | interface | migrated | Runtime Process 生命周期协议的 legacy compatibility name。 |
 | `SlimeAI.GameOS.Runtime.Schedule.IRuntimeCommandHandler<TRequest,TResult>` | interface | migrated | Runtime Process 命令处理协议。 |
-| `SlimeAI.GameOS.Runtime.Schedule.RuntimeSchedule` | class | migrated | 纯 C# Runtime 调度器。 |
+| `SlimeAI.GameOS.Runtime.Schedule.SchedulePhase` | enum | runtime-command-buffer | CommandBuffer playback phase：BeginTick / BeforeSystemTick / AfterSystemTick / AfterEventDispatch / EndOfFrame / Manual。 |
+| `SlimeAI.GameOS.Runtime.Schedule.RuntimeSchedule` | class | migrated | 纯 C# Runtime 调度器；`RunPhase(SchedulePhase)` 只触发 CommandBuffer playback。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredCommandKind` | enum | runtime-command-buffer | 第一阶段 8 种 deferred command：Spawn / Destroy / Attach / Detach / QueuedEvent / ResourceRequest / GodotNodeInstantiate / GodotNodeFree。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredCommandStatus` | enum | runtime-command-buffer | Command playback 状态：Pending / Played / Failed / Skipped。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredCommandFailureReason` | enum | runtime-command-buffer | Command playback 失败原因，包含 MissingTargetEntity / DuplicateEntityId / BridgeTargetUnavailable / WorldDisposing 等。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredRuntimeCommand` | readonly record struct | runtime-command-buffer | typed nullable payload fields + meta；通过 `ForSpawn / ForDestroy / ForAttach / ForDetach / ForQueuedEvent / ForResourceRequest / ForGodotInstantiate / ForGodotFree` 构造。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.CommandPlaybackReport` | record | runtime-command-buffer | phase playback 报告：Queued / Played / Failed / Skipped counts、DurationMs、Commands。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.CommandPlaybackEntry` | record struct | runtime-command-buffer | 单条 command 的 meta、typed payload、CreatedEntityId、Status、FailureReason。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.IStructuralChangeGuard` | interface | runtime-command-buffer | `EnterGuard(reason)` 返回的受保护区域句柄。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.RuntimeCommandBuffer` | class | runtime-command-buffer | RuntimeWorld 持有的 deferred queue；支持 guard、phase playback、dispose discard report。 |
+| `SlimeAI.GameOS.Runtime.CommandBuffer.IGodotNodeCommandHandler` | interface | runtime-command-buffer | GodotNodeInstantiate / GodotNodeFree 的可注入 bridge handler；默认未注入时返回 `BridgeTargetUnavailable`。 |
 | `SlimeAI.GameOS.Runtime.Resource.ResourceCategory` | enum | migrated | 资源分类。 |
 | `SlimeAI.GameOS.Runtime.Resource.ResourceData` | record struct | migrated | 资源映射条目。 |
 | `SlimeAI.GameOS.Runtime.Resource.ResourceCatalog` | static class | runtime-world | 资源键到路径映射 static facade，转发到 `RuntimeWorld.Default.Resources`。 |

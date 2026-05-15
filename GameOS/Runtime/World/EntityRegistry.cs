@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Runtime.CommandBuffer;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.Schedule;
 
 namespace SlimeAI.GameOS.Runtime.World;
 
@@ -13,18 +15,30 @@ public sealed class EntityRegistry : IEntityRegistry
     private readonly Dictionary<EntityId, IEntity> entities = new();
     private readonly ILifecycleTree lifecycle;
     private readonly IWorldEventBus events;
+    private readonly RuntimeCommandBuffer commands;
 
     /// <summary>
     /// 创建实体注册表实例。
     /// </summary>
-    public EntityRegistry(ILifecycleTree lifecycle, IWorldEventBus events)
+    public EntityRegistry(ILifecycleTree lifecycle, IWorldEventBus events, RuntimeCommandBuffer commands)
     {
         this.lifecycle = lifecycle ?? throw new ArgumentNullException(nameof(lifecycle));
         this.events = events ?? throw new ArgumentNullException(nameof(events));
+        this.commands = commands ?? throw new ArgumentNullException(nameof(commands));
     }
 
     /// <inheritdoc />
     public RuntimeEntity Spawn(EntitySpawnConfig config = default)
+    {
+        if (commands.IsGuarded && !commands.IsPlayingBack)
+        {
+            return SpawnDeferred(config);
+        }
+
+        return SpawnImmediate(config);
+    }
+
+    internal RuntimeEntity SpawnImmediate(EntitySpawnConfig config = default)
     {
         var entityId = config.EntityId.IsEmpty
             ? EntityId.From(Guid.NewGuid().ToString("N"))
@@ -39,6 +53,11 @@ public sealed class EntityRegistry : IEntityRegistry
     /// <inheritdoc />
     public bool Register(IEntity entity)
     {
+        return RegisterImmediate(entity);
+    }
+
+    internal bool RegisterImmediate(IEntity entity)
+    {
         ArgumentNullException.ThrowIfNull(entity);
         if (entities.ContainsKey(entity.EntityId))
         {
@@ -52,6 +71,22 @@ public sealed class EntityRegistry : IEntityRegistry
 
     /// <inheritdoc />
     public bool Destroy(EntityId entityId)
+    {
+        if (commands.IsGuarded && !commands.IsPlayingBack)
+        {
+            if (entityId.IsEmpty)
+            {
+                return false;
+            }
+
+            commands.Enqueue(DeferredRuntimeCommand.ForDestroy(entityId, SchedulePhase.EndOfFrame));
+            return true;
+        }
+
+        return DestroyImmediate(entityId);
+    }
+
+    internal bool DestroyImmediate(EntityId entityId)
     {
         if (!entities.TryGetValue(entityId, out var entity))
         {
@@ -116,6 +151,23 @@ public sealed class EntityRegistry : IEntityRegistry
         }
 
         return lifecycle.Attach(parentEntityId, childEntityId, parentDestroyPolicy);
+    }
+
+    internal bool Contains(EntityId entityId)
+    {
+        return entities.ContainsKey(entityId);
+    }
+
+    private RuntimeEntity SpawnDeferred(EntitySpawnConfig config)
+    {
+        var entityId = config.EntityId.IsEmpty
+            ? EntityId.From(Guid.NewGuid().ToString("N"))
+            : config.EntityId;
+        var reservedConfig = config with { EntityId = entityId };
+        var entity = new RuntimeEntity(entityId, reservedConfig.DataCatalog, events);
+        commands.Enqueue(DeferredRuntimeCommand.ForSpawn(reservedConfig, entityId, SchedulePhase.EndOfFrame));
+        commands.ReserveEntity(entity);
+        return entity;
     }
 
     private void AttachLifecycleParentFromConfig(EntityId childEntityId, EntitySpawnConfig config)

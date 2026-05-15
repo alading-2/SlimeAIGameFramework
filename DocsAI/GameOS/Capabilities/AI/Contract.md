@@ -116,3 +116,9 @@ Tools/run-tests.sh
 - 不直接调用 `MovementSystem` 或 `AttackService`
 - 行为树节点必须保持纯函数式（不写外部状态）
 - 不在 `_Process` 中分配对象
+
+## 13. Runtime CommandBuffer / Guard
+
+- AIService / 行为树 tick 当前由显式调用驱动，不自动处于 CommandBuffer guard 内。
+- AI 发布的攻击请求如果进入 world event dispatch，handler 内结构变更会被 guard 捕获并延迟。
+- 行为树节点不要假设 event handler 内 spawn 的 entity 立即可通过 registry 查询；需要实体状态时使用已有 entity handle 或等待 phase playback。

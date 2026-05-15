@@ -95,3 +95,9 @@ Unit DataKey 的验证通过 build 和 DataOS snapshot 生成完成。
 
 - 不删除现有 DataKey（其他 Capability 可能依赖）
 - `EntityType` 和 `DeathType` 的枚举值需同步更新使用处
+
+## 13. Runtime CommandBuffer / Guard
+
+- Unit 是纯数据 Capability，不主动发布事件或执行结构变更。
+- GodotBridge component registered/unregistered callback 处于 `godot-bridge-callback` guard 内；Unit 相关 adapter 如需创建或销毁实体，必须接受 Runtime CommandBuffer 的 deferred 语义。
+- Unit DataKey 写入不进 CommandBuffer；只有 `Spawn / Destroy / Attach / Detach` 受 guard 影响。

@@ -96,3 +96,9 @@ Tools/run-tests.sh
 
 - 不绕过 `AttackService` 直接调用 `DamageService`
 - 攻击状态转换必须完整（WindUp -> Active -> Recovery -> Cooldown）
+
+## 13. Runtime CommandBuffer / Guard
+
+- Attack 请求和状态事件的 world/entity handler 内如果调用 `Spawn / Destroy / Attach / Detach`，会进入 Runtime CommandBuffer。
+- AttackService 自身不引入 deferred queue；需要结构变更时使用 RuntimeWorld/EntityManager 现有入口，让 guard 自动决定同步或延迟。
+- GodotAttackComponent 的 component registered/unregistered callback 处于 `godot-bridge-callback` guard 内；callback 里不要要求新 spawn 立即出现在 registry。

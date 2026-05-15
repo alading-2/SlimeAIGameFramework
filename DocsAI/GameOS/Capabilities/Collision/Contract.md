@@ -88,3 +88,9 @@ Godot smoke 验证 Area2D 进入/离开事件。
 
 - 不直接操作 Godot PhysicsServer2D RID
 - 碰撞隔离逻辑必须保留（对象池安全）
+
+## 13. Runtime CommandBuffer / Guard
+
+- Collision / Hurtbox / ContactDamage 事件 handler 内若调用结构变更 API，会处于 event dispatch guard 并进入 Runtime CommandBuffer。
+- CollisionSystem 自身不持有 deferred queue；只发布事件和写 Data。
+- Godot collision bridge component callback 处于 `godot-bridge-callback` guard 内；callback 中不要依赖新 spawn 立即进入 registry。

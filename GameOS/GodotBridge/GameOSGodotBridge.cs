@@ -1,6 +1,7 @@
 using System;
 using Godot;
 using SlimeAI.GameOS.Runtime.Entity;
+using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.GodotBridge;
 
@@ -124,6 +125,7 @@ public static class GameOSGodotBridge
             var componentNode = GodotNodeRegistry.GetNodeById(componentId);
             if (componentNode is IGodotComponent component)
             {
+                using var guard = RuntimeWorld.Default.Commands.EnterGuard("godot-bridge-callback");
                 component.OnComponentUnregistered(entity, entityNode);
             }
 
@@ -180,6 +182,7 @@ public static class GameOSGodotBridge
 
         if (nodeRegistered && componentNode is IGodotComponent component)
         {
+            using var guard = RuntimeWorld.Default.Commands.EnterGuard("godot-bridge-callback");
             component.OnComponentRegistered(entity, entityNode);
         }
 

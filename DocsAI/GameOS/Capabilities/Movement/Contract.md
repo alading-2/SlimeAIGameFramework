@@ -132,3 +132,9 @@ Godot smoke 验证所有 MoveMode 的 `Node2D.Position` 同步。
 - 不在 `_Process` 中 `new` 对象或 LINQ
 - 不直接修改 `Node2D.Position` 绕过 `GodotMovementDriver`
 - 不删除现有 Strategy 的默认注册
+
+## 13. Runtime CommandBuffer / Guard
+
+- MovementSystem tick 当前不自动处于 CommandBuffer guard 内；`DestroyOnStop` 默认同步销毁。
+- 如果未来 Movement tick 被外层 event/lifecycle/bridge callback 调用并处于 guard 内，`EntityManager.Destroy` 会延迟到 phase playback；调用方不应在同栈依赖 registry 立即移除。
+- `RuntimeSchedule.RunPhase` 不 tick MovementSystem；承载游戏节点必须显式安排 Movement tick 与 `RunPhase` 顺序。

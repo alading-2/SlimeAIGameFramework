@@ -1,4 +1,6 @@
 using System;
+using SlimeAI.GameOS.Runtime.CommandBuffer;
+using SlimeAI.GameOS.Runtime.Schedule;
 
 namespace SlimeAI.GameOS.Runtime.World;
 
@@ -12,14 +14,19 @@ public sealed class RuntimeWorld : IDisposable
     private readonly WorldEventBusImpl events;
     private readonly ResourceCatalogState resources;
     private readonly ObjectPoolManagerState pools;
+    private readonly RuntimeCommandBuffer commands;
+    private readonly RuntimeSchedule schedule;
     private readonly Action<string>? disposeStepObserver;
 
     private RuntimeWorld(bool isDefault, Action<string>? disposeStepObserver = null)
     {
         IsDefault = isDefault;
         events = new WorldEventBusImpl();
-        lifecycle = new LifecycleTreeImpl(events);
-        entities = new EntityRegistry(lifecycle, events);
+        commands = new RuntimeCommandBuffer(this);
+        events.SetCommandBuffer(commands);
+        schedule = new RuntimeSchedule(commands);
+        lifecycle = new LifecycleTreeImpl(events, commands);
+        entities = new EntityRegistry(lifecycle, events, commands);
         resources = new ResourceCatalogState();
         pools = new ObjectPoolManagerState();
         this.disposeStepObserver = disposeStepObserver;
@@ -56,6 +63,20 @@ public sealed class RuntimeWorld : IDisposable
     /// <summary>对象池管理句柄。</summary>
     public IObjectPoolManager Pools => EnsureAlive(pools);
 
+    /// <summary>Runtime 调度句柄。</summary>
+    public IRuntimeSchedule Schedule => EnsureAlive(schedule);
+
+    /// <summary>Runtime CommandBuffer 句柄。</summary>
+    public IRuntimeCommandBuffer Commands => EnsureAlive(commands);
+
+    internal EntityRegistry EntityRegistry => entities;
+
+    internal LifecycleTreeImpl LifecycleTree => lifecycle;
+
+    internal WorldEventBusImpl EventBus => events;
+
+    internal ResourceCatalogState ResourceCatalog => resources;
+
     /// <summary>是否为进程级默认 world。</summary>
     public bool IsDefault { get; }
 
@@ -76,6 +97,8 @@ public sealed class RuntimeWorld : IDisposable
         }
 
         IsDisposed = true;
+        ClearSubsystem("Schedule", schedule.Clear);
+        ClearSubsystem("Commands", () => commands.Clear());
         ClearSubsystem("Pools", pools.Clear);
         ClearSubsystem("Resources", resources.Clear);
         ClearSubsystem("Lifecycle", lifecycle.Clear);

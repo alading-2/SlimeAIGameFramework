@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Runtime.CommandBuffer;
+using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.Runtime.Schedule;
 
 /// <summary>
 /// 纯 C# Runtime 调度器，负责系统实例、依赖、运行条件和生命周期。
 /// </summary>
-public sealed class RuntimeSchedule
+public sealed class RuntimeSchedule : IRuntimeSchedule
 {
     private sealed class Entry
     {
@@ -23,6 +25,8 @@ public sealed class RuntimeSchedule
     private readonly Dictionary<string, SystemDescriptor> descriptors = new(StringComparer.Ordinal);
     private readonly Dictionary<string, SystemConfig> configs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Entry> entries = new(StringComparer.Ordinal);
+    private readonly IRuntimeCommandBuffer? commandBuffer;
+    private bool isCleared;
 
     /// <summary>项目状态服务。</summary>
     public ProjectStateService ProjectState { get; } = new();
@@ -31,7 +35,16 @@ public sealed class RuntimeSchedule
     /// 创建调度器并订阅项目状态切换。
     /// </summary>
     public RuntimeSchedule()
+        : this(null)
     {
+    }
+
+    /// <summary>
+    /// 创建带 CommandBuffer playback 入口的调度器。
+    /// </summary>
+    public RuntimeSchedule(IRuntimeCommandBuffer? commandBuffer)
+    {
+        this.commandBuffer = commandBuffer;
         ProjectState.StateChanged += OnProjectStateChanged;
     }
 
@@ -257,6 +270,19 @@ public sealed class RuntimeSchedule
     }
 
     /// <summary>
+    /// 播放指定 phase 的 RuntimeCommandBuffer；不 tick capability service。
+    /// </summary>
+    public CommandPlaybackReport RunPhase(SchedulePhase phase)
+    {
+        if (isCleared)
+        {
+            throw new ObjectDisposedException(nameof(RuntimeSchedule));
+        }
+
+        return commandBuffer?.Playback(phase) ?? CommandPlaybackReport.Empty(phase);
+    }
+
+    /// <summary>
     /// 清空全部系统。
     /// </summary>
     public void Clear()
@@ -274,6 +300,7 @@ public sealed class RuntimeSchedule
         entries.Clear();
         descriptors.Clear();
         configs.Clear();
+        isCleared = true;
     }
 
     private void OnProjectStateChanged(object? sender, ProjectStateChangedEventArgs args)

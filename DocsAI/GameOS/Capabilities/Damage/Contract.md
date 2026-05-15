@@ -118,3 +118,9 @@ Runtime tests 覆盖暴击、闪避、护甲、吸血、护盾等全处理器链
 - 不删除 `HealthExecutionProcessor`
 - 概率值必须保持 0-100 语义
 - 不在热路径分配对象
+
+## 13. Runtime CommandBuffer / Guard
+
+- Damage event handler 在 world bus 派发期间处于 `event-dispatch:<EventName>` guard；handler 内若调用结构变更 API，会进入 Runtime CommandBuffer。
+- DamageService / HealService 正常状态写入不进 CommandBuffer；只有 `Spawn / Destroy / Attach / Detach` 受 guard 影响。
+- 需要销毁实体时优先保持在 service/tick 显式路径；若处于 guard 内，接受 deferred destroy 并在 phase playback 后观察 registry。

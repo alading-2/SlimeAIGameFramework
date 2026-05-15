@@ -111,6 +111,7 @@ public class WorldEventBus : IWorldEventBus
             }
 
             var snapshot = list.ToArray();
+            using var guard = EnterHandlerDispatchGuard(eventType);
             foreach (var subscription in snapshot)
             {
                 if (subscription.IsDisposed)
@@ -173,10 +174,31 @@ public class WorldEventBus : IWorldEventBus
         dispatchingTypes.Clear();
     }
 
+    /// <summary>
+    /// 派发 handler 前进入可选 guard；默认无操作，由 RuntimeWorld 注入。
+    /// </summary>
+    protected virtual IDisposable EnterHandlerDispatchGuard(Type eventType)
+    {
+        return NoopDispatchGuard.Instance;
+    }
+
     private static string HandlerLabel(Delegate handler)
     {
         var target = handler.Target?.GetType().Name ?? "static";
         return $"{target}.{handler.Method.Name}";
+    }
+
+    private sealed class NoopDispatchGuard : IDisposable
+    {
+        public static readonly NoopDispatchGuard Instance = new();
+
+        private NoopDispatchGuard()
+        {
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     internal sealed class Subscription

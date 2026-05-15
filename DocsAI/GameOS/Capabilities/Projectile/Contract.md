@@ -104,3 +104,9 @@ Tools/run-tests.sh
 - 不直接 `QueueFree` 视觉节点（必须通过对象池）
 - 不在 `_Process` 中分配集合
 - 命中后必须正确更新 `HitCount`
+
+## 13. Runtime CommandBuffer / Guard
+
+- `ProjectileTool.Spawn` 可能在 event handler、lifecycle callback 或 GodotBridge component callback guard 内被调用；guarded spawn 返回 reserved `RuntimeEntity`，本工具后续 `Data.Set` 会保留到 phase playback。
+- `ProjectileTool.Spawn` 不应在同一 guard 内依赖 `EntityManager.Get(projectile.EntityId)`；需要 registry 可见时由承载节点在合适 phase 调 `RuntimeWorld.Default.Schedule.RunPhase(...)`。
+- `DestroyOnStop` 触发的 `EntityManager.Destroy` 在 guard 内会延迟；当前 Movement tick 不在 guard 内，仍按同步销毁路径执行。

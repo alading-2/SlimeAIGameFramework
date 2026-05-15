@@ -136,6 +136,45 @@ Phase trace SHOULD 记录：
 | `decision` | `started`、`stopped`、`blocked`、`executed`、`skipped`。 |
 | `reason` | 阻断或跳过原因。 |
 
+## Command Playback Report
+
+CommandBuffer playback report 可由 Runtime tests、Godot scene acceptance 或后续 JSONL sink 输出，推荐文件名：
+
+```text
+artifacts/command-playback-report.jsonl
+```
+
+每次 `RuntimeSchedule.RunPhase(phase)` 对应一条 report。字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `phase` | string | `SchedulePhase` 名称。 |
+| `queuedCount` | number | 本次 phase 选中的命令数。 |
+| `playedCount` | number | 成功播放数。 |
+| `failedCount` | number | 失败数。 |
+| `skippedCount` | number | 跳过数；dispose discard 时为 pending command 数。 |
+| `durationMs` | number | 本次 playback 耗时。 |
+| `commands` | array | 单条 command playback entry。 |
+
+`commands[]` entry MUST 包含：
+
+| 字段 | 来源 | 说明 |
+| --- | --- | --- |
+| `commandId` | `DeferredRuntimeCommand.CommandId` | 入队时分配。 |
+| `sequence` | `DeferredRuntimeCommand.Sequence` | 播放排序依据。 |
+| `kind` | `DeferredCommandKind` | 8 种 typed command kind。 |
+| `targetPhase` | `SchedulePhase` | 目标 phase。 |
+| `requestedBy` | guard reason 或调用方 label | 例如 `event-dispatch:Requested`、`lifecycle-callback`、`godot-bridge-callback`。 |
+| `capturedEntityId` | command meta | guarded spawn reserved id。 |
+| `targetEntityId` | command meta | destroy/attach/detach target id。 |
+| `createdEntityId` | playback result | spawn 实际注册的 id。 |
+| `status` | `DeferredCommandStatus` | `Played / Failed / Skipped`。 |
+| `failureReason` | `DeferredCommandFailureReason` | 失败或跳过原因；dispose discard 必须是 `WorldDisposing`。 |
+| `debugLabel` | command meta | 调试标签。 |
+| `spawn / destroy / attach / detach / queuedEvent / resourceRequest / godotInstantiate / godotFree` | typed payload | 只允许与 `kind` 对应的一个 payload 非空。 |
+
+Observation JSON 中 typed payload 的 entity-id 字段仍按底层 string 输出。`QueuedEvent.PayloadBytes` 不要求完整展开；可记录 `eventTypeName` 和 payload byte length，避免把二进制内容写入人读 artifact。
+
 ## EventBus Dump
 
 EventBus artifact 文件名建议：
@@ -343,32 +382,6 @@ Observation MUST NOT query authoring SQLite during gameplay. It MAY reference si
 
 旧 `res://Src/...` 或 `res://Data/...` MUST 标记为 `legacy`、`missing` 或 `intentionally dropped`，不能因为出现在 snapshot 中就标记为已迁移行为。
 
-## Command Playback Report
-
-`RuntimeCommandBuffer` 尚未实现。Observation 预留 report 形状，后续 R09 实现时使用：
-
-```text
-artifacts/command-playback.json
-```
-
-字段：
-
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| `queuedCount` | int | 入队命令数量。 |
-| `playedCount` | int | 成功回放数量。 |
-| `failedCount` | int | 失败数量。 |
-| `skippedCount` | int | 跳过数量。 |
-| `durationMs` | float | 回放耗时。 |
-| `commands` | array | 单条命令记录。 |
-
-单条命令：
-
-- `commandId`
-- `commandType`
-- `phase`
-- `status`
-- `failureReason`
 - `requestedBy`
 - `capturedEntityId`
 - `createdEntityId`

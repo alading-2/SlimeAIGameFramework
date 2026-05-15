@@ -72,7 +72,7 @@ internal static class RuntimeWorldTests
 
         world.Dispose();
 
-        AssertEqual("dispose order", "Pools,Resources,Lifecycle,Entities,Events", string.Join(",", order));
+        AssertEqual("dispose order", "Schedule,Commands,Pools,Resources,Lifecycle,Entities,Events", string.Join(",", order));
     }
 
     public static void DisposePublishesTeardownEventsBeforeEventsClear()
@@ -106,6 +106,8 @@ internal static class RuntimeWorldTests
         AssertThrows<ObjectDisposedException>("events getter after dispose", () => _ = world.Events);
         AssertThrows<ObjectDisposedException>("resources getter after dispose", () => _ = world.Resources);
         AssertThrows<ObjectDisposedException>("pools getter after dispose", () => _ = world.Pools);
+        AssertThrows<ObjectDisposedException>("schedule getter after dispose", () => _ = world.Schedule);
+        AssertThrows<ObjectDisposedException>("commands getter after dispose", () => _ = world.Commands);
     }
 
     public static void SubsystemHandlesArePresent()
@@ -117,6 +119,8 @@ internal static class RuntimeWorldTests
         AssertEqual("events handle", true, world.Events != null);
         AssertEqual("resources handle", true, world.Resources != null);
         AssertEqual("pools handle", true, world.Pools != null);
+        AssertEqual("schedule handle", true, world.Schedule != null);
+        AssertEqual("commands handle", true, world.Commands != null);
     }
 
     private static void AssertThrows<TException>(string name, Action action)

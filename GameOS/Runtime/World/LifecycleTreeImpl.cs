@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Runtime.CommandBuffer;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.Schedule;
 
 namespace SlimeAI.GameOS.Runtime.World;
 
@@ -11,6 +13,7 @@ namespace SlimeAI.GameOS.Runtime.World;
 public sealed class LifecycleTreeImpl : ILifecycleTree
 {
     private readonly IWorldEventBus events;
+    private readonly RuntimeCommandBuffer commands;
     private readonly Dictionary<EntityId, LifecycleLink> childToLink = new();
     private readonly Dictionary<EntityId, List<LifecycleLink>> parentToLinks = new();
     private readonly Dictionary<EntityId, EntityId> childToParent = new();
@@ -18,13 +21,34 @@ public sealed class LifecycleTreeImpl : ILifecycleTree
     /// <summary>
     /// 创建 lifecycle 树实例。
     /// </summary>
-    public LifecycleTreeImpl(IWorldEventBus events)
+    public LifecycleTreeImpl(IWorldEventBus events, RuntimeCommandBuffer commands)
     {
         this.events = events ?? throw new ArgumentNullException(nameof(events));
+        this.commands = commands ?? throw new ArgumentNullException(nameof(commands));
     }
 
     /// <inheritdoc />
     public bool Attach(
+        EntityId parentId,
+        EntityId childId,
+        ParentDestroyPolicy destroyPolicy = ParentDestroyPolicy.DestroyRecursively,
+        int priority = 0)
+    {
+        if (commands.IsGuarded && !commands.IsPlayingBack)
+        {
+            if (parentId.IsEmpty || childId.IsEmpty || parentId.Equals(childId))
+            {
+                return false;
+            }
+
+            commands.Enqueue(DeferredRuntimeCommand.ForAttach(parentId, childId, destroyPolicy, priority, SchedulePhase.EndOfFrame));
+            return true;
+        }
+
+        return AttachImmediate(parentId, childId, destroyPolicy, priority);
+    }
+
+    internal bool AttachImmediate(
         EntityId parentId,
         EntityId childId,
         ParentDestroyPolicy destroyPolicy = ParentDestroyPolicy.DestroyRecursively,
@@ -60,12 +84,32 @@ public sealed class LifecycleTreeImpl : ILifecycleTree
         }
 
         siblings.Add(link);
-        events.Publish(new LifecycleChildAttached(parentId, childId, destroyPolicy));
+        using (commands.EnterGuard("lifecycle-callback"))
+        {
+            events.Publish(new LifecycleChildAttached(parentId, childId, destroyPolicy));
+        }
+
         return true;
     }
 
     /// <inheritdoc />
     public bool Detach(EntityId parentId, EntityId childId)
+    {
+        if (commands.IsGuarded && !commands.IsPlayingBack)
+        {
+            if (parentId.IsEmpty || childId.IsEmpty)
+            {
+                return false;
+            }
+
+            commands.Enqueue(DeferredRuntimeCommand.ForDetach(parentId, childId, SchedulePhase.EndOfFrame));
+            return true;
+        }
+
+        return DetachImmediate(parentId, childId);
+    }
+
+    internal bool DetachImmediate(EntityId parentId, EntityId childId)
     {
         if (parentId.IsEmpty || childId.IsEmpty)
         {
@@ -95,7 +139,11 @@ public sealed class LifecycleTreeImpl : ILifecycleTree
             }
         }
 
-        events.Publish(new LifecycleChildDetached(parentId, childId, link.DestroyPolicy));
+        using (commands.EnterGuard("lifecycle-callback"))
+        {
+            events.Publish(new LifecycleChildDetached(parentId, childId, link.DestroyPolicy));
+        }
+
         return true;
     }
 

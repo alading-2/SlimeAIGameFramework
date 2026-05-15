@@ -105,3 +105,9 @@ Tools/run-tests.sh
 - 不改 `IFeatureHandler` 接口签名
 - Modifier 回滚必须和授予成对出现
 - 不直接修改被 Modifier 影响的 DataKey（通过 Modifier API）
+
+## 13. Runtime CommandBuffer / Guard
+
+- Feature handler 可能由 AbilityService 或 event handler 间接触发；若处于 guard 内，handler 中的结构变更自动进入 Runtime CommandBuffer。
+- Handler 生成 Projectile / Effect 后可以继续写返回 entity handle 的 Data；不要在同一 guard 内通过 registry 立即 `Get` 新实体。
+- 本 Capability 不提供独立 deferred queue，也不提供 `EnqueueAndWait`；确需同步等待时必须开独立 OpenSpec change。

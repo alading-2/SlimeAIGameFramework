@@ -93,3 +93,9 @@ Tools/run-tests.sh
 
 - 不直接 `QueueFree` 节点（必须通过对象池）
 - 不修改 `EffectTool` 接口签名
+
+## 13. Runtime CommandBuffer / Guard
+
+- `EffectTool.Spawn` 可能在 event handler、lifecycle callback 或 GodotBridge component callback guard 内被调用；guarded spawn 返回 reserved `RuntimeEntity`，本工具后续 `Data.Set` 会保留到 phase playback。
+- `EffectTool.Spawn` 不应在同一 guard 内依赖 `EntityManager.Get(effect.EntityId)`；需要 registry 可见时由承载节点在合适 phase 调 `RuntimeWorld.Default.Schedule.RunPhase(...)`。
+- `GodotProjectileEffectSpawner` 消费 `Spawned` event 时使用 event 内 entity handle，不要求 registry 已注册。

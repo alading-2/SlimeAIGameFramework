@@ -36,6 +36,17 @@
 - `SlimeAI.GameOS.Runtime.World.IWorldEventBus`
 - `SlimeAI.GameOS.Runtime.World.IResourceCatalog`
 - `SlimeAI.GameOS.Runtime.World.IObjectPoolManager`
+- `SlimeAI.GameOS.Runtime.World.IRuntimeSchedule`
+- `SlimeAI.GameOS.Runtime.World.IRuntimeCommandBuffer`
+- `SlimeAI.GameOS.Runtime.Schedule.SchedulePhase`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredCommandKind`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredCommandStatus`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredCommandFailureReason`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.DeferredRuntimeCommand`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.CommandPlaybackReport`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.CommandPlaybackEntry`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.IStructuralChangeGuard`
+- `SlimeAI.GameOS.Runtime.CommandBuffer.RuntimeCommandBuffer`
 - `SlimeAI.GameOS.Runtime.Data.Data`
 - `SlimeAI.GameOS.Runtime.Data.DataKey<T>`
 - `SlimeAI.GameOS.Runtime.Data.IDataKey`
@@ -134,12 +145,25 @@
 
 ## Runtime World 契约
 
-- `RuntimeWorld` 是 GameOS Runtime 的世界容器 facade，固定持有 `Entities / Lifecycle / Events / Resources / Pools` 五个 subsystem 句柄。禁止在 `RuntimeWorld` 上引入 `IServiceProvider`、`Services.Get<T>()` 或反射 service locator；后续 P4 的 Schedule / Commands 必须扩展 `RuntimeWorld`，不能另建并行全局容器。
+- `RuntimeWorld` 是 GameOS Runtime 的世界容器 facade，固定持有 `Entities / Lifecycle / Events / Resources / Pools / Schedule / Commands` 七个 subsystem 句柄。禁止在 `RuntimeWorld` 上引入 `IServiceProvider`、`Services.Get<T>()` 或反射 service locator；延迟命令和 phase playback 必须通过 `RuntimeWorld.Commands / Schedule`，不能另建并行全局容器。
 - `RuntimeWorld.Default` 是进程级 eager singleton；现有 `EntityManager`、`LifecycleTree`、`WorldEvents.World`、`ResourceCatalog`、`ObjectPoolManager` static facade 保留并转发到 `Default`，BrotatoLike 和 Capability 旧调用面不强制改造。
 - `RuntimeWorld.CreateScoped()` 每次返回独立 sandbox，实体注册表、LifecycleTree、WorldEventBus、ResourceCatalog、ObjectPoolManager state 与 `Default` 和其他 scoped world 完全隔离。框架测试必须优先使用 `using var world = RuntimeWorld.CreateScoped();`。
-- `RuntimeWorld.Default.Dispose()` 必须抛 `InvalidOperationException("RuntimeWorld.Default cannot be disposed")`；scoped world `Dispose()` 后 `Entities / Lifecycle / Events / Resources / Pools` getter 必须抛 `ObjectDisposedException`。
-- 本变更范围内 scoped world dispose 顺序固定为 `Pools -> Resources -> Lifecycle -> Entities -> Events`。完整事实源顺序预留 P4 扩展为 `Schedule -> Commands -> Pools -> Resources -> Lifecycle -> Entities -> Events`；后续 change 不得重新定义此顺序。
-- `IEntityRegistry / ILifecycleTree / IWorldEventBus / IResourceCatalog / IObjectPoolManager` 是 `RuntimeWorld` 组合用 internal-only abstraction：Capability、游戏仓和测试不支持注册自定义实现或 mock；需要隔离时用真实 `CreateScoped()`。
+- `RuntimeWorld.Default.Dispose()` 必须抛 `InvalidOperationException("RuntimeWorld.Default cannot be disposed")`；scoped world `Dispose()` 后 `Entities / Lifecycle / Events / Resources / Pools / Schedule / Commands` getter 必须抛 `ObjectDisposedException`。
+- Scoped world dispose 顺序固定为 `Schedule -> Commands -> Pools -> Resources -> Lifecycle -> Entities -> Events`；后续 change 不得重新定义此顺序。`Commands.Clear()` 在 teardown 中 discard pending commands，报告 `Skipped / WorldDisposing`，不得 drain。
+- `IEntityRegistry / ILifecycleTree / IWorldEventBus / IResourceCatalog / IObjectPoolManager / IRuntimeSchedule / IRuntimeCommandBuffer` 是 `RuntimeWorld` 组合用 internal-only abstraction：Capability、游戏仓和测试不支持注册自定义实现或 mock；需要隔离时用真实 `CreateScoped()`。
+
+## Runtime CommandBuffer 契约
+
+- `RuntimeCommandBuffer` 是 Runtime、Capability、GodotBridge 和游戏 adapter 唯一的 deferred structural request 队列。禁止为某个 subsystem 另建并行 deferred queue。
+- `DeferredCommandKind` 第一阶段固定为 8 种：`Spawn / Destroy / Attach / Detach / QueuedEvent / ResourceRequest / GodotNodeInstantiate / GodotNodeFree`。新增 kind 必须进入独立 OpenSpec change。
+- `DeferredRuntimeCommand` 是 `readonly record struct`，payload 必须使用 8 个 nullable typed payload field：`SpawnCommandPayload / DestroyCommandPayload / AttachCommandPayload / DetachCommandPayload / QueuedEventCommandPayload / ResourceRequestCommandPayload / GodotNodeInstantiatePayload / GodotNodeFreeCommandPayload`。不得使用 `object Payload`、`Dictionary<string, object>` 或 stringly-typed `PayloadKey / PayloadValue`。
+- `RuntimeCommandBuffer.EnterGuard(reason)` 返回 `IStructuralChangeGuard`。当前 framework 自动进入 guard 的上下文为：world event handler dispatch（`event-dispatch:<EventName>`）、lifecycle callback publish（`lifecycle-callback`）、GodotBridge component registered/unregistered callback（`godot-bridge-callback`）。
+- Guard 内调用 `EntityManager.Spawn / world.Entities.Spawn` 会返回 reserved `RuntimeEntity`，但不立即注册到 `EntityRegistry`；同一 guard 内 `world.Entities.Get(capturedId)` 返回 `null`。返回的 entity handle 可正常 `Data.Set` 和 `Events.Publish`，playback 时会注册同一个 reserved entity，保留 guard 内 data writes。
+- Guard 内 `Destroy / Attach / Detach` 自动入队。单个 outer guard scope 内超过 1000 条 enqueue 会抛 `InvalidOperationException("Guard scope command limit exceeded")`。
+- `RuntimeCommandBuffer.Playback(phase)` 只播放 `TargetPhase == phase` 的命令，并按 `Sequence` 排序；其它 phase 留在队列。失败或跳过会写入 `CommandPlaybackReport`。
+- `QueuedEventCommandPayload` 第一阶段只支持 framework-known `IGlobalEvent` record，使用 `typeof(T).FullName` 与 `JsonSerializer.SerializeToUtf8Bytes`；playback 通过 framework event type registry 反序列化并 `Publish<T>`。不支持 game-specific dynamic event replay。
+- `ResourceRequestCommandPayload(ResourceKey, ResourcePath)` playback 时默认以 `ResourceCategory.Other` 注册。
+- `GodotNodeInstantiate / GodotNodeFree` 通过可注入 `IGodotNodeCommandHandler` 执行；默认未注入时报告 `BridgeTargetUnavailable`。
 
 ## Runtime Data 契约
 
@@ -189,6 +213,7 @@
 ## Runtime Schedule 契约
 
 - `RuntimeSchedule` 是纯 C# 调度器，负责 Runtime Process / Schedule Process 描述符、配置、依赖、人工启用状态、运行条件和生命周期。
+- `RuntimeSchedule.RunPhase(SchedulePhase phase)` 是 CommandBuffer playback 入口，只调用 `RuntimeCommandBuffer.Playback(phase)`，不 tick capability service，不引入 system graph 或 query DSL。
 - `ProjectStateService` 维护 `GameFlowState / OverlayFlags / SimulationState` 三域状态。
 - `SystemRunCondition` 是 schedule compatibility symbol，把流程、覆盖层、模拟状态门禁前置到调度层。
 - `IRuntimeSystem` 是 Runtime Process 生命周期协议的 legacy compatibility name；`IRuntimeCommandHandler<TRequest,TResult>` 是命令入口协议。

@@ -107,3 +107,9 @@ Tools/run-tests.sh
 - 不绕过 `AbilityService.TryTrigger()` 直接执行 handler
 - 不改触发模式语义
 - 冷却/充能逻辑保持统一
+
+## 13. Runtime CommandBuffer / Guard
+
+- Ability event handler 或 GodotBridge component callback 内触发技能时，handler 中的 `Spawn / Destroy / Attach / Detach` 会跟随 Runtime CommandBuffer guard 语义。
+- Ability handler 不应在 guarded spawn 后立刻通过 `EntityManager.Get` 要求 registry 可见；使用返回的 entity handle 写 Data，等待 `RunPhase` playback 后再查询 registry。
+- `QueuedEvent` deferred replay 只支持 framework-known `IGlobalEvent`，不支持游戏侧输入或技能动态事件重放。
