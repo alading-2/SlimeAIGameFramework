@@ -7,6 +7,7 @@
 | Preferred term | Legacy public symbols / search terms | 解释 |
 | --- | --- | --- |
 | `Runtime Entity` | `IEntity`、`RuntimeEntity`、`EntityManager`、`Entity` | 运行时对象身份容器，暴露 `EntityId + Data + Events`；不是 archetype entity 或行为 owner。 |
+| `Runtime World` | `RuntimeWorld`、`RuntimeWorld.Default`、`RuntimeWorld.CreateScoped`、`WorldEvents.World` | GameOS Runtime 状态容器；`Default` 承载旧 static facade，`CreateScoped()` 用于测试沙箱。 |
 | `Runtime Data / DataKey` | `Data`、`DataKey<T>`、`DataCatalog`、`DataSlot`、历史 `Component` 搜索 | 状态契约和 typed 读写入口；不是 ECS component storage。 |
 | `Capability` | `Movement`、`Damage`、`Ability`、`Feature` 等 Capability API | 玩法组合和所有权单元；行为进入 service、tool、handler、DataKey、Event 或 selector。 |
 | `GodotBridge Adapter` | `IGodotComponent`、`Godot*Component`、`AttackComponent`、`Component` | Godot Node 生命周期/输入/物理/表现桥接；旧符号是 compatibility name，不是传统 ECS data component。 |
@@ -22,6 +23,19 @@
 | `GameOSInfo.FrameworkId` | const string | stable | `SlimeAI.GameOS`。 |
 | `GameOSInfo.Version` | const string | bootstrap | 当前框架版本。 |
 | `GameOSInfo.Stage` | const string | bootstrap | 当前迁移阶段。 |
+| `SlimeAI.GameOS.Runtime.World.RuntimeWorld` | class | runtime-world | GameOS Runtime 世界容器；公开 `Default / CreateScoped / Entities / Lifecycle / Events / Resources / Pools / IsDefault / IsDisposed`。 |
+| `RuntimeWorld.Default` | static property | runtime-world | 进程级 eager singleton；现有 static facade 全部转发到此实例。 |
+| `RuntimeWorld.CreateScoped()` | static method | runtime-world | 创建独立 sandbox world；测试和局部运行域优先使用。 |
+| `RuntimeWorld.Entities` | property | runtime-world | 当前 world 的 `IEntityRegistry` 句柄。 |
+| `RuntimeWorld.Lifecycle` | property | runtime-world | 当前 world 的 `ILifecycleTree` 句柄。 |
+| `RuntimeWorld.Events` | property | runtime-world | 当前 world 的 `IWorldEventBus` 句柄。 |
+| `RuntimeWorld.Resources` | property | runtime-world | 当前 world 的 `IResourceCatalog` 句柄。 |
+| `RuntimeWorld.Pools` | property | runtime-world | 当前 world 的 `IObjectPoolManager` 句柄。 |
+| `SlimeAI.GameOS.Runtime.World.IEntityRegistry` | interface | internal-only abstraction | RuntimeWorld 组合用实体注册表句柄；不支持外部自定义实现或 mock。 |
+| `SlimeAI.GameOS.Runtime.World.ILifecycleTree` | interface | internal-only abstraction | RuntimeWorld 组合用 lifecycle 树句柄；不支持外部自定义实现或 mock。 |
+| `SlimeAI.GameOS.Runtime.World.IWorldEventBus` | interface | internal-only abstraction | RuntimeWorld 组合用 world event bus 句柄；不支持外部自定义实现或 mock。 |
+| `SlimeAI.GameOS.Runtime.World.IResourceCatalog` | interface | internal-only abstraction | RuntimeWorld 组合用资源目录句柄；不支持外部自定义实现或 mock。 |
+| `SlimeAI.GameOS.Runtime.World.IObjectPoolManager` | interface | internal-only abstraction | RuntimeWorld 组合用对象池管理句柄；不支持外部自定义实现或 mock。 |
 | `SlimeAI.GameOS.Runtime.Data.Data` | class | typed-contract | 运行时 typed 数据容器，绑定 `DataCatalog`，公开 `DataKey<T>` 读写 API。 |
 | `SlimeAI.GameOS.Runtime.Data.DataKey<T>` | class | typed-contract | 业务 Data 访问入口，定义 stable key、runtime default、类型、分类、modifier/computed 规则。 |
 | `SlimeAI.GameOS.Runtime.Data.IDataKey` | interface | typed-contract | Catalog、snapshot、debug 边界使用的非泛型只读 DataKey 视图。 |
@@ -47,15 +61,15 @@
 | `SlimeAI.GameOS.Runtime.Event.IEventBus` | interface | migrated | `Publish<T>(in T) / Subscribe<T>(Action<T>) → IDisposable / ExportObservation(path)`。 |
 | `SlimeAI.GameOS.Runtime.Event.EntityEventBus` | class | migrated | 实体级事件总线，支持 IBroadcastEvent 自动转发。 |
 | `SlimeAI.GameOS.Runtime.Event.WorldEventBus` | class | migrated | 进程级事件总线，替换旧 `GlobalEventBus`。 |
-| `SlimeAI.GameOS.Runtime.Event.WorldEvents` | static class | migrated | `WorldEvents.World` 是进程级 world bus 静态访问点。 |
+| `SlimeAI.GameOS.Runtime.Event.WorldEvents` | static class | runtime-world | `WorldEvents.World` 转发到 `RuntimeWorld.Default.Events`。 |
 | `SlimeAI.GameOS.Runtime.Event.EventBusObservation` | class | migrated | 订阅、发布计数、reentry 阻断、handler 异常和 dump 导出。 |
 | `SlimeAI.GameOS.Runtime.Event.EventDataChangeSink` | class | migrated | Data 变更到 IEventBus 的桥，发布 `Runtime.Events.Core.DataPropertyChanged`。 |
 | `SlimeAI.GameOS.Runtime.Entity.EntityId` | record struct | migrated | Typed entity 身份 wrapper；`Empty / From(string?) / IsEmpty / Value`，禁止 implicit `string` 转换。 |
 | `SlimeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | Runtime Entity legacy interface；只暴露 typed `EntityId`、Runtime Data 和事件，不承载业务逻辑。 |
 | `SlimeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity 身份容器，构造接受 typed `EntityId`，不是 archetype entity。 |
 | `SlimeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数；`EntityId / ParentEntityId` 为 typed `EntityId`，以 `EntityId.Empty` 表达"未指定"；只含 `EntityId / DataCatalog / ParentEntityId / ParentDestroyPolicy`。 |
-| `SlimeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | Runtime Entity 生命周期注册表，`Spawn / Register / Destroy / Get / Clear / AttachLifecycleParent` 全部使用 typed `EntityId`；不是 ECS world registry / query API。 |
-| `SlimeAI.GameOS.Runtime.Entity.LifecycleTree` | static class | migrated | Lifecycle parent 单父树 facade；`Attach / Detach / GetChildren / GetParentEntityId / DetachAll / Clear` typed API，发布 `LifecycleChildAttached / LifecycleChildDetached`。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntityManager` | static class | runtime-world | Runtime Entity static facade，转发到 `RuntimeWorld.Default.Entities`；`Spawn / Register / Destroy / Get / GetAll / Clear / AttachLifecycleParent` 全部使用 typed `EntityId`。 |
+| `SlimeAI.GameOS.Runtime.Entity.LifecycleTree` | static class | runtime-world | Lifecycle parent 单父树 static facade，转发到 `RuntimeWorld.Default.Lifecycle`；typed API，发布 `LifecycleChildAttached / LifecycleChildDetached`。 |
 | `SlimeAI.GameOS.Runtime.Entity.LifecycleLink` | record struct | migrated | `(ParentEntityId, ChildEntityId, DestroyPolicy, Priority)` 不可变 lifecycle 边。 |
 | `SlimeAI.GameOS.Runtime.Entity.ParentDestroyPolicy` | enum | migrated | `DestroyRecursively / Detach`，lifecycle 销毁策略；原位于 `Runtime.Relationship`，现迁入 `Runtime.Entity`。 |
 | `SlimeAI.GameOS.Runtime.Entity.EntityIdList` | record struct | migrated | typed entity-id 多引用不可变值；`Empty / Add / Remove / Contains / Count / [int]`，按内容与顺序 value-equality。 |
@@ -76,14 +90,14 @@
 | `SlimeAI.GameOS.Runtime.Schedule.RuntimeSchedule` | class | migrated | 纯 C# Runtime 调度器。 |
 | `SlimeAI.GameOS.Runtime.Resource.ResourceCategory` | enum | migrated | 资源分类。 |
 | `SlimeAI.GameOS.Runtime.Resource.ResourceData` | record struct | migrated | 资源映射条目。 |
-| `SlimeAI.GameOS.Runtime.Resource.ResourceCatalog` | static class | migrated | 资源键到路径映射表。 |
+| `SlimeAI.GameOS.Runtime.Resource.ResourceCatalog` | static class | runtime-world | 资源键到路径映射 static facade，转发到 `RuntimeWorld.Default.Resources`。 |
 | `SlimeAI.GameOS.Runtime.Resource.ResourceManagement` | static class | migrated | 统一资源加载 facade。 |
 | `SlimeAI.GameOS.Runtime.Pool.IPoolable` | interface | migrated | 对象池生命周期接口。 |
 | `SlimeAI.GameOS.Runtime.Pool.IObjectPool` | interface | migrated | 全局池注册表使用的非泛型句柄。 |
 | `SlimeAI.GameOS.Runtime.Pool.ObjectPoolConfig` | record struct | migrated | 对象池配置。 |
 | `SlimeAI.GameOS.Runtime.Pool.PoolStats` | record struct | migrated | 对象池统计。 |
 | `SlimeAI.GameOS.Runtime.Pool.ObjectPool<T>` | class | migrated | 类型安全对象池。 |
-| `SlimeAI.GameOS.Runtime.Pool.ObjectPoolManager` | static class | migrated | 全局对象池注册和归还入口。 |
+| `SlimeAI.GameOS.Runtime.Pool.ObjectPoolManager` | static class | runtime-world | 对象池注册和归还 static facade，转发到 `RuntimeWorld.Default.Pools`。 |
 | `SlimeAI.GameOS.Runtime.Timer.GameTimer` | class | migrated | 可池化运行时计时器。 |
 | `SlimeAI.GameOS.Runtime.Timer.TimerManager` | class | migrated | 由外部 Tick 驱动的计时器管理器。 |
 | `SlimeAI.GameOS.Runtime.Events.Core` | namespace | migrated | Runtime 基础事件 payload：`EntitySpawned / EntityDestroyed / DataPropertyChanged / LifecycleChildAttached / LifecycleChildDetached / InputUseSkill / InputNextSkill / InputPreviousSkill`。 |

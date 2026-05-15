@@ -146,6 +146,8 @@ artifacts/eventbus-dump.json
 
 Runtime EventBus 暴露的唯一导出入口是 `IEventBus.ExportObservation(path)`：`EntityEventBus` 与 `WorldEventBus` 都在内部维护 `EventBusObservation`，记录订阅、发布计数、同类型嵌套阻断和 handler 异常。
 
+`RuntimeWorld.Default.Events` 与 `RuntimeWorld.CreateScoped().Events` 使用同一套 artifact 约定，导出文件仍命名为 `eventbus-dump.json`。Scoped world 只改变状态归属，不改变 schema、字段或输出目录规则；测试需要隔离 Observation 时必须创建 `using var world = RuntimeWorld.CreateScoped();`，再对 `world.Events.ExportObservation(path)` 或 entity bus 导出 artifact。新测试不得通过 `RuntimeWorld.Default.Events.Clear()` 或 `WorldEvents.World.Clear()` 做隔离。
+
 Event dump MUST 能区分：
 
 - 没有订阅。

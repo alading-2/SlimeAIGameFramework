@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
-using SlimeAI.GameOS.Runtime.Event;
-using SlimeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.Runtime.Entity;
 
@@ -10,22 +8,13 @@ namespace SlimeAI.GameOS.Runtime.Entity;
 /// </summary>
 public static class EntityManager
 {
-    private static readonly Dictionary<EntityId, IEntity> Entities = new();
-
     /// <summary>
     /// 生成并注册一个纯 Runtime Entity。
     /// </summary>
     /// <param name="config">生成参数。</param>
     public static RuntimeEntity Spawn(EntitySpawnConfig config = default)
     {
-        var entityId = config.EntityId.IsEmpty
-            ? EntityId.From(Guid.NewGuid().ToString("N"))
-            : config.EntityId;
-        var entity = new RuntimeEntity(entityId, config.DataCatalog);
-
-        Register(entity);
-        AttachLifecycleParentFromConfig(entity.EntityId, config);
-        return entity;
+        return RuntimeWorld.Default.Entities.Spawn(config);
     }
 
     /// <summary>
@@ -34,15 +23,7 @@ public static class EntityManager
     /// <param name="entity">运行时实体实例。</param>
     public static bool Register(IEntity entity)
     {
-        ArgumentNullException.ThrowIfNull(entity);
-        if (Entities.ContainsKey(entity.EntityId))
-        {
-            return false;
-        }
-
-        Entities.Add(entity.EntityId, entity);
-        entity.Events.Publish(new EntitySpawned(entity));
-        return true;
+        return RuntimeWorld.Default.Entities.Register(entity);
     }
 
     /// <summary>
@@ -51,18 +32,7 @@ public static class EntityManager
     /// <param name="entityId">稳定运行时实体 Id。</param>
     public static bool Destroy(EntityId entityId)
     {
-        if (!Entities.TryGetValue(entityId, out var entity))
-        {
-            return false;
-        }
-
-        DestroyOwnedChildren(entityId);
-        LifecycleTree.DetachAll(entityId);
-        RuntimeOwnedReferenceRegistry.NotifyDestroying(entity);
-        Entities.Remove(entityId);
-        entity.Data.Reset();
-        entity.Events.Publish(new EntityDestroyed(entity));
-        return true;
+        return RuntimeWorld.Default.Entities.Destroy(entityId);
     }
 
     /// <summary>
@@ -71,8 +41,7 @@ public static class EntityManager
     /// <param name="entity">运行时实体实例。</param>
     public static bool Destroy(IEntity entity)
     {
-        ArgumentNullException.ThrowIfNull(entity);
-        return Destroy(entity.EntityId);
+        return RuntimeWorld.Default.Entities.Destroy(entity);
     }
 
     /// <summary>
@@ -81,7 +50,7 @@ public static class EntityManager
     /// <param name="entityId">稳定运行时实体 Id。</param>
     public static IEntity? Get(EntityId entityId)
     {
-        return Entities.GetValueOrDefault(entityId);
+        return RuntimeWorld.Default.Entities.Get(entityId);
     }
 
     /// <summary>
@@ -89,7 +58,7 @@ public static class EntityManager
     /// </summary>
     public static IReadOnlyList<IEntity> GetAll()
     {
-        return new List<IEntity>(Entities.Values);
+        return RuntimeWorld.Default.Entities.GetAll();
     }
 
     /// <summary>
@@ -97,14 +66,9 @@ public static class EntityManager
     /// </summary>
     public static void Clear()
     {
-        foreach (var entity in Entities.Values)
-        {
-            entity.Data.Reset();
-        }
-
-        Entities.Clear();
-        LifecycleTree.Clear();
-        WorldEvents.World.Clear();
+        RuntimeWorld.Default.Entities.Clear();
+        RuntimeWorld.Default.Lifecycle.Clear();
+        RuntimeWorld.Default.Events.Clear();
     }
 
     /// <summary>
@@ -118,34 +82,6 @@ public static class EntityManager
         EntityId parentEntityId,
         ParentDestroyPolicy parentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively)
     {
-        if (!Entities.ContainsKey(childEntityId) || !Entities.ContainsKey(parentEntityId))
-        {
-            return false;
-        }
-
-        return LifecycleTree.Attach(parentEntityId, childEntityId, parentDestroyPolicy);
-    }
-
-    private static void AttachLifecycleParentFromConfig(EntityId childEntityId, EntitySpawnConfig config)
-    {
-        if (config.ParentEntityId.IsEmpty)
-        {
-            return;
-        }
-
-        LifecycleTree.Attach(config.ParentEntityId, childEntityId, config.ParentDestroyPolicy);
-    }
-
-    private static void DestroyOwnedChildren(EntityId parentEntityId)
-    {
-        var children = LifecycleTree.GetChildren(parentEntityId);
-        for (var i = 0; i < children.Count; i++)
-        {
-            var link = children[i];
-            if (link.DestroyPolicy == ParentDestroyPolicy.DestroyRecursively)
-            {
-                Destroy(link.ChildEntityId);
-            }
-        }
+        return RuntimeWorld.Default.Entities.AttachLifecycleParent(childEntityId, parentEntityId, parentDestroyPolicy);
     }
 }

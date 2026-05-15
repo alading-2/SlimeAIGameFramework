@@ -15,6 +15,10 @@
 
 后续长期任务默认进入 `openspec/changes/<change>/`。`plan` / `ralplan` 只作为澄清、评审和风险收敛手段；需要落盘时写入 OpenSpec artifact。
 
+## Runtime World 入口
+
+Runtime 状态容器入口是 `SlimeAI.GameOS.Runtime.World.RuntimeWorld`。生产和旧调用面通过 `RuntimeWorld.Default` 以及 `EntityManager / LifecycleTree / WorldEvents.World / ResourceCatalog / ObjectPoolManager` static facade 访问；测试和沙箱用 `using var world = RuntimeWorld.CreateScoped();`。规范事实源是 OpenSpec `runtime-world-container`，长期契约同步在 `DocsAI/GameOS/Contracts.md` 与 `DocsAI/GameOS/ApiIndex.md`。
+
 ## Skill 迁移状态
 
 框架仓库根 `.codex/skills/` 包含 Runtime、DataOS、Capability、GodotBridge、Validation、OpenSpec 和 Research 入口型 Skill。游戏仓库只通过这些入口和游戏侧 DocsAI 路由，避免普通游戏开发误改框架内部。

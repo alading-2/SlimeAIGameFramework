@@ -16,6 +16,7 @@ using SlimeAI.GameOS.Runtime.Pool;
 using SlimeAI.GameOS.Runtime.Resource;
 using SlimeAI.GameOS.Runtime.Schedule;
 using SlimeAI.GameOS.Runtime.Timer;
+using SlimeAI.GameOS.Runtime.World;
 using AbilityEvents = SlimeAI.GameOS.Capabilities.Ability.Events;
 using AttackEvents = SlimeAI.GameOS.Capabilities.Attack.Events;
 using CollisionEvents = SlimeAI.GameOS.Capabilities.Collision.Events;
@@ -36,6 +37,13 @@ var tests = new (string Name, Action Run)[]
     ("EventBus broadcast routes to both buses", EventBusTests.BroadcastRoutesToBothBuses),
     ("EventBus entity event on world bus rejected", EventBusTests.EntityEventOnWorldBusRejected),
     ("EventBus global event on entity bus rejected", EventBusTests.GlobalEventOnEntityBusRejected),
+    ("RuntimeWorld default singleton", RuntimeWorldTests.DefaultSingleton),
+    ("RuntimeWorld default cannot dispose", RuntimeWorldTests.DefaultCannotDispose),
+    ("RuntimeWorld scoped subsystem isolation", RuntimeWorldTests.CreateScopedIsolatesSubsystems),
+    ("RuntimeWorld dispose order", RuntimeWorldTests.DisposeOrderIsDeterministic),
+    ("RuntimeWorld dispose publishes teardown events", RuntimeWorldTests.DisposePublishesTeardownEventsBeforeEventsClear),
+    ("RuntimeWorld access after dispose throws", RuntimeWorldTests.DisposeAfterAccessThrows),
+    ("RuntimeWorld subsystem handles present", RuntimeWorldTests.SubsystemHandlesArePresent),
     ("Entity Data event bridge", TestEntityDataBridge),
     ("EntityId value equality", EntityIdTests.ValueEqualityWorksAcrossSameKey),
     ("EntityId empty/default/null all equal", EntityIdTests.EmptyDefaultAndFromNullAllEqual),
@@ -168,85 +176,81 @@ static void TestEntityDataBridge()
 
 static void TestEntityLifecycle()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     var spawned = 0;
     var destroyed = 0;
-    var spawnSub = WorldEvents.World.Subscribe<EntitySpawned>(_ => spawned++);
-    var destroySub = WorldEvents.World.Subscribe<EntityDestroyed>(_ => destroyed++);
+    var spawnSub = world.Events.Subscribe<EntitySpawned>(_ => spawned++);
+    var destroySub = world.Events.Subscribe<EntityDestroyed>(_ => destroyed++);
 
-    var entity = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("entity-life") });
+    var entity = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("entity-life") });
 
-    AssertEqual("entity found", new EntityId("entity-life"), EntityManager.Get(new EntityId("entity-life"))?.EntityId);
+    AssertEqual("entity found", new EntityId("entity-life"), world.Entities.Get(new EntityId("entity-life"))?.EntityId);
     AssertEqual("spawned event", 1, spawned);
-    AssertEqual("destroy result", true, EntityManager.Destroy(entity));
+    AssertEqual("destroy result", true, world.Entities.Destroy(entity));
     AssertEqual("destroyed event", 1, destroyed);
 
     spawnSub.Dispose();
     destroySub.Dispose();
-    EntityManager.Clear();
 }
 
 static void TestLifecycleTree()
 {
-    LifecycleTree.Clear();
-    WorldEvents.World.Clear();
+    using var world = RuntimeWorld.CreateScoped();
 
     var attached = 0;
     var detached = 0;
-    var attachSub = WorldEvents.World.Subscribe<LifecycleChildAttached>(_ => attached++);
-    var detachSub = WorldEvents.World.Subscribe<LifecycleChildDetached>(_ => detached++);
+    var attachSub = world.Events.Subscribe<LifecycleChildAttached>(_ => attached++);
+    var detachSub = world.Events.Subscribe<LifecycleChildDetached>(_ => detached++);
 
     var parent1 = new EntityId("lifecycle-parent-1");
     var parent2 = new EntityId("lifecycle-parent-2");
     var child = new EntityId("lifecycle-child");
 
     // Attach 成功并发布事件。
-    AssertEqual("attach first parent", true, LifecycleTree.Attach(parent1, child, ParentDestroyPolicy.DestroyRecursively, priority: 7));
+    AssertEqual("attach first parent", true, world.Lifecycle.Attach(parent1, child, ParentDestroyPolicy.DestroyRecursively, priority: 7));
     AssertEqual("attach event count", 1, attached);
-    AssertEqual("isAttached after attach", true, LifecycleTree.IsAttached(parent1, child));
-    AssertEqual("getParentEntityId", parent1, LifecycleTree.GetParentEntityId(child));
-    AssertEqual("getChildEntityIds count", 1, LifecycleTree.GetChildEntityIds(parent1).Count);
-    AssertEqual("getChildEntityIds entry", child, LifecycleTree.GetChildEntityIds(parent1)[0]);
+    AssertEqual("isAttached after attach", true, world.Lifecycle.IsAttached(parent1, child));
+    AssertEqual("getParentEntityId", parent1, world.Lifecycle.GetParentEntityId(child));
+    AssertEqual("getChildEntityIds count", 1, world.Lifecycle.GetChildEntityIds(parent1).Count);
+    AssertEqual("getChildEntityIds entry", child, world.Lifecycle.GetChildEntityIds(parent1)[0]);
 
-    var links = LifecycleTree.GetChildren(parent1);
+    var links = world.Lifecycle.GetChildren(parent1);
     AssertEqual("link parent", parent1, links[0].ParentEntityId);
     AssertEqual("link policy", ParentDestroyPolicy.DestroyRecursively, links[0].DestroyPolicy);
     AssertEqual("link priority", 7, links[0].Priority);
 
     // 单 parent 假设：第二个 parent attach 失败。
-    AssertEqual("attach second parent blocked", false, LifecycleTree.Attach(parent2, child));
+    AssertEqual("attach second parent blocked", false, world.Lifecycle.Attach(parent2, child));
     AssertEqual("attach event still 1", 1, attached);
 
     // 自挂、Empty、cycle 拒绝。
-    AssertEqual("self attach rejected", false, LifecycleTree.Attach(parent1, parent1));
-    AssertEqual("empty parent rejected", false, LifecycleTree.Attach(EntityId.Empty, child));
-    AssertEqual("empty child rejected", false, LifecycleTree.Attach(parent1, EntityId.Empty));
+    AssertEqual("self attach rejected", false, world.Lifecycle.Attach(parent1, parent1));
+    AssertEqual("empty parent rejected", false, world.Lifecycle.Attach(EntityId.Empty, child));
+    AssertEqual("empty child rejected", false, world.Lifecycle.Attach(parent1, EntityId.Empty));
 
     var grandchild = new EntityId("lifecycle-grandchild");
-    LifecycleTree.Attach(child, grandchild);
-    AssertEqual("cycle attach rejected", false, LifecycleTree.Attach(grandchild, parent1));
+    world.Lifecycle.Attach(child, grandchild);
+    AssertEqual("cycle attach rejected", false, world.Lifecycle.Attach(grandchild, parent1));
 
     // Detach 触发事件并清状态。
-    AssertEqual("detach success", true, LifecycleTree.Detach(parent1, child));
+    AssertEqual("detach success", true, world.Lifecycle.Detach(parent1, child));
     AssertEqual("detach event count", 1, detached);
-    AssertEqual("getParentEntityId after detach", EntityId.Empty, LifecycleTree.GetParentEntityId(child));
-    AssertEqual("isAttached after detach", false, LifecycleTree.IsAttached(parent1, child));
+    AssertEqual("getParentEntityId after detach", EntityId.Empty, world.Lifecycle.GetParentEntityId(child));
+    AssertEqual("isAttached after detach", false, world.Lifecycle.IsAttached(parent1, child));
 
     // Detach 不存在 link 返回 false。
-    AssertEqual("detach absent link", false, LifecycleTree.Detach(parent1, child));
+    AssertEqual("detach absent link", false, world.Lifecycle.Detach(parent1, child));
 
     // 重 attach 到新 parent 成功。
-    AssertEqual("re-attach to new parent", true, LifecycleTree.Attach(parent2, child));
+    AssertEqual("re-attach to new parent", true, world.Lifecycle.Attach(parent2, child));
 
     // DetachAll 清掉 entity 所有参与（child 与 parent 两侧）。
-    LifecycleTree.DetachAll(child);
-    AssertEqual("detachAll removes child link", false, LifecycleTree.IsAttached(parent2, child));
-    AssertEqual("detachAll removes parent links", 0, LifecycleTree.GetChildEntityIds(child).Count);
+    world.Lifecycle.DetachAll(child);
+    AssertEqual("detachAll removes child link", false, world.Lifecycle.IsAttached(parent2, child));
+    AssertEqual("detachAll removes parent links", 0, world.Lifecycle.GetChildEntityIds(child).Count);
 
     attachSub.Dispose();
     detachSub.Dispose();
-    WorldEvents.World.Clear();
-    LifecycleTree.Clear();
 }
 
 static void TestEntityIdList()
@@ -290,7 +294,7 @@ static void TestEntityIdList()
 
 static void TestRuntimeOwnedReferenceRegistry()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     RuntimeOwnedReferenceRegistry.Clear();
     ProjectileDataKeys.RegisterAll();
 
@@ -299,9 +303,9 @@ static void TestRuntimeOwnedReferenceRegistry()
         ProjectileDataKeys.SourceEntity,
         ProjectileDataKeys.SpawnedProjectileIds));
 
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-source") });
-    var child1 = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-1") });
-    var child2 = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-2") });
+    var source = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-source") });
+    var child1 = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-1") });
+    var child2 = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-2") });
 
     // capability 手动维护 spawn 一致性。
     child1.Data.Set(ProjectileDataKeys.SourceEntity, source.EntityId);
@@ -313,7 +317,7 @@ static void TestRuntimeOwnedReferenceRegistry()
         source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds).Contains(child1.EntityId));
 
     // destroy child1：framework 自动从 owner list 移除。
-    EntityManager.Destroy(child1);
+    world.Entities.Destroy(child1);
     var listAfterDestroy = source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds);
     AssertEqual("owner list child1 removed", false, listAfterDestroy.Contains(child1.EntityId));
     AssertEqual("owner list child2 retained", true, listAfterDestroy.Contains(child2.EntityId));
@@ -321,53 +325,50 @@ static void TestRuntimeOwnedReferenceRegistry()
     // 自定义 cleaner 也会被回调。
     var cleaner = new TestOwnedReferenceCleaner();
     RuntimeOwnedReferenceRegistry.Register(cleaner);
-    EntityManager.Destroy(child2);
+    world.Entities.Destroy(child2);
     AssertEqual("cleaner invoked once", 1, cleaner.CallCount);
     AssertEqual("cleaner sees destroyed entity", child2.EntityId, cleaner.LastEntityId);
 
     // Clear 后 descriptor 不再生效。
     RuntimeOwnedReferenceRegistry.Clear();
-    var child3 = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-3") });
+    var child3 = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-3") });
     child3.Data.Set(ProjectileDataKeys.SourceEntity, source.EntityId);
     source.Data.Set(ProjectileDataKeys.SpawnedProjectileIds,
         EntityIdList.Empty.Add(child3.EntityId));
-    EntityManager.Destroy(child3);
+    world.Entities.Destroy(child3);
     AssertEqual("after Clear descriptor inert",
         true,
         source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds).Contains(child3.EntityId));
 
     RuntimeOwnedReferenceRegistry.Clear();
-    EntityManager.Clear();
 }
 
 static void TestEntityParentDestroyPolicy()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
 
-    var parent = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("parent") });
-    var recursiveChild = EntityManager.Spawn(new EntitySpawnConfig
+    var parent = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("parent") });
+    var recursiveChild = world.Entities.Spawn(new EntitySpawnConfig
     {
         EntityId = new EntityId("child-recursive"),
         ParentEntityId = parent.EntityId,
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively
     });
-    var detachedChild = EntityManager.Spawn(new EntitySpawnConfig
+    var detachedChild = world.Entities.Spawn(new EntitySpawnConfig
     {
         EntityId = new EntityId("child-detached"),
         ParentEntityId = parent.EntityId,
         ParentDestroyPolicy = ParentDestroyPolicy.Detach
     });
 
-    AssertEqual("recursive child registered", recursiveChild.EntityId, EntityManager.Get(recursiveChild.EntityId)?.EntityId);
-    AssertEqual("detached child policy", ParentDestroyPolicy.Detach, LifecycleTree.GetChildren(parent.EntityId)[1].DestroyPolicy);
+    AssertEqual("recursive child registered", recursiveChild.EntityId, world.Entities.Get(recursiveChild.EntityId)?.EntityId);
+    AssertEqual("detached child policy", ParentDestroyPolicy.Detach, world.Lifecycle.GetChildren(parent.EntityId)[1].DestroyPolicy);
 
-    EntityManager.Destroy(parent);
+    world.Entities.Destroy(parent);
 
-    AssertEqual("recursive child destroyed", null, EntityManager.Get(recursiveChild.EntityId));
-    AssertEqual("detached child alive", detachedChild.EntityId, EntityManager.Get(detachedChild.EntityId)?.EntityId);
-    AssertEqual("detached parent link removed", false, LifecycleTree.IsAttached(parent.EntityId, detachedChild.EntityId));
-
-    EntityManager.Clear();
+    AssertEqual("recursive child destroyed", null, world.Entities.Get(recursiveChild.EntityId));
+    AssertEqual("detached child alive", detachedChild.EntityId, world.Entities.Get(detachedChild.EntityId)?.EntityId);
+    AssertEqual("detached parent link removed", false, world.Lifecycle.IsAttached(parent.EntityId, detachedChild.EntityId));
 }
 
 static void TestSystemRunCondition()
@@ -459,11 +460,12 @@ static void TestTimerManager()
 
 static void TestResourceCatalog()
 {
-    ResourceCatalog.Clear();
-    ResourceCatalog.Register("Main", ResourceCategory.Entity, "res://Scenes/Main.tscn");
+    using var world = RuntimeWorld.CreateScoped();
+    world.Resources.Register("Main", ResourceCategory.Entity, "res://Scenes/Main.tscn");
 
-    AssertEqual("resource path", "res://Scenes/Main.tscn", ResourceManagement.GetPath("Main", ResourceCategory.Entity));
-    AssertEqual("resource key count", 1, ResourceCatalog.GetKeys(ResourceCategory.Entity).Count);
+    AssertEqual("resource found", true, world.Resources.TryGet("Main", ResourceCategory.Entity, out var data));
+    AssertEqual("resource path", "res://Scenes/Main.tscn", data.Path);
+    AssertEqual("resource key count", 1, world.Resources.GetKeys(ResourceCategory.Entity).Count);
 }
 
 static void TestRuntimeTypedDataApi()
@@ -810,17 +812,17 @@ static string BuildMissingDescriptorSnapshot()
 
 static void TestCollisionLayerMaskEvent()
 {
-    EntityManager.Clear();
-    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-source") });
+    using var world = RuntimeWorld.CreateScoped();
+    var source = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-source") });
     source.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.Projectile);
     source.Data.Set(CollisionDataKeys.CollisionMask, CollisionLayers.EnemyHurtbox);
     source.Data.Set(CollisionDataKeys.Team, 1);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-target") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-target") });
     target.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     target.Data.Set(CollisionDataKeys.Team, 2);
 
-    var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-same-team") });
+    var sameTeam = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("collision-same-team") });
     sameTeam.Data.Set(CollisionDataKeys.CollisionLayer, CollisionLayers.EnemyHurtbox);
     sameTeam.Data.Set(CollisionDataKeys.Team, 1);
 
@@ -845,14 +847,13 @@ static void TestCollisionLayerMaskEvent()
     AssertEqual("collision payload target", target.EntityId, received?.Target.EntityId);
     AssertEqual("collision payload layer", CollisionLayers.EnemyHurtbox, received?.TargetLayer);
 
-    EntityManager.Clear();
 }
 
 static void TestDamageServiceAppliesHealth()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-attacker") });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-victim") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-attacker") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-victim") });
     victim.Data.Set(DamageDataKeys.MaxHp, 20f);
     victim.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
@@ -888,14 +889,13 @@ static void TestDamageServiceAppliesHealth()
     AssertEqual("damaged events", 1, damagedEvents);
     AssertEqual("health events", 1, healthEvents);
 
-    EntityManager.Clear();
 }
 
 static void TestDamageServiceKilledEvent()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-killer") });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-killed-victim") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-killer") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-killed-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 5f);
 
     var killedEvents = 0;
@@ -920,14 +920,13 @@ static void TestDamageServiceKilledEvent()
     AssertEqual("kill stat", 1, attacker.Data.Get<int>(DamageDataKeys.TotalKills));
     AssertEqual("killed events", 1, killedEvents);
 
-    EntityManager.Clear();
 }
 
 static void TestDamagePipelineDodge()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-dodge-attacker") });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-dodge-victim") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-dodge-attacker") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-dodge-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 20f);
     victim.Data.Set(DamageDataKeys.DodgeChance, 100f);
 
@@ -955,17 +954,16 @@ static void TestDamagePipelineDodge()
     AssertEqual("dodge damaged events", 0, damagedEvents);
     AssertEqual("dodge event", 1, dodgedEvents);
 
-    EntityManager.Clear();
 }
 
 static void TestDamagePipelineCriticalArmorAndStats()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-crit-attacker") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-crit-attacker") });
     attacker.Data.Set(DamageDataKeys.CritRate, 100f);
     attacker.Data.Set(DamageDataKeys.CritDamage, 200f);
 
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-crit-victim") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-crit-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 100f);
     victim.Data.Set(DamageDataKeys.Armor, 15f);
 
@@ -989,14 +987,13 @@ static void TestDamagePipelineCriticalArmorAndStats()
     AssertNear("wave damage dealt", 20f, attacker.Data.Get<float>(DamageDataKeys.WaveDamageDealt));
     AssertNear("wave damage taken", 20f, victim.Data.Get<float>(DamageDataKeys.WaveDamageTaken));
 
-    EntityManager.Clear();
 }
 
 static void TestDamagePipelineTrueDamageBypassesDodgeAndArmor()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-true-attacker") });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-true-victim") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-true-attacker") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-true-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 50f);
     victim.Data.Set(DamageDataKeys.DodgeChance, 100f);
     victim.Data.Set(DamageDataKeys.Armor, 100f);
@@ -1015,18 +1012,17 @@ static void TestDamagePipelineTrueDamageBypassesDodgeAndArmor()
     AssertNear("true damage final", 12f, result.Info.FinalDamage);
     AssertNear("true damage hp", 38f, victim.Data.Get<float>(DamageDataKeys.CurrentHp));
 
-    EntityManager.Clear();
 }
 
 static void TestDamagePipelineLifesteal()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-lifesteal-attacker") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-lifesteal-attacker") });
     attacker.Data.Set(DamageDataKeys.MaxHp, 30f);
     attacker.Data.Set(DamageDataKeys.CurrentHp, 10f);
     attacker.Data.Set(DamageDataKeys.LifeSteal, 100f);
 
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-lifesteal-victim") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-lifesteal-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 40f);
 
     var healedEvents = 0;
@@ -1051,14 +1047,13 @@ static void TestDamagePipelineLifesteal()
     AssertNear("lifesteal stat", 10f, attacker.Data.Get<float>(DamageDataKeys.TotalHealingDone));
     AssertEqual("lifesteal event", 1, healedEvents);
 
-    EntityManager.Clear();
 }
 
 static void TestDamagePipelineShield()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-shield-attacker") });
-    var victim = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-shield-victim") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-shield-attacker") });
+    var victim = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-shield-victim") });
     victim.Data.Set(DamageDataKeys.CurrentHp, 30f);
     victim.Data.Set(DamageDataKeys.Shield, 8f);
 
@@ -1093,14 +1088,13 @@ static void TestDamagePipelineShield()
     AssertNear("shield full hp unchanged", 30f, victim.Data.Get<float>(DamageDataKeys.CurrentHp));
     AssertNear("shield full remaining", 15f, victim.Data.Get<float>(DamageDataKeys.Shield));
 
-    EntityManager.Clear();
 }
 
 static void TestHealServiceAppliesAndClamps()
 {
-    EntityManager.Clear();
-    var healer = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-healer") });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-target") });
+    using var world = RuntimeWorld.CreateScoped();
+    var healer = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-healer") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-target") });
     target.Data.Set(DamageDataKeys.MaxHp, 20f);
     target.Data.Set(DamageDataKeys.CurrentHp, 10f);
 
@@ -1127,15 +1121,14 @@ static void TestHealServiceAppliesAndClamps()
     AssertNear("heal received stat", 10f, target.Data.Get<float>(DamageDataKeys.TotalHealingReceived));
     AssertEqual("heal events", 1, healedEvents);
 
-    EntityManager.Clear();
 }
 
 static void TestDamageToolMultiTargetAndPeriodic()
 {
-    EntityManager.Clear();
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-attacker") });
-    var first = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-first") });
-    var second = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-second") });
+    using var world = RuntimeWorld.CreateScoped();
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-attacker") });
+    var first = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-first") });
+    var second = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("damage-tool-second") });
     first.Data.Set(DamageDataKeys.CurrentHp, 20f);
     second.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
@@ -1180,15 +1173,13 @@ static void TestDamageToolMultiTargetAndPeriodic()
     AssertNear("tool periodic second final", 11f, second.Data.Get<float>(DamageDataKeys.CurrentHp));
     AssertNear("tool periodic dealt stat", 18f, attacker.Data.Get<float>(DamageDataKeys.TotalDamageDealt));
     timerManager.Clear();
-
-    EntityManager.Clear();
 }
 
 static void TestAbilityServiceInstantDamageCooldownAndCharge()
 {
-    EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-firebolt") });
+    using var world = RuntimeWorld.CreateScoped();
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-firebolt") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Damage, 5f);
@@ -1196,7 +1187,7 @@ static void TestAbilityServiceInstantDamageCooldownAndCharge()
     ability.Data.Set(AbilityDataKeys.UsesCharges, true);
     ability.Data.Set(AbilityDataKeys.CurrentCharges, 2);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-target") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var executedEvents = 0;
@@ -1240,14 +1231,13 @@ static void TestAbilityServiceInstantDamageCooldownAndCharge()
     AssertNear("ability second damage hp", 10f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
     AssertEqual("ability second charge consumed", 0, ability.Data.Get<int>(AbilityDataKeys.CurrentCharges));
 
-    EntityManager.Clear();
 }
 
 static void TestAbilityServiceRequiresTarget()
 {
-    EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target") });
+    using var world = RuntimeWorld.CreateScoped();
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Damage, 5f);
@@ -1268,14 +1258,13 @@ static void TestAbilityServiceRequiresTarget()
     AssertEqual("ability no target failed", AbilityTriggerResult.FailNoTarget, report.Result);
     AssertEqual("ability failed events", 1, failedEvents);
 
-    EntityManager.Clear();
 }
 
 static void TestAbilityServiceAcceptsPointTarget()
 {
-    EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point") });
+    using var world = RuntimeWorld.CreateScoped();
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Point);
 
@@ -1294,14 +1283,13 @@ static void TestAbilityServiceAcceptsPointTarget()
     });
     AssertEqual("ability point success", AbilityTriggerResult.Success, report.Result);
 
-    EntityManager.Clear();
 }
 
 static void TestAbilityServiceAcceptsEntityOrPointTarget()
 {
-    EntityManager.Clear();
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either") });
+    using var world = RuntimeWorld.CreateScoped();
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.EntityOrPoint);
 
@@ -1320,7 +1308,7 @@ static void TestAbilityServiceAcceptsEntityOrPointTarget()
     });
     AssertEqual("ability either point success", AbilityTriggerResult.Success, pointReport.Result);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-target") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-target") });
     var entityReport = AbilityService.Instance.TryTrigger(new AbilityCastContext
     {
         Caster = caster,
@@ -1329,16 +1317,15 @@ static void TestAbilityServiceAcceptsEntityOrPointTarget()
     });
     AssertEqual("ability either entity success", AbilityTriggerResult.Success, entityReport.Result);
 
-    EntityManager.Clear();
 }
 
 static void TestAbilityServicePeriodicDamage()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     var timerManager = new TimerManager("ability-periodic-test-timers");
     var service = new AbilityService(timerManager);
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic") });
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Damage, 2f);
@@ -1346,7 +1333,7 @@ static void TestAbilityServicePeriodicDamage()
     ability.Data.Set(AbilityDataKeys.DamageRepeatCount, 3);
     ability.Data.Set(AbilityDataKeys.ApplyImmediateDamage, true);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic-target") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-periodic-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var report = service.TryTrigger(new AbilityCastContext
@@ -1367,28 +1354,27 @@ static void TestAbilityServicePeriodicDamage()
 
     AssertNear("ability periodic final hp", 14f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
     timerManager.Clear();
-    EntityManager.Clear();
 }
 
 static void TestAbilityServicePeriodicAutoTrigger()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     var service = new AbilityService(new TimerManager("ability-auto-trigger-test-timers"));
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto") });
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TriggerMode, AbilityTriggerMode.Periodic);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     ability.Data.Set(AbilityDataKeys.Cooldown, 1f);
     ability.Data.Set(AbilityDataKeys.Damage, 3f);
 
-    var manualAbility = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-manual") });
+    var manualAbility = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-manual") });
     manualAbility.Data.Set(AbilityDataKeys.IsEnabled, true);
     manualAbility.Data.Set(AbilityDataKeys.TriggerMode, AbilityTriggerMode.Manual);
     manualAbility.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
     manualAbility.Data.Set(AbilityDataKeys.Damage, 100f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-target") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-auto-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var context = new AbilityCastContext
@@ -1419,7 +1405,6 @@ static void TestAbilityServicePeriodicAutoTrigger()
     AssertEqual("ability auto second count", 1, second.Count);
     AssertNear("ability auto second damage", 14f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
 
-    EntityManager.Clear();
 }
 
 static void TestAbilityTargetingToolFindsNearestEntity()
@@ -1728,9 +1713,9 @@ static void TestEffectToolSpawnsRuntimeEntity()
 
 static void TestFeatureServiceGrantsModifiersAndRemoves()
 {
-    EntityManager.Clear();
-    var owner = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-owner") });
-    var feature = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-damage-bonus") });
+    using var world = RuntimeWorld.CreateScoped();
+    var owner = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-owner") });
+    var feature = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-damage-bonus") });
     owner.Data.Set(DamageDataKeys.ContactDamage, 5f);
 
     var service = new FeatureService();
@@ -1752,18 +1737,17 @@ static void TestFeatureServiceGrantsModifiersAndRemoves()
     service.Remove(owner, feature);
     AssertNear("feature modifier removed", 5f, owner.Data.Get<float>(DamageDataKeys.ContactDamage));
 
-    EntityManager.Clear();
 }
 
 static void TestFeatureServiceLifecycleHandler()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     FeatureHandlerRegistry.Clear();
     var handler = new CountingFeatureHandler("feature.lifecycle");
     FeatureHandlerRegistry.Register(handler);
 
-    var owner = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-lifecycle-owner") });
-    var feature = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-lifecycle") });
+    var owner = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-lifecycle-owner") });
+    var feature = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-lifecycle") });
     var service = new FeatureService();
     var definition = new FeatureDefinition
     {
@@ -1791,23 +1775,22 @@ static void TestFeatureServiceLifecycleHandler()
     AssertEqual("feature activation count", 1, feature.Data.Get<int>(FeatureDataKeys.ActivationCount));
 
     FeatureHandlerRegistry.Clear();
-    EntityManager.Clear();
 }
 
 static void TestAbilityServiceInvokesFeatureHandler()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     FeatureHandlerRegistry.Clear();
     var handler = new AbilityFeatureProbeHandler();
     FeatureHandlerRegistry.Register(handler);
 
-    var caster = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-caster") });
-    var ability = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature") });
+    var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-caster") });
+    var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.FeatureHandlerId, handler.FeatureId);
     ability.Data.Set(AbilityDataKeys.Damage, 99f);
 
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-target") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
     var report = AbilityService.Instance.TryTrigger(new AbilityCastContext
@@ -1824,7 +1807,6 @@ static void TestAbilityServiceInvokesFeatureHandler()
     AssertEqual("ability feature active reset", false, ability.Data.Get<bool>(FeatureDataKeys.IsActive));
 
     FeatureHandlerRegistry.Clear();
-    EntityManager.Clear();
 }
 
 static void TestAIServiceMovesTowardTarget()
@@ -2143,11 +2125,11 @@ static void TestAIServicePreparesAbilityAutoTargetContexts()
 
 static void TestAttackServiceConsumesRequestAndDamages()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     var timer = new TimerManager("attack-service-instant-test-timers");
     var service = new AttackService(timer, DamageService.Instance);
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-attacker") });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-target") });
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-attacker") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     attacker.Data.Set(AttackDataKeys.Damage, 6f);
     attacker.Data.Set(AttackDataKeys.Range, 20f);
@@ -2181,16 +2163,15 @@ static void TestAttackServiceConsumesRequestAndDamages()
 
     service.Clear();
     timer.Clear();
-    EntityManager.Clear();
 }
 
 static void TestAttackServiceGatesRangeAndCooldown()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     var timer = new TimerManager("attack-service-gates-test-timers");
     var service = new AttackService(timer, DamageService.Instance);
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-attacker") });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-target") });
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-attacker") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     attacker.Data.Set(AttackDataKeys.Damage, 6f);
     attacker.Data.Set(AttackDataKeys.Range, 4f);
@@ -2225,16 +2206,15 @@ static void TestAttackServiceGatesRangeAndCooldown()
     AssertEqual("attack after cooldown accepted", AttackTriggerResult.Success, afterCooldown.Result);
 
     timer.Clear();
-    EntityManager.Clear();
 }
 
 static void TestAttackServiceWindupAndRecoveryTimers()
 {
-    EntityManager.Clear();
+    using var world = RuntimeWorld.CreateScoped();
     var timer = new TimerManager("attack-service-windup-test-timers");
     var service = new AttackService(timer, DamageService.Instance);
-    var attacker = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-attacker") });
-    var target = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-target") });
+    var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-attacker") });
+    var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
     attacker.Data.Set(AttackDataKeys.Damage, 5f);
     attacker.Data.Set(AttackDataKeys.Range, 10f);
@@ -2268,7 +2248,6 @@ static void TestAttackServiceWindupAndRecoveryTimers()
     AssertEqual("attack cooldown complete", AttackTriggerResult.Success, service.TryRequest(request).Result);
 
     timer.Clear();
-    EntityManager.Clear();
 }
 
 static void TestMovementChargeTick()

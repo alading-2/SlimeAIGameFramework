@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.Runtime.Pool;
 
@@ -8,17 +9,13 @@ namespace SlimeAI.GameOS.Runtime.Pool;
 /// </summary>
 public static class ObjectPoolManager
 {
-    private static readonly Dictionary<string, IObjectPool> Pools = new(StringComparer.Ordinal);
-    private static readonly Dictionary<object, string> ObjectToPool = new();
-    private static readonly object LockObject = new();
-
     /// <summary>
     /// Registers a pool by name.
     /// </summary>
     /// <param name="pool">Pool instance.</param>
     public static void Register<T>(ObjectPool<T> pool) where T : class
     {
-        RegisterPool(pool);
+        RuntimeWorld.Default.Pools.Register(pool);
     }
 
     /// <summary>
@@ -27,11 +24,7 @@ public static class ObjectPoolManager
     /// <param name="pool">Pool instance.</param>
     public static void RegisterPool(IObjectPool pool)
     {
-        ArgumentNullException.ThrowIfNull(pool);
-        lock (LockObject)
-        {
-            Pools[pool.PoolName] = pool;
-        }
+        RuntimeWorld.Default.Pools.RegisterPool(pool);
     }
 
     /// <summary>
@@ -40,7 +33,7 @@ public static class ObjectPoolManager
     /// <param name="pool">Pool instance.</param>
     public static void Unregister<T>(ObjectPool<T> pool) where T : class
     {
-        UnregisterPool(pool);
+        RuntimeWorld.Default.Pools.Unregister(pool);
     }
 
     /// <summary>
@@ -49,11 +42,7 @@ public static class ObjectPoolManager
     /// <param name="pool">Pool instance.</param>
     public static void UnregisterPool(IObjectPool pool)
     {
-        ArgumentNullException.ThrowIfNull(pool);
-        lock (LockObject)
-        {
-            Pools.Remove(pool.PoolName);
-        }
+        RuntimeWorld.Default.Pools.UnregisterPool(pool);
     }
 
     /// <summary>
@@ -63,10 +52,7 @@ public static class ObjectPoolManager
     /// <param name="poolName">Pool name.</param>
     public static void MapObject(object instance, string poolName)
     {
-        lock (LockObject)
-        {
-            ObjectToPool[instance] = poolName;
-        }
+        RuntimeWorld.Default.Pools.MapObject(instance, poolName);
     }
 
     /// <summary>
@@ -75,10 +61,7 @@ public static class ObjectPoolManager
     /// <param name="instance">Pooled instance.</param>
     public static void UnmapObject(object instance)
     {
-        lock (LockObject)
-        {
-            ObjectToPool.Remove(instance);
-        }
+        RuntimeWorld.Default.Pools.UnmapObject(instance);
     }
 
     /// <summary>
@@ -87,18 +70,7 @@ public static class ObjectPoolManager
     /// <param name="instance">Pooled instance.</param>
     public static bool ReturnToPool(object instance)
     {
-        ArgumentNullException.ThrowIfNull(instance);
-
-        IObjectPool? pool;
-        lock (LockObject)
-        {
-            if (!ObjectToPool.TryGetValue(instance, out var poolName) || !Pools.TryGetValue(poolName, out pool))
-            {
-                return false;
-            }
-        }
-
-        return pool.ReleaseObject(instance);
+        return RuntimeWorld.Default.Pools.ReturnToPool(instance);
     }
 
     /// <summary>
@@ -107,10 +79,7 @@ public static class ObjectPoolManager
     /// <param name="name">Pool name.</param>
     public static ObjectPool<T>? GetPool<T>(string name) where T : class
     {
-        lock (LockObject)
-        {
-            return Pools.TryGetValue(name, out var pool) ? pool as ObjectPool<T> : null;
-        }
+        return RuntimeWorld.Default.Pools.GetPool<T>(name);
     }
 
     /// <summary>
@@ -119,10 +88,7 @@ public static class ObjectPoolManager
     /// <param name="name">Pool name.</param>
     public static IObjectPool? GetNamedPool(string name)
     {
-        lock (LockObject)
-        {
-            return Pools.GetValueOrDefault(name);
-        }
+        return RuntimeWorld.Default.Pools.GetNamedPool(name);
     }
 
     /// <summary>
@@ -130,16 +96,7 @@ public static class ObjectPoolManager
     /// </summary>
     public static Dictionary<string, PoolStats> GetAllStats()
     {
-        lock (LockObject)
-        {
-            var result = new Dictionary<string, PoolStats>(StringComparer.Ordinal);
-            foreach (var pair in Pools)
-            {
-                result[pair.Key] = pair.Value.GetStats();
-            }
-
-            return result;
-        }
+        return RuntimeWorld.Default.Pools.GetAllStats();
     }
 
     /// <summary>
@@ -147,17 +104,6 @@ public static class ObjectPoolManager
     /// </summary>
     public static void DestroyAll()
     {
-        List<IObjectPool> pools;
-        lock (LockObject)
-        {
-            pools = new List<IObjectPool>(Pools.Values);
-            Pools.Clear();
-            ObjectToPool.Clear();
-        }
-
-        for (var i = 0; i < pools.Count; i++)
-        {
-            pools[i].Destroy();
-        }
+        RuntimeWorld.Default.Pools.Clear();
     }
 }

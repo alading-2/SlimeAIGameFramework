@@ -61,14 +61,24 @@ public static class RuntimeOwnedReferenceRegistry
     /// </summary>
     internal static void NotifyDestroying(IEntity destroyed)
     {
+        NotifyDestroying(destroyed, EntityManager.Get);
+    }
+
+    /// <summary>
+    /// 在指定 world registry 的查找函数中执行 owner cleanup。
+    /// </summary>
+    internal static void NotifyDestroying(IEntity destroyed, Func<EntityId, IEntity?> resolveEntity)
+    {
         if (destroyed == null)
         {
             return;
         }
 
+        ArgumentNullException.ThrowIfNull(resolveEntity);
+
         for (var i = 0; i < Descriptors.Count; i++)
         {
-            ApplyDescriptor(Descriptors[i], destroyed);
+            ApplyDescriptor(Descriptors[i], destroyed, resolveEntity);
         }
 
         for (var i = 0; i < Cleaners.Count; i++)
@@ -77,7 +87,10 @@ public static class RuntimeOwnedReferenceRegistry
         }
     }
 
-    private static void ApplyDescriptor(OwnedReferenceDescriptor descriptor, IEntity destroyed)
+    private static void ApplyDescriptor(
+        OwnedReferenceDescriptor descriptor,
+        IEntity destroyed,
+        Func<EntityId, IEntity?> resolveEntity)
     {
         var ownerSlot = destroyed.Data.Get(descriptor.ChildToOwnerKey);
         if (!ownerSlot.HasValue || ownerSlot.Value.IsEmpty)
@@ -85,7 +98,7 @@ public static class RuntimeOwnedReferenceRegistry
             return;
         }
 
-        var owner = EntityManager.Get(ownerSlot.Value);
+        var owner = resolveEntity(ownerSlot.Value);
         if (owner == null)
         {
             return;

@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
-using SlimeAI.GameOS.Runtime.Event;
-using SlimeAI.GameOS.Runtime.Events.Core;
+using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.Runtime.Entity;
 
@@ -20,10 +18,6 @@ namespace SlimeAI.GameOS.Runtime.Entity;
 /// </remarks>
 public static class LifecycleTree
 {
-    private static readonly Dictionary<EntityId, LifecycleLink> ChildToLink = new();
-    private static readonly Dictionary<EntityId, List<LifecycleLink>> ParentToLinks = new();
-    private static readonly Dictionary<EntityId, EntityId> ChildToParent = new();
-
     /// <summary>
     /// 将 <paramref name="childId"/> 作为 <paramref name="parentId"/> 的 lifecycle child 挂接。
     /// </summary>
@@ -38,38 +32,7 @@ public static class LifecycleTree
         ParentDestroyPolicy destroyPolicy = ParentDestroyPolicy.DestroyRecursively,
         int priority = 0)
     {
-        if (parentId.IsEmpty || childId.IsEmpty)
-        {
-            return false;
-        }
-
-        if (parentId.Equals(childId))
-        {
-            return false;
-        }
-
-        if (ChildToParent.ContainsKey(childId))
-        {
-            return false;
-        }
-
-        if (WouldCreateCycle(parentId, childId))
-        {
-            return false;
-        }
-
-        var link = new LifecycleLink(parentId, childId, destroyPolicy, priority);
-        ChildToLink[childId] = link;
-        ChildToParent[childId] = parentId;
-        if (!ParentToLinks.TryGetValue(parentId, out var siblings))
-        {
-            siblings = new List<LifecycleLink>();
-            ParentToLinks[parentId] = siblings;
-        }
-
-        siblings.Add(link);
-        WorldEvents.World.Publish(new LifecycleChildAttached(parentId, childId, destroyPolicy));
-        return true;
+        return RuntimeWorld.Default.Lifecycle.Attach(parentId, childId, destroyPolicy, priority);
     }
 
     /// <summary>
@@ -77,36 +40,7 @@ public static class LifecycleTree
     /// </summary>
     public static bool Detach(EntityId parentId, EntityId childId)
     {
-        if (parentId.IsEmpty || childId.IsEmpty)
-        {
-            return false;
-        }
-
-        if (!ChildToLink.TryGetValue(childId, out var link) || !link.ParentEntityId.Equals(parentId))
-        {
-            return false;
-        }
-
-        ChildToLink.Remove(childId);
-        ChildToParent.Remove(childId);
-        if (ParentToLinks.TryGetValue(parentId, out var siblings))
-        {
-            for (var i = siblings.Count - 1; i >= 0; i--)
-            {
-                if (siblings[i].ChildEntityId.Equals(childId))
-                {
-                    siblings.RemoveAt(i);
-                }
-            }
-
-            if (siblings.Count == 0)
-            {
-                ParentToLinks.Remove(parentId);
-            }
-        }
-
-        WorldEvents.World.Publish(new LifecycleChildDetached(parentId, childId, link.DestroyPolicy));
-        return true;
+        return RuntimeWorld.Default.Lifecycle.Detach(parentId, childId);
     }
 
     /// <summary>
@@ -114,12 +48,7 @@ public static class LifecycleTree
     /// </summary>
     public static bool IsAttached(EntityId parentId, EntityId childId)
     {
-        if (parentId.IsEmpty || childId.IsEmpty)
-        {
-            return false;
-        }
-
-        return ChildToParent.TryGetValue(childId, out var existing) && existing.Equals(parentId);
+        return RuntimeWorld.Default.Lifecycle.IsAttached(parentId, childId);
     }
 
     /// <summary>
@@ -127,12 +56,7 @@ public static class LifecycleTree
     /// </summary>
     public static EntityId GetParentEntityId(EntityId childId)
     {
-        if (childId.IsEmpty)
-        {
-            return EntityId.Empty;
-        }
-
-        return ChildToParent.TryGetValue(childId, out var parent) ? parent : EntityId.Empty;
+        return RuntimeWorld.Default.Lifecycle.GetParentEntityId(childId);
     }
 
     /// <summary>
@@ -140,12 +64,7 @@ public static class LifecycleTree
     /// </summary>
     public static IReadOnlyList<LifecycleLink> GetChildren(EntityId parentId)
     {
-        if (parentId.IsEmpty || !ParentToLinks.TryGetValue(parentId, out var siblings))
-        {
-            return Array.Empty<LifecycleLink>();
-        }
-
-        return new List<LifecycleLink>(siblings);
+        return RuntimeWorld.Default.Lifecycle.GetChildren(parentId);
     }
 
     /// <summary>
@@ -153,18 +72,7 @@ public static class LifecycleTree
     /// </summary>
     public static IReadOnlyList<EntityId> GetChildEntityIds(EntityId parentId)
     {
-        if (parentId.IsEmpty || !ParentToLinks.TryGetValue(parentId, out var siblings) || siblings.Count == 0)
-        {
-            return Array.Empty<EntityId>();
-        }
-
-        var result = new EntityId[siblings.Count];
-        for (var i = 0; i < siblings.Count; i++)
-        {
-            result[i] = siblings[i].ChildEntityId;
-        }
-
-        return result;
+        return RuntimeWorld.Default.Lifecycle.GetChildEntityIds(parentId);
     }
 
     /// <summary>
@@ -173,31 +81,7 @@ public static class LifecycleTree
     /// </summary>
     public static void DetachAll(EntityId entityId)
     {
-        if (entityId.IsEmpty)
-        {
-            return;
-        }
-
-        // 1) 作为 child：从其 lifecycle parent detach。
-        if (ChildToParent.TryGetValue(entityId, out var parentId))
-        {
-            Detach(parentId, entityId);
-        }
-
-        // 2) 作为 parent：遍历所有 child 并 detach。
-        if (ParentToLinks.TryGetValue(entityId, out var children) && children.Count > 0)
-        {
-            var snapshot = new EntityId[children.Count];
-            for (var i = 0; i < children.Count; i++)
-            {
-                snapshot[i] = children[i].ChildEntityId;
-            }
-
-            for (var i = 0; i < snapshot.Length; i++)
-            {
-                Detach(entityId, snapshot[i]);
-            }
-        }
+        RuntimeWorld.Default.Lifecycle.DetachAll(entityId);
     }
 
     /// <summary>
@@ -205,31 +89,6 @@ public static class LifecycleTree
     /// </summary>
     public static void Clear()
     {
-        ChildToLink.Clear();
-        ParentToLinks.Clear();
-        ChildToParent.Clear();
-    }
-
-    private static bool WouldCreateCycle(EntityId parentId, EntityId childId)
-    {
-        // 沿 parent 现有 lifecycle 链向上回查；若回到 childId 即形成环。
-        var current = parentId;
-        for (var depth = 0; depth < 128; depth++)
-        {
-            if (!ChildToParent.TryGetValue(current, out var next))
-            {
-                return false;
-            }
-
-            if (next.Equals(childId))
-            {
-                return true;
-            }
-
-            current = next;
-        }
-
-        // 深度超限按 cycle 处理，避免误连。
-        return true;
+        RuntimeWorld.Default.Lifecycle.Clear();
     }
 }

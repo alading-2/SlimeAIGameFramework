@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using SlimeAI.GameOS.Observation;
+using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.Runtime.Event;
 
 /// <summary>
 /// 进程级事件总线。接受 IGlobalEvent / IBroadcastEvent；拒绝 IEntityEvent-only。
 /// </summary>
-public sealed class WorldEventBus : IEventBus, IWorldEventBusRouter
+public class WorldEventBus : IWorldEventBus
 {
     private static readonly GameOSContextLog Log = GameOSLog.For("EventBus");
 
@@ -224,5 +225,5 @@ public static class WorldEvents
     /// <summary>
     /// 全局单例 world bus，供跨实体/系统级事件派发。
     /// </summary>
-    public static WorldEventBus World { get; } = new();
+    public static IWorldEventBus World => RuntimeWorld.Default.Events;
 }

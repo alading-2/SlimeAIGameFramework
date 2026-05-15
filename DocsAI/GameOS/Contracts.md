@@ -30,6 +30,12 @@
 - `SlimeAI.GameOS.Runtime.Event.WorldEventBus`
 - `SlimeAI.GameOS.Runtime.Event.WorldEvents`
 - `SlimeAI.GameOS.Runtime.Event.EventBusObservation`
+- `SlimeAI.GameOS.Runtime.World.RuntimeWorld`
+- `SlimeAI.GameOS.Runtime.World.IEntityRegistry`
+- `SlimeAI.GameOS.Runtime.World.ILifecycleTree`
+- `SlimeAI.GameOS.Runtime.World.IWorldEventBus`
+- `SlimeAI.GameOS.Runtime.World.IResourceCatalog`
+- `SlimeAI.GameOS.Runtime.World.IObjectPoolManager`
 - `SlimeAI.GameOS.Runtime.Data.Data`
 - `SlimeAI.GameOS.Runtime.Data.DataKey<T>`
 - `SlimeAI.GameOS.Runtime.Data.IDataKey`
@@ -126,6 +132,15 @@
 - `SlimeAI.GameOS.Observation.GameOSObservationSession`
 - `SlimeAI.GameOS.Observation.SceneValidationSession`
 
+## Runtime World 契约
+
+- `RuntimeWorld` 是 GameOS Runtime 的世界容器 facade，固定持有 `Entities / Lifecycle / Events / Resources / Pools` 五个 subsystem 句柄。禁止在 `RuntimeWorld` 上引入 `IServiceProvider`、`Services.Get<T>()` 或反射 service locator；后续 P4 的 Schedule / Commands 必须扩展 `RuntimeWorld`，不能另建并行全局容器。
+- `RuntimeWorld.Default` 是进程级 eager singleton；现有 `EntityManager`、`LifecycleTree`、`WorldEvents.World`、`ResourceCatalog`、`ObjectPoolManager` static facade 保留并转发到 `Default`，BrotatoLike 和 Capability 旧调用面不强制改造。
+- `RuntimeWorld.CreateScoped()` 每次返回独立 sandbox，实体注册表、LifecycleTree、WorldEventBus、ResourceCatalog、ObjectPoolManager state 与 `Default` 和其他 scoped world 完全隔离。框架测试必须优先使用 `using var world = RuntimeWorld.CreateScoped();`。
+- `RuntimeWorld.Default.Dispose()` 必须抛 `InvalidOperationException("RuntimeWorld.Default cannot be disposed")`；scoped world `Dispose()` 后 `Entities / Lifecycle / Events / Resources / Pools` getter 必须抛 `ObjectDisposedException`。
+- 本变更范围内 scoped world dispose 顺序固定为 `Pools -> Resources -> Lifecycle -> Entities -> Events`。完整事实源顺序预留 P4 扩展为 `Schedule -> Commands -> Pools -> Resources -> Lifecycle -> Entities -> Events`；后续 change 不得重新定义此顺序。
+- `IEntityRegistry / ILifecycleTree / IWorldEventBus / IResourceCatalog / IObjectPoolManager` 是 `RuntimeWorld` 组合用 internal-only abstraction：Capability、游戏仓和测试不支持注册自定义实现或 mock；需要隔离时用真实 `CreateScoped()`。
+
 ## Runtime Data 契约
 
 - `Data` 是运行时 typed 状态容器，构造时绑定 frozen `DataCatalog`，主存储使用 catalog key id + typed slot。
@@ -145,7 +160,7 @@
 - `EntityEventBus` 承载实体级事件；`IBroadcastEvent` 会在 Publish 后自动转发到注入的 `WorldEventBus`。反向违规（`IEntityEvent` 到 world bus、`IGlobalEvent` 到 entity bus）会 `log Error` 并 return，不派发。
 - 同类型嵌套 Publish 被阻断：per-bus 检测到正在派发的 `T` 时记录 reentry、log Error、return；跨类型级联和不同 bus 上的同类型 Publish 仍允许。
 - 订阅顺序等于注册顺序；退订唯一路径是 Dispose 由 `Subscribe` 返回的 token。handler 异常被 `EventBusObservation` 捕获，不会中断其他 handler。
-- `WorldEvents.World` 是进程级 world bus 的静态访问点；Capability 事件按目录组织在 `SlimeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SlimeAI/GameOS/Runtime/Events/{Core,Global}/`。
+- `WorldEvents.World` 是 `RuntimeWorld.Default.Events` 的静态访问点；Capability 事件按目录组织在 `SlimeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SlimeAI/GameOS/Runtime/Events/{Core,Global}/`。
 - `ExportObservation` 写 `eventbus-dump.json`，字段覆盖 `schemaVersion`、`busName`、`generatedAtUtc`、`subscriptions`、`emittedCounts`、`sameTypeReentryBlockedCounts`、`handlerExceptions`、`handlerRegistrationOrder`。
 
 ## Runtime Entity 契约
@@ -153,7 +168,7 @@
 - `EntityId` 是 typed value：`readonly record struct EntityId(string Value)`，定义在 `SlimeAI.GameOS.Runtime.Entity`；不允许 implicit `string ↔ EntityId` 转换，调用方必须 `new EntityId(value)` 或 `EntityId.From(string?)` 显式构造。`EntityId.Empty` 是唯一"无引用"值，`IsEmpty` 同时把 `null` 与 `""` 视为 empty；`default(EntityId) == Empty == From(null) == From("")`。
 - `IEntity` 是 `Runtime Entity` 的 legacy public symbol，只暴露 typed `EntityId`、`Data`、`Events`，不承载业务逻辑。
 - `RuntimeEntity` 是运行时对象身份容器，由 Capability、Relationship、RuntimeSchedule 和 GodotBridge Adapter 操作；不要通过子类继承或在 `IEntity` 上增加行为方法来实现玩法。
-- `EntityManager.Spawn / Register / Destroy / Get / GetAll / Clear / AttachLifecycleParent` 全部使用 typed `EntityId`；内部以 `Dictionary<EntityId, IEntity>` 索引。`EntityManager.Spawn(EntitySpawnConfig)` 在 `EntityId.Empty` 时分配 `EntityId.From(Guid.NewGuid().ToString("N"))`。
+- `EntityManager.Spawn / Register / Destroy / Get / GetAll / Clear / AttachLifecycleParent` 全部使用 typed `EntityId`；static facade 转发到 `RuntimeWorld.Default.Entities`，instance state 由 `EntityRegistry` 持有。`EntityManager.Spawn(EntitySpawnConfig)` 在 `EntityId.Empty` 时分配 `EntityId.From(Guid.NewGuid().ToString("N"))`。
 - `EntitySpawnConfig` 仅含 `EntityId / DataCatalog / ParentEntityId / ParentDestroyPolicy` 四字段；不再支持 `AutoAddParentRelation` 与 `ParentRelationTypes`（业务引用走 typed DataKey）。
 - Runtime Events `EntitySpawned / EntityDestroyed` payload 携带 `IEntity Entity`（typed `EntityId` 通过 `Entity.EntityId` 暴露）；`LifecycleChildAttached / LifecycleChildDetached` payload 字段 `ParentEntityId / ChildEntityId / DestroyPolicy` 全部 typed，没有 string `RelationType`。
 - 业务 entity 引用 DataKey 必须是 `DataKey<EntityId?>` 或 `DataKey<EntityIdList>`：`Projectile.SourceEntity / AbilityEntity / TargetEntity / SpawnedProjectileIds`、`Effect.SourceEntity / AbilityEntity / TargetEntity / SpawnedEffectIds`、`Ability.OwnerEntity / OwnedAbilityIds`、`AI.TargetEntity`。`DataKey<IEntity?>` 与 `DataKey<List<string>>` 不再作为业务 entity-id 引用类型。
@@ -165,9 +180,9 @@
 - `LifecycleTree` 是运行时唯一公开 Relationship 入口，假设每个 entity 至多一个 lifecycle parent；业务多对多引用走 typed `DataKey<EntityIdList>`，不进入 `LifecycleTree`。
 - `LifecycleLink(ParentEntityId, ChildEntityId, DestroyPolicy, Priority)` 是不可变 typed record；策略和优先级是字段，不是 `Dictionary<string, object>`。
 - 父实体销毁时，`DestroyPolicy = DestroyRecursively` 子实体递归销毁，`Detach` 子实体继续存活并断开 lifecycle link；`EntityManager.Destroy` 在销毁路径调用 `RuntimeOwnedReferenceRegistry.NotifyDestroying`，再发布 `EntityDestroyed`。
-- `LifecycleTree.Attach / Detach` 成功时通过 `WorldEvents.World.Publish` 发布 `LifecycleChildAttached / LifecycleChildDetached`（`IGlobalEvent`）；`EntityId.Empty` 作为 parent 或 child 被拒绝。
+- `LifecycleTree.Attach / Detach` static facade 转发到 `RuntimeWorld.Default.Lifecycle`；成功时通过所属 world bus 发布 `LifecycleChildAttached / LifecycleChildDetached`（`IGlobalEvent`）；`EntityId.Empty` 作为 parent 或 child 被拒绝。
 - `LifecycleTree.GetChildren / GetChildEntityIds / GetParentEntityId` 返回快照，避免调用方持有内部索引；`GetParentEntityId` 在无 parent 时返回 `EntityId.Empty`。
-- `LifecycleTree.Clear` 与 `EntityManager.Clear` 配套调用，仅用于测试或运行域重置。
+- `LifecycleTree.Clear` 与 `EntityManager.Clear` 配套调用，仅用于运行域重置；新测试使用 `RuntimeWorld.CreateScoped()`，不直接 mutate `RuntimeWorld.Default`。
 
 ## Runtime Schedule 契约
 
@@ -179,14 +194,14 @@
 
 ## Runtime Resource 契约
 
-- `ResourceCatalog` 保存稳定资源键到 Godot `res://` 路径的映射。
+- `ResourceCatalog` 保存稳定资源键到 Godot `res://` 路径的映射；static facade 转发到 `RuntimeWorld.Default.Resources`，scoped 测试可通过 `world.Resources` 隔离资源目录。
 - `ResourceManagement` 是统一加载入口，游戏和 Capability 不直接调用 `GD.Load`。
 - DataOS snapshot 可批量注册资源映射；资源扫描仍不在 Runtime 热路径中执行。
 
 ## Runtime Pool 契约
 
 - `IObjectPool` 是全局池注册表的非泛型句柄，允许 Runtime 对象池和 Godot Node 池共用 `ObjectPoolManager.ReturnToPool`。
-- `ObjectPool<T>` 支持预热、复用、统计、`IPoolable` 生命周期和 `ObjectPoolManager.ReturnToPool`。
+- `ObjectPool<T>` 支持预热、复用、统计、`IPoolable` 生命周期和 `ObjectPoolManager.ReturnToPool`；static manager 转发到 `RuntimeWorld.Default.Pools`。
 - `ObjectPoolConfig.MaxSize = -1` 表示无限制，遵守项目数值语义。
 - Runtime `ObjectPool<T>` 保持纯 C#；Godot Node 泊车、脱树和碰撞隔离逻辑进入 GodotBridge。
 
