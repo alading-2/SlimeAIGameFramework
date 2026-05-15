@@ -1,7 +1,6 @@
 using System;
 using Godot;
 using SlimeAI.GameOS.Runtime.Entity;
-using SlimeAI.GameOS.Runtime.Relationship;
 
 namespace SlimeAI.GameOS.GodotBridge;
 
@@ -117,9 +116,7 @@ public static class GameOSGodotBridge
         ArgumentNullException.ThrowIfNull(entity);
 
         var count = 0;
-        var componentIds = RelationshipManager.GetChildEntitiesByParentAndType(
-            entity.EntityId.Value,
-            RelationshipType.EntityToComponent);
+        var componentIds = GodotNodeRegistry.GetAdaptersByEntity(entity.EntityId);
 
         for (var i = 0; i < componentIds.Count; i++)
         {
@@ -130,7 +127,7 @@ public static class GameOSGodotBridge
                 component.OnComponentUnregistered(entity, entityNode);
             }
 
-            RelationshipManager.RemoveRelationship(entity.EntityId.Value, componentId, RelationshipType.EntityToComponent);
+            GodotNodeRegistry.UnregisterAdapter(entity.EntityId, componentId);
             if (componentNode != null)
             {
                 GodotNodeRegistry.Unregister(componentNode, componentId);
@@ -179,17 +176,14 @@ public static class GameOSGodotBridge
     {
         var componentId = GodotNodeRegistry.GetNodeInstanceId(componentNode);
         var nodeRegistered = GodotNodeRegistry.Register(componentNode, componentId);
-        var relationRegistered = RelationshipManager.AddRelationship(
-            entity.EntityId.Value,
-            componentId,
-            RelationshipType.EntityToComponent);
+        var adapterRegistered = GodotNodeRegistry.RegisterAdapter(entity.EntityId, componentId);
 
         if (nodeRegistered && componentNode is IGodotComponent component)
         {
             component.OnComponentRegistered(entity, entityNode);
         }
 
-        return nodeRegistered || relationRegistered;
+        return nodeRegistered || adapterRegistered;
     }
 
     private static bool IsComponentNode(Node node)

@@ -1,6 +1,6 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-14（P2a typed EntityId boundary）
+> 更新日期：2026-05-15（P1 LifecycleTree + 框架仓 typed reference 完成；游戏仓与 archive 待执行）
 
 ## 当前阶段
 
@@ -29,10 +29,10 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 
 ## 风险
 
-- P2a typed `EntityId` 已完成框架与 tests 适配，`RelationshipManager` 内部仍是 string-based（P1 范畴未动），调用面通过 `entityId.Value` 适配；`runtime-relationship-as-lifecycle-tree`（P1）将彻底替换 `RelationshipManager` 为 typed `LifecycleTree`。BrotatoLike submodule 同步与 Godot smoke 验证仍待执行。
+- P1 `refactor-runtime-relationship-as-lifecycle-tree` 框架仓已完成：删除 `Runtime/Relationship/` 目录，新增 `Runtime/Entity/LifecycleTree.cs`、`LifecycleLink.cs`、`EntityIdList.cs`、`OwnedReferenceDescriptor.cs`、`IOwnedReferenceCleaner.cs`、`RuntimeOwnedReferenceRegistry.cs`；`EntitySpawnConfig` 简化为 `EntityId / DataCatalog / ParentEntityId / ParentDestroyPolicy`；`Projectile / Effect / Ability` capability 在 `Initialize` 处注册 owner cleanup hook，`SpawnedProjectileIds / SpawnedEffectIds / OwnedAbilityIds` 改为 `DataKey<EntityIdList>`；`GodotNodeRegistry` 内部 entity→adapter 索引替代旧 `RelationshipType.EntityToComponent`。框架仓 `Tools/run-build.sh` 与 `Tools/run-tests.sh` 全 PASS（85/85，含新 `LifecycleTree / EntityIdList / RuntimeOwnedReferenceRegistry` 测试）。BrotatoLike 游戏仓同步、Godot smoke 验证、相关 skill 同步与 archive 仍待执行。
 - Godot Node 对象池碰撞隔离已有第一版 API，并已通过 BrotatoLike Godot headless smoke；PhysicsServer2D trace 尚未接入。
 - 当前碰撞隔离已覆盖 `CollisionObject2D` 根节点脱树、泊车、layer/mask 清零、Area2D monitoring/monitorable 和 CollisionShape/Polygon 禁用；PhysicsServer2D trace 尚未接入。
-- Relationship / Schedule 已迁入纯 C# 最小内核；ScheduleDataKeys 和 BrotatoLike 第一批系统配置 / 预设 / Spawn config 已进入 DataOS snapshot，但尚未接完整 RuntimeSchedule 自动装载。
+- LifecycleTree / Schedule 已迁入纯 C# 最小内核；ScheduleDataKeys 和 BrotatoLike 第一批系统配置 / 预设 / Spawn config 已进入 DataOS snapshot，但尚未接完整 RuntimeSchedule 自动装载。
 - Movement Capability 已覆盖旧项目 `None / Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc` 纯运行时策略，并完成运行时圆形扫描版运动碰撞、同帧多命中派发、目标查询注入、Godot Physics broadphase、Godot 朝向输出第一批和 DataOS 可写入的 handler authoring DataKey；BrotatoLike 已接入 SineWave / Orbit / Boomerang / Bezier / CircularArc / AttachToHost / Charge 从 DataOS 组装 `MovementParams` 的执行路径，真实输入 UI 和更多游戏侧宿主内容仍未迁入。
 - Collision Capability 已迁入旧碰撞层常量、`CollisionDataKeys`、`CollisionFilterPolicy`、`CollisionContact`、`CollisionSystem`、`Capabilities.Collision.Events`、`GodotAreaEntity2D`、`GodotCollisionBridge`、`GodotCollisionComponent` 和 `GodotHurtboxComponent` 第一批；ContactDamage bridge 已接入 DamageService。
 - Damage Capability 已迁入 `DamageDataKeys`、`DamageType`、`DamageTags`、`DamageInfo`、`DamageService`、`HealService`、`DamageTool`、`IDamageProcessor`、默认处理器优先级、基础检查、闪避、暴击、护盾、护甲、受伤倍率、生命值结算、吸血、统计处理器、`Capabilities.Damage.Events` 和 Godot `GodotContactDamageComponent` 第一批；SystemCore 门禁尚未迁入。
@@ -63,6 +63,16 @@ Tools/run-build.sh             # PASS
 Tools/run-tests.sh             # 83/83 PASS（含 4 个新增 EntityIdTests）
 Tools/run-dataos-validate.sh   # PASS
 ```
+
+### P1 LifecycleTree 框架仓实施验证（2026-05-15）
+
+```bash
+cd /home/slime/Code/SkilmeAI/SlimeAI
+Tools/run-build.sh             # PASS（0 errors / 0 warnings）
+Tools/run-tests.sh             # 85/85 PASS（含 LifecycleTree、EntityIdList、RuntimeOwnedReferenceRegistry 新测试）
+```
+
+游戏仓 BrotatoLike submodule 同步、Godot smoke、skill 同步与 archive 仍待执行（tasks 11/12）。
 
 BrotatoLike build / Godot smoke 与 submodule 指针更新仍待执行（task 9）。
 

@@ -1,7 +1,6 @@
 namespace SlimeAI.GameOS.Runtime.Entity;
 
 using SlimeAI.GameOS.Runtime.Data;
-using SlimeAI.GameOS.Runtime.Relationship;
 
 /// <summary>
 /// 纯 Runtime Entity 生成参数。
@@ -19,22 +18,12 @@ public readonly record struct EntitySpawnConfig
     public DataCatalog? DataCatalog { get; init; }
 
     /// <summary>
-    /// 可选父实体 Id；为 <see cref="Entity.EntityId.Empty"/> 时不绑定父子关系。
+    /// 可选 lifecycle parent 实体 Id；为 <see cref="Entity.EntityId.Empty"/> 时不挂 lifecycle parent。
     /// </summary>
     public EntityId ParentEntityId { get; init; }
 
     /// <summary>
-    /// 是否自动补充 PARENT 关系。
-    /// </summary>
-    public bool AutoAddParentRelation { get; init; }
-
-    /// <summary>
-    /// 父实体销毁时对子实体的处理策略，只写入 PARENT 关系。
+    /// 父实体销毁时对子实体的处理策略；只有 <see cref="ParentEntityId"/> 非空时生效。
     /// </summary>
     public ParentDestroyPolicy ParentDestroyPolicy { get; init; }
-
-    /// <summary>
-    /// 额外业务关系类型，例如 EntityToProjectile。
-    /// </summary>
-    public string[]? ParentRelationTypes { get; init; }
 }

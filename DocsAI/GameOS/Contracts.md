@@ -44,9 +44,13 @@
 - `SlimeAI.GameOS.Runtime.Entity.IEntity`
 - `SlimeAI.GameOS.Runtime.Entity.RuntimeEntity`
 - `SlimeAI.GameOS.Runtime.Entity.EntityManager`
-- `SlimeAI.GameOS.Runtime.Relationship.RelationshipManager`
-- `SlimeAI.GameOS.Runtime.Relationship.RelationshipType`
-- `SlimeAI.GameOS.Runtime.Relationship.RelationshipLifecycle`
+- `SlimeAI.GameOS.Runtime.Entity.LifecycleTree`
+- `SlimeAI.GameOS.Runtime.Entity.LifecycleLink`
+- `SlimeAI.GameOS.Runtime.Entity.ParentDestroyPolicy`
+- `SlimeAI.GameOS.Runtime.Entity.EntityIdList`
+- `SlimeAI.GameOS.Runtime.Entity.OwnedReferenceDescriptor`
+- `SlimeAI.GameOS.Runtime.Entity.RuntimeOwnedReferenceRegistry`
+- `SlimeAI.GameOS.Runtime.Entity.IOwnedReferenceCleaner`
 - `SlimeAI.GameOS.Runtime.Schedule.RuntimeSchedule`
 - `SlimeAI.GameOS.Runtime.Schedule.ProjectStateService`
 - `SlimeAI.GameOS.Runtime.Schedule.SystemRunCondition`
@@ -149,20 +153,21 @@
 - `EntityId` 是 typed value：`readonly record struct EntityId(string Value)`，定义在 `SlimeAI.GameOS.Runtime.Entity`；不允许 implicit `string ↔ EntityId` 转换，调用方必须 `new EntityId(value)` 或 `EntityId.From(string?)` 显式构造。`EntityId.Empty` 是唯一"无引用"值，`IsEmpty` 同时把 `null` 与 `""` 视为 empty；`default(EntityId) == Empty == From(null) == From("")`。
 - `IEntity` 是 `Runtime Entity` 的 legacy public symbol，只暴露 typed `EntityId`、`Data`、`Events`，不承载业务逻辑。
 - `RuntimeEntity` 是运行时对象身份容器，由 Capability、Relationship、RuntimeSchedule 和 GodotBridge Adapter 操作；不要通过子类继承或在 `IEntity` 上增加行为方法来实现玩法。
-- `EntityManager.Spawn / Register / Destroy / Get / GetAll / Clear / BindParentRelationships` 全部使用 typed `EntityId`；内部以 `Dictionary<EntityId, IEntity>` 索引。`EntityManager.Spawn(EntitySpawnConfig)` 在 `EntityId.Empty` 时分配 `EntityId.From(Guid.NewGuid().ToString("N"))`。
-- `EntitySpawnConfig.EntityId / ParentEntityId` 字段类型为 `EntityId`，以 `EntityId.Empty` 表达"未指定"；其余字段 `AutoAddParentRelation / ParentDestroyPolicy / ParentRelationTypes` 不变。
-- Runtime Events `EntitySpawned / EntityDestroyed` payload 携带 `IEntity Entity`（typed `EntityId` 通过 `Entity.EntityId` 暴露）；`RelationshipAdded / RelationshipRemoved` payload 中 `ParentEntityId / ChildEntityId` 字段类型为 typed `EntityId`，`RelationType` 仍为 string。
-- 业务 entity 引用 DataKey 必须是 `DataKey<EntityId?>`：`Projectile.SourceEntity / AbilityEntity / TargetEntity`、`Effect.SourceEntity / AbilityEntity / TargetEntity`、`AI.TargetEntity`。`DataKey<IEntity?>` 不再作为业务 entity-id 引用类型。
-- `RelationshipManager` 内部 API 仍以 string 为 entity-id（P1 范畴未动）；`EntityManager` 与 capability 在调用 `RelationshipManager` 时通过 `entityId.Value` 适配。
+- `EntityManager.Spawn / Register / Destroy / Get / GetAll / Clear / AttachLifecycleParent` 全部使用 typed `EntityId`；内部以 `Dictionary<EntityId, IEntity>` 索引。`EntityManager.Spawn(EntitySpawnConfig)` 在 `EntityId.Empty` 时分配 `EntityId.From(Guid.NewGuid().ToString("N"))`。
+- `EntitySpawnConfig` 仅含 `EntityId / DataCatalog / ParentEntityId / ParentDestroyPolicy` 四字段；不再支持 `AutoAddParentRelation` 与 `ParentRelationTypes`（业务引用走 typed DataKey）。
+- Runtime Events `EntitySpawned / EntityDestroyed` payload 携带 `IEntity Entity`（typed `EntityId` 通过 `Entity.EntityId` 暴露）；`LifecycleChildAttached / LifecycleChildDetached` payload 字段 `ParentEntityId / ChildEntityId / DestroyPolicy` 全部 typed，没有 string `RelationType`。
+- 业务 entity 引用 DataKey 必须是 `DataKey<EntityId?>` 或 `DataKey<EntityIdList>`：`Projectile.SourceEntity / AbilityEntity / TargetEntity / SpawnedProjectileIds`、`Effect.SourceEntity / AbilityEntity / TargetEntity / SpawnedEffectIds`、`Ability.OwnerEntity / OwnedAbilityIds`、`AI.TargetEntity`。`DataKey<IEntity?>` 与 `DataKey<List<string>>` 不再作为业务 entity-id 引用类型。
+- Owner cleanup hook：Capability 在 `Initialize` 时通过 `RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(ChildToOwnerKey, OwnerListKey))` 注册一次；framework 在 `EntityManager.Destroy` 销毁完 lifecycle children、发布 `EntityDestroyed` 之前回调每个 descriptor，把被销毁 entity id 从 owner `EntityIdList` 里移除。
 - Godot Node Entity 和 GodotBridge Adapter 生命周期第一版已进入 GodotBridge；对象池、碰撞隔离和复杂 adapter 缓存后续继续迁。`Component` 字样只作为现有类名兼容。
 
-## Runtime Relationship 契约
+## Runtime LifecycleTree 契约
 
-- `RelationshipManager` 是运行时关系图入口，维护父索引、子索引和类型索引。
-- `RelationshipType.Parent` 是归属主链，`ParentDestroyPolicy` 只写入 PARENT 关系。
-- 父实体销毁时，`DestroyRecursively` 子实体递归销毁，`Detach` 子实体继续存活并断开 PARENT。
-- 关系增删会通过 `Runtime.Events.Core.RelationshipAdded / RelationshipRemoved` 发布低频全局事件（`IGlobalEvent`）。
-- 关系查询返回快照集合，避免调用方持有内部索引。
+- `LifecycleTree` 是运行时唯一公开 Relationship 入口，假设每个 entity 至多一个 lifecycle parent；业务多对多引用走 typed `DataKey<EntityIdList>`，不进入 `LifecycleTree`。
+- `LifecycleLink(ParentEntityId, ChildEntityId, DestroyPolicy, Priority)` 是不可变 typed record；策略和优先级是字段，不是 `Dictionary<string, object>`。
+- 父实体销毁时，`DestroyPolicy = DestroyRecursively` 子实体递归销毁，`Detach` 子实体继续存活并断开 lifecycle link；`EntityManager.Destroy` 在销毁路径调用 `RuntimeOwnedReferenceRegistry.NotifyDestroying`，再发布 `EntityDestroyed`。
+- `LifecycleTree.Attach / Detach` 成功时通过 `WorldEvents.World.Publish` 发布 `LifecycleChildAttached / LifecycleChildDetached`（`IGlobalEvent`）；`EntityId.Empty` 作为 parent 或 child 被拒绝。
+- `LifecycleTree.GetChildren / GetChildEntityIds / GetParentEntityId` 返回快照，避免调用方持有内部索引；`GetParentEntityId` 在无 parent 时返回 `EntityId.Empty`。
+- `LifecycleTree.Clear` 与 `EntityManager.Clear` 配套调用，仅用于测试或运行域重置。
 
 ## Runtime Schedule 契约
 
@@ -214,8 +219,8 @@
 - `GodotEntity` 是可挂场景的 `Node + IEntity` 基类，进入 SceneTree 时注册到 `EntityManager` 和 `GodotNodeRegistry`，离开 SceneTree 时注销并清理 Runtime Entity。
 - `GodotEntity2D` 是可挂 2D 场景的 `Node2D + IEntity` 基类，额外接入 Movement `Position` 初始同步。
 - `IGodotComponent` 是 GodotBridge Adapter 生命周期协议的 legacy compatibility name；`GameOSGodotBridge.RegisterComponents` 会递归扫描子节点，识别实现 `IGodotComponent` 或类型名以 `Component` 结尾的节点。
-- Entity-Component 组合关系是 legacy relationship name，统一写入 `RelationshipType.EntityToComponent`，语义是 Runtime Entity 到 GodotBridge Adapter 的绑定。
-- `GodotNodeRegistry` 只保存运行时注册表，不替代 SceneTree，也不持有业务状态。
+- Entity-Adapter 绑定记录在 GodotBridge 内部 typed registry：`GodotNodeRegistry.RegisterAdapter / UnregisterAdapter / IsAdapterRegistered / GetAdaptersByEntity`；不进入框架 `LifecycleTree`，也不通过 typed DataKey 暴露给 Capability。
+- `GodotNodeRegistry` 同时保存 Node 注册表和 entity→adapter ids 映射，不替代 SceneTree，也不持有业务状态。
 - `GameOSTimerDriver._Process` 不分配对象，不使用 LINQ，只把 Godot delta 传给 `TimerManager.Tick`。
 - `GodotMovementDriver._Process` 推进 `MovementSystem.Tick`，并同步已注册 `Node2D + IEntity` 的运行时位置；需要固定步长或测试时可关闭 `AutoTick` 并手动调用 `TickMovement(delta)`。
 - `GodotNodePool<T>` 管理 Godot Node 池化，支持 `Get(false)` 延迟激活、`Activate`、`Release`、`ReleaseAll`、`Destroy` 和 `PoolStats`。
@@ -262,17 +267,17 @@
 - Movement 碰撞在一次位移段内会连续派发多个有效目标，支持 Projectile 同帧穿透；同一次移动内已命中的目标会去重，且会显式跳过移动实体自身。
 - `ProjectileMovementOptions` 当前覆盖 `Mode / Speed / MaxDuration / MaxDistance / ReachDistance / StopAtTarget / ApplyDamageOnHit / StopAfterHitCount / DestroyOnStop / IgnoreSameTeam / TargetMatchMode / SourceRadiusOverride / TargetRadiusOverride / Damage / DamageType / DamageTags`；`StopAfterHitCount` 默认读取 `ProjectileDataKeys.MaxHitCount`，`StopAfterHitCount = -1` 表示只命中通知和伤害但不停止；`MaxDuration` 默认读取 `ProjectileDataKeys.MaxLifeTime`，`-1` 表示不限制。
 - `DestroyOnStop` 对 Projectile 的碰撞停止、到时、到距离和完成停止都生效；默认开启，用于停止后销毁 Runtime 投射物并触发 GodotBridge 清理视觉节点。
-- `ProjectileDataKeys` 当前覆盖 `ScenePath / SourceEntity / AbilityEntity / TargetEntity / SpawnPosition / TargetPosition / Direction / Speed / MaxHitCount / HitCount / MaxLifeTime / Damage / DamageType / DamageTags`。
+- `ProjectileDataKeys` 当前覆盖 `ScenePath / SourceEntity / AbilityEntity / TargetEntity / SpawnPosition / TargetPosition / Direction / Speed / MaxHitCount / HitCount / MaxLifeTime / Damage / DamageType / DamageTags / SpawnedProjectileIds`；其中 `SpawnedProjectileIds: DataKey<EntityIdList>` 位于 source 实体上，表达 spawner -> projectile 多引用。
 - `ScenePath` 只保存 `res://` 字符串路径；Runtime 层不加载 Godot 场景，Godot 项目可挂 `GodotProjectileEffectSpawner` 监听生成事件并实例化视觉节点。
-- 生成时会绑定 `RelationshipType.EntityToProjectile / Source`，有目标实体时额外绑定 `RelationshipType.Target`。
+- 生成时 `ProjectileTool.Spawn` 以 source 为 `EntitySpawnConfig.ParentEntityId` 建立 lifecycle parent（默认 `DestroyRecursively`），同时写 typed `ProjectileDataKeys.SourceEntity / TargetEntity`、并把 projectile id append 到 source 的 `SpawnedProjectileIds`；`ProjectileTool.Initialize` 在 capability 启动处调用 `RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(SourceEntity, SpawnedProjectileIds))` 以 framework 销毁路径自动同步 owner-list。
 - 飞行 Tick 由调用方持有的 `MovementSystem` 推进；Godot 项目可用 `GodotMovementDriver` 同步 Runtime 位置到视觉节点。
 
 ## Effect Capability 契约
 
 - `EffectTool.Spawn` 是当前纯 Runtime 效果生成入口，生成 `RuntimeEntity`，写入 `EffectDataKeys` 和 Movement `Position`，并发布 `Capabilities.Effect.Events.Spawned`。
-- `EffectDataKeys` 当前覆盖 `ScenePath / Name / AnimationName / SourceEntity / AbilityEntity / TargetEntity / Position / Duration`。
+- `EffectDataKeys` 当前覆盖 `ScenePath / Name / AnimationName / SourceEntity / AbilityEntity / TargetEntity / Position / Duration / SpawnedEffectIds`；`SpawnedEffectIds: DataKey<EntityIdList>` 位于 source 实体上。
 - `Duration = -1` 表示不自动结束，遵守数值型“不限制”语义。
-- 生成时会绑定 `RelationshipType.EntityToEffect / Source`，有目标实体时额外绑定 `RelationshipType.Target`。
+- 生成时 `EffectTool.Spawn` 以 source 为 `EntitySpawnConfig.ParentEntityId` 建立 lifecycle parent，同时写 typed `EffectDataKeys.SourceEntity / TargetEntity`、并把 effect id append 到 source 的 `SpawnedEffectIds`；`EffectTool.Initialize` 在 capability 启动处调用 `RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(SourceEntity, SpawnedEffectIds))`。
 - Godot 项目可挂 `GodotProjectileEffectSpawner` 监听生成事件并实例化视觉节点；Bridge 会解析 `AnimatedSprite2D` 并播放 `AnimationName`，为空时回退到场景当前动画或第一个可用动画，`Duration > 0` 时按动画帧数和 fps 调整 `SpeedScale`。
 - 当前 Effect 仍不负责附着跟随和生命周期计时销毁，这些后续由 Effect runtime 扩展接入。
 

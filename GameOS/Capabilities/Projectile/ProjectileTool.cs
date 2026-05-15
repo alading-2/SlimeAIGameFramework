@@ -6,7 +6,6 @@ using SlimeAI.GameOS.Capabilities.Movement.Events;
 using SlimeAI.GameOS.Capabilities.Projectile.Events;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
-using SlimeAI.GameOS.Runtime.Relationship;
 
 namespace SlimeAI.GameOS.Capabilities.Projectile;
 
@@ -15,6 +14,25 @@ namespace SlimeAI.GameOS.Capabilities.Projectile;
 /// </summary>
 public static class ProjectileTool
 {
+    private static bool ownerCleanupRegistered;
+
+    /// <summary>
+    /// 在 capability 启动入口调用，向 framework 注册 source -> SpawnedProjectileIds owner cleanup hook。
+    /// </summary>
+    public static void Initialize()
+    {
+        ProjectileDataKeys.RegisterAll();
+        if (ownerCleanupRegistered)
+        {
+            return;
+        }
+
+        RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(
+            ProjectileDataKeys.SourceEntity,
+            ProjectileDataKeys.SpawnedProjectileIds));
+        ownerCleanupRegistered = true;
+    }
+
     /// <summary>
     /// 生成纯 Runtime 投射物实体。
     /// </summary>
@@ -22,14 +40,12 @@ public static class ProjectileTool
     public static ProjectileSpawnResult Spawn(ProjectileSpawnOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        ProjectileDataKeys.RegisterAll();
+        Initialize();
 
         var projectile = EntityManager.Spawn(new EntitySpawnConfig
         {
             EntityId = options.EntityId,
             ParentEntityId = options.Source.EntityId,
-            AutoAddParentRelation = true,
-            ParentRelationTypes = [RelationshipType.EntityToProjectile, RelationshipType.Source],
         });
 
         var targetPosition = options.TargetPosition
@@ -46,11 +62,11 @@ public static class ProjectileTool
         if (options.Target != null)
         {
             projectile.Data.Set(ProjectileDataKeys.TargetEntity, options.Target.EntityId);
-            RelationshipManager.AddRelationship(
-                projectile.EntityId.Value,
-                options.Target.EntityId.Value,
-                RelationshipType.Target);
         }
+
+        // 同步 spawner owner-list：把当前 projectile id 写回 source 的 typed list。
+        var spawnedList = options.Source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds);
+        options.Source.Data.Set(ProjectileDataKeys.SpawnedProjectileIds, spawnedList.Add(projectile.EntityId));
 
         projectile.Data.Set(ProjectileDataKeys.ScenePath, options.ScenePath ?? string.Empty);
         projectile.Data.Set(ProjectileDataKeys.SpawnPosition, options.SpawnPosition);

@@ -2,7 +2,6 @@ using System;
 using SlimeAI.GameOS.Capabilities.Effect.Events;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Runtime.Entity;
-using SlimeAI.GameOS.Runtime.Relationship;
 
 namespace SlimeAI.GameOS.Capabilities.Effect;
 
@@ -11,6 +10,25 @@ namespace SlimeAI.GameOS.Capabilities.Effect;
 /// </summary>
 public static class EffectTool
 {
+    private static bool ownerCleanupRegistered;
+
+    /// <summary>
+    /// 在 capability 启动入口调用，向 framework 注册 source -> SpawnedEffectIds owner cleanup hook。
+    /// </summary>
+    public static void Initialize()
+    {
+        EffectDataKeys.RegisterAll();
+        if (ownerCleanupRegistered)
+        {
+            return;
+        }
+
+        RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(
+            EffectDataKeys.SourceEntity,
+            EffectDataKeys.SpawnedEffectIds));
+        ownerCleanupRegistered = true;
+    }
+
     /// <summary>
     /// 生成纯 Runtime 效果实体。
     /// </summary>
@@ -18,14 +36,12 @@ public static class EffectTool
     public static EffectSpawnResult Spawn(EffectSpawnOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        EffectDataKeys.RegisterAll();
+        Initialize();
 
         var effect = EntityManager.Spawn(new EntitySpawnConfig
         {
             EntityId = options.EntityId,
             ParentEntityId = options.Source.EntityId,
-            AutoAddParentRelation = true,
-            ParentRelationTypes = [RelationshipType.EntityToEffect, RelationshipType.Source]
         });
         var position = options.Target?.Data.Get<Vector2Value>(MovementDataKeys.Position, options.Position)
             ?? options.Position;
@@ -39,11 +55,11 @@ public static class EffectTool
         if (options.Target != null)
         {
             effect.Data.Set(EffectDataKeys.TargetEntity, options.Target.EntityId);
-            RelationshipManager.AddRelationship(
-                effect.EntityId.Value,
-                options.Target.EntityId.Value,
-                RelationshipType.Target);
         }
+
+        // 同步 spawner owner-list：把当前 effect id 写回 source 的 typed list。
+        var spawnedList = options.Source.Data.Get(EffectDataKeys.SpawnedEffectIds);
+        options.Source.Data.Set(EffectDataKeys.SpawnedEffectIds, spawnedList.Add(effect.EntityId));
 
         effect.Data.Set(EffectDataKeys.ScenePath, options.ScenePath ?? string.Empty);
         effect.Data.Set(EffectDataKeys.Name, options.Name ?? string.Empty);

@@ -86,6 +86,11 @@ public static class ProjectileDataKeys
         defaultValue: Capabilities.Damage.DamageTags.Projectile,
         category: ProjectileCategory.Basic);
 
+    /// <summary>由本实体作为 source 生成的投射物 EntityId 列表（typed 多引用）。</summary>
+    public static readonly DataKey<EntityIdList> SpawnedProjectileIds = DataKey.Create<EntityIdList>("Projectile.SpawnedProjectileIds",
+        defaultValue: EntityIdList.Empty,
+        category: ProjectileCategory.Runtime);
+
     /// <summary>
     /// 显式触发静态 DataKey 注册。
     /// </summary>
@@ -105,5 +110,6 @@ public static class ProjectileDataKeys
         _ = Damage;
         _ = DamageType;
         _ = DamageTags;
+        _ = SpawnedProjectileIds;
     }
 }

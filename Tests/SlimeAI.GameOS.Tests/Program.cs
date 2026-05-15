@@ -13,7 +13,6 @@ using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Events.Core;
 using SlimeAI.GameOS.Runtime.Pool;
-using SlimeAI.GameOS.Runtime.Relationship;
 using SlimeAI.GameOS.Runtime.Resource;
 using SlimeAI.GameOS.Runtime.Schedule;
 using SlimeAI.GameOS.Runtime.Timer;
@@ -43,7 +42,9 @@ var tests = new (string Name, Action Run)[]
     ("EntityId IsEmpty for null/empty/whitespace", EntityIdTests.IsEmptyTreatsNullAndEmptyAsEmpty),
     ("EntityId Value preserves underlying string", EntityIdTests.ValuePreservesUnderlyingString),
     ("Entity lifecycle", TestEntityLifecycle),
-    ("Relationship graph", TestRelationshipGraph),
+    ("LifecycleTree attach detach single-parent", TestLifecycleTree),
+    ("EntityIdList immutable value-equality", TestEntityIdList),
+    ("RuntimeOwnedReferenceRegistry cleanup descriptor", TestRuntimeOwnedReferenceRegistry),
     ("Entity parent destroy policy", TestEntityParentDestroyPolicy),
     ("SystemRunCondition gates", TestSystemRunCondition),
     ("RuntimeSchedule lifecycle and command", TestRuntimeSchedule),
@@ -185,44 +186,158 @@ static void TestEntityLifecycle()
     EntityManager.Clear();
 }
 
-static void TestRelationshipGraph()
+static void TestLifecycleTree()
 {
-    RelationshipManager.Clear();
+    LifecycleTree.Clear();
     WorldEvents.World.Clear();
 
-    var added = 0;
-    var removed = 0;
-    var addSub = WorldEvents.World.Subscribe<RelationshipAdded>(data =>
-    {
-        if (data.RelationType == RelationshipType.EntityToAbility)
-        {
-            added++;
-        }
-    });
-    var removeSub = WorldEvents.World.Subscribe<RelationshipRemoved>(_ => removed++);
+    var attached = 0;
+    var detached = 0;
+    var attachSub = WorldEvents.World.Subscribe<LifecycleChildAttached>(_ => attached++);
+    var detachSub = WorldEvents.World.Subscribe<LifecycleChildDetached>(_ => detached++);
 
-    var ok = RelationshipManager.AddRelationship(
-        "player",
-        "ability-a",
-        RelationshipType.EntityToAbility,
-        priority: 10);
+    var parent1 = new EntityId("lifecycle-parent-1");
+    var parent2 = new EntityId("lifecycle-parent-2");
+    var child = new EntityId("lifecycle-child");
 
-    AssertEqual("relationship add", true, ok);
-    AssertEqual("relationship event add", 1, added);
-    AssertEqual("relationship child", "ability-a", RelationshipManager.GetChildEntitiesByParentAndType("player", RelationshipType.EntityToAbility)[0]);
-    AssertEqual("relationship one-to-many blocked", false, RelationshipManager.AddRelationship(
-        "other-player",
-        "ability-a",
-        RelationshipType.EntityToAbility,
-        constraint: RelationshipConstraint.OneToMany));
+    // Attach 成功并发布事件。
+    AssertEqual("attach first parent", true, LifecycleTree.Attach(parent1, child, ParentDestroyPolicy.DestroyRecursively, priority: 7));
+    AssertEqual("attach event count", 1, attached);
+    AssertEqual("isAttached after attach", true, LifecycleTree.IsAttached(parent1, child));
+    AssertEqual("getParentEntityId", parent1, LifecycleTree.GetParentEntityId(child));
+    AssertEqual("getChildEntityIds count", 1, LifecycleTree.GetChildEntityIds(parent1).Count);
+    AssertEqual("getChildEntityIds entry", child, LifecycleTree.GetChildEntityIds(parent1)[0]);
 
-    RelationshipManager.RemoveRelationship("player", "ability-a", RelationshipType.EntityToAbility);
-    AssertEqual("relationship event remove", 1, removed);
+    var links = LifecycleTree.GetChildren(parent1);
+    AssertEqual("link parent", parent1, links[0].ParentEntityId);
+    AssertEqual("link policy", ParentDestroyPolicy.DestroyRecursively, links[0].DestroyPolicy);
+    AssertEqual("link priority", 7, links[0].Priority);
 
-    addSub.Dispose();
-    removeSub.Dispose();
+    // 单 parent 假设：第二个 parent attach 失败。
+    AssertEqual("attach second parent blocked", false, LifecycleTree.Attach(parent2, child));
+    AssertEqual("attach event still 1", 1, attached);
+
+    // 自挂、Empty、cycle 拒绝。
+    AssertEqual("self attach rejected", false, LifecycleTree.Attach(parent1, parent1));
+    AssertEqual("empty parent rejected", false, LifecycleTree.Attach(EntityId.Empty, child));
+    AssertEqual("empty child rejected", false, LifecycleTree.Attach(parent1, EntityId.Empty));
+
+    var grandchild = new EntityId("lifecycle-grandchild");
+    LifecycleTree.Attach(child, grandchild);
+    AssertEqual("cycle attach rejected", false, LifecycleTree.Attach(grandchild, parent1));
+
+    // Detach 触发事件并清状态。
+    AssertEqual("detach success", true, LifecycleTree.Detach(parent1, child));
+    AssertEqual("detach event count", 1, detached);
+    AssertEqual("getParentEntityId after detach", EntityId.Empty, LifecycleTree.GetParentEntityId(child));
+    AssertEqual("isAttached after detach", false, LifecycleTree.IsAttached(parent1, child));
+
+    // Detach 不存在 link 返回 false。
+    AssertEqual("detach absent link", false, LifecycleTree.Detach(parent1, child));
+
+    // 重 attach 到新 parent 成功。
+    AssertEqual("re-attach to new parent", true, LifecycleTree.Attach(parent2, child));
+
+    // DetachAll 清掉 entity 所有参与（child 与 parent 两侧）。
+    LifecycleTree.DetachAll(child);
+    AssertEqual("detachAll removes child link", false, LifecycleTree.IsAttached(parent2, child));
+    AssertEqual("detachAll removes parent links", 0, LifecycleTree.GetChildEntityIds(child).Count);
+
+    attachSub.Dispose();
+    detachSub.Dispose();
     WorldEvents.World.Clear();
-    RelationshipManager.Clear();
+    LifecycleTree.Clear();
+}
+
+static void TestEntityIdList()
+{
+    AssertEqual("empty count", 0, EntityIdList.Empty.Count);
+    AssertEqual("default count", 0, default(EntityIdList).Count);
+
+    var a = new EntityId("a");
+    var b = new EntityId("b");
+    var listAb = EntityIdList.Empty.Add(a).Add(b);
+    AssertEqual("add count", 2, listAb.Count);
+    AssertEqual("add ordering preserved", a, listAb[0]);
+    AssertEqual("contains true", true, listAb.Contains(a));
+    AssertEqual("contains false", false, listAb.Contains(new EntityId("c")));
+
+    // Add 已存在不会重复加。
+    var listAbAgain = listAb.Add(a);
+    AssertEqual("dedup add count", 2, listAbAgain.Count);
+
+    // value-equality：不同底层 list，内容相同也相等。
+    var listAb2 = EntityIdList.Empty.Add(a).Add(b);
+    AssertEqual("value equality", true, listAb.Equals(listAb2));
+    AssertEqual("hash equality", listAb.GetHashCode(), listAb2.GetHashCode());
+
+    // Remove 返回新值。
+    var listOnlyB = listAb.Remove(a);
+    AssertEqual("remove count", 1, listOnlyB.Count);
+    AssertEqual("remove leftover entry", b, listOnlyB[0]);
+    AssertEqual("immutability original count", 2, listAb.Count);
+
+    // 移除所有元素回到 Empty。
+    var listEmpty = listOnlyB.Remove(b);
+    AssertEqual("empty after remove all", true, listEmpty.Equals(EntityIdList.Empty));
+
+    // EntityId.Empty 作为元素能正常处理。
+    var listWithEmpty = EntityIdList.Empty.Add(EntityId.Empty).Add(a);
+    AssertEqual("empty element contains", true, listWithEmpty.Contains(EntityId.Empty));
+    var listAfterRemoveEmpty = listWithEmpty.Remove(EntityId.Empty);
+    AssertEqual("empty element removed", false, listAfterRemoveEmpty.Contains(EntityId.Empty));
+}
+
+static void TestRuntimeOwnedReferenceRegistry()
+{
+    EntityManager.Clear();
+    RuntimeOwnedReferenceRegistry.Clear();
+    ProjectileDataKeys.RegisterAll();
+
+    // 注册 typed descriptor：source -> SpawnedProjectileIds。
+    RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(
+        ProjectileDataKeys.SourceEntity,
+        ProjectileDataKeys.SpawnedProjectileIds));
+
+    var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-source") });
+    var child1 = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-1") });
+    var child2 = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-2") });
+
+    // capability 手动维护 spawn 一致性。
+    child1.Data.Set(ProjectileDataKeys.SourceEntity, source.EntityId);
+    child2.Data.Set(ProjectileDataKeys.SourceEntity, source.EntityId);
+    source.Data.Set(ProjectileDataKeys.SpawnedProjectileIds,
+        EntityIdList.Empty.Add(child1.EntityId).Add(child2.EntityId));
+
+    AssertEqual("owner list contains child1", true,
+        source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds).Contains(child1.EntityId));
+
+    // destroy child1：framework 自动从 owner list 移除。
+    EntityManager.Destroy(child1);
+    var listAfterDestroy = source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds);
+    AssertEqual("owner list child1 removed", false, listAfterDestroy.Contains(child1.EntityId));
+    AssertEqual("owner list child2 retained", true, listAfterDestroy.Contains(child2.EntityId));
+
+    // 自定义 cleaner 也会被回调。
+    var cleaner = new TestOwnedReferenceCleaner();
+    RuntimeOwnedReferenceRegistry.Register(cleaner);
+    EntityManager.Destroy(child2);
+    AssertEqual("cleaner invoked once", 1, cleaner.CallCount);
+    AssertEqual("cleaner sees destroyed entity", child2.EntityId, cleaner.LastEntityId);
+
+    // Clear 后 descriptor 不再生效。
+    RuntimeOwnedReferenceRegistry.Clear();
+    var child3 = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("owner-child-3") });
+    child3.Data.Set(ProjectileDataKeys.SourceEntity, source.EntityId);
+    source.Data.Set(ProjectileDataKeys.SpawnedProjectileIds,
+        EntityIdList.Empty.Add(child3.EntityId));
+    EntityManager.Destroy(child3);
+    AssertEqual("after Clear descriptor inert",
+        true,
+        source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds).Contains(child3.EntityId));
+
+    RuntimeOwnedReferenceRegistry.Clear();
+    EntityManager.Clear();
 }
 
 static void TestEntityParentDestroyPolicy()
@@ -234,25 +349,23 @@ static void TestEntityParentDestroyPolicy()
     {
         EntityId = new EntityId("child-recursive"),
         ParentEntityId = parent.EntityId,
-        AutoAddParentRelation = true,
         ParentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively
     });
     var detachedChild = EntityManager.Spawn(new EntitySpawnConfig
     {
         EntityId = new EntityId("child-detached"),
         ParentEntityId = parent.EntityId,
-        AutoAddParentRelation = true,
         ParentDestroyPolicy = ParentDestroyPolicy.Detach
     });
 
     AssertEqual("recursive child registered", recursiveChild.EntityId, EntityManager.Get(recursiveChild.EntityId)?.EntityId);
-    AssertEqual("detached child policy", ParentDestroyPolicy.Detach, RelationshipLifecycle.ReadParentDestroyPolicy(parent.EntityId.Value, detachedChild.EntityId.Value));
+    AssertEqual("detached child policy", ParentDestroyPolicy.Detach, LifecycleTree.GetChildren(parent.EntityId)[1].DestroyPolicy);
 
     EntityManager.Destroy(parent);
 
     AssertEqual("recursive child destroyed", null, EntityManager.Get(recursiveChild.EntityId));
     AssertEqual("detached child alive", detachedChild.EntityId, EntityManager.Get(detachedChild.EntityId)?.EntityId);
-    AssertEqual("detached parent relation removed", false, RelationshipManager.HasRelationship(parent.EntityId.Value, detachedChild.EntityId.Value, RelationshipType.Parent));
+    AssertEqual("detached parent link removed", false, LifecycleTree.IsAttached(parent.EntityId, detachedChild.EntityId));
 
     EntityManager.Clear();
 }
@@ -1397,8 +1510,10 @@ static void TestProjectileToolSpawnsRuntimeEntity()
 
     AssertEqual("projectile created", true, result.Created);
     AssertEqual("projectile registered", result.Projectile.EntityId, EntityManager.Get(new EntityId("projectile-runtime"))?.EntityId);
-    AssertEqual("projectile source relationship", true, RelationshipManager.HasRelationship(source.EntityId.Value, result.Projectile.EntityId.Value, RelationshipType.EntityToProjectile));
-    AssertEqual("projectile target relationship", true, RelationshipManager.HasRelationship(result.Projectile.EntityId.Value, target.EntityId.Value, RelationshipType.Target));
+    AssertEqual("projectile source typed", source.EntityId, result.Projectile.Data.Get<EntityId?>(ProjectileDataKeys.SourceEntity, null) ?? EntityId.Empty);
+    AssertEqual("projectile target typed", target.EntityId, result.Projectile.Data.Get<EntityId?>(ProjectileDataKeys.TargetEntity, null) ?? EntityId.Empty);
+    AssertEqual("spawner spawned-projectile-id present", true, source.Data.Get(ProjectileDataKeys.SpawnedProjectileIds).Contains(result.Projectile.EntityId));
+    AssertEqual("projectile lifecycle parent attached", true, LifecycleTree.IsAttached(source.EntityId, result.Projectile.EntityId));
     AssertEqual("projectile scene path", "res://Projectiles/Fireball.tscn", result.Projectile.Data.Get<string>(ProjectileDataKeys.ScenePath));
     AssertEqual("projectile direction", new Vector2Value(1f, 0f), result.Projectile.Data.Get<Vector2Value>(ProjectileDataKeys.Direction));
     AssertNear("projectile speed", 12f, result.Projectile.Data.Get<float>(ProjectileDataKeys.Speed));
@@ -1595,8 +1710,10 @@ static void TestEffectToolSpawnsRuntimeEntity()
 
     AssertEqual("effect created", true, result.Created);
     AssertEqual("effect registered", result.Effect.EntityId, EntityManager.Get(new EntityId("effect-runtime"))?.EntityId);
-    AssertEqual("effect source relationship", true, RelationshipManager.HasRelationship(source.EntityId.Value, result.Effect.EntityId.Value, RelationshipType.EntityToEffect));
-    AssertEqual("effect target relationship", true, RelationshipManager.HasRelationship(result.Effect.EntityId.Value, target.EntityId.Value, RelationshipType.Target));
+    AssertEqual("effect source typed", source.EntityId, result.Effect.Data.Get<EntityId?>(EffectDataKeys.SourceEntity, null) ?? EntityId.Empty);
+    AssertEqual("effect target typed", target.EntityId, result.Effect.Data.Get<EntityId?>(EffectDataKeys.TargetEntity, null) ?? EntityId.Empty);
+    AssertEqual("spawner spawned-effect-id present", true, source.Data.Get(EffectDataKeys.SpawnedEffectIds).Contains(result.Effect.EntityId));
+    AssertEqual("effect lifecycle parent attached", true, LifecycleTree.IsAttached(source.EntityId, result.Effect.EntityId));
     AssertEqual("effect scene path", "res://Effects/Impact.tscn", result.Effect.Data.Get<string>(EffectDataKeys.ScenePath));
     AssertEqual("effect name", "Impact", result.Effect.Data.Get<string>(EffectDataKeys.Name));
     AssertEqual("effect animation name", "Effect", result.Effect.Data.Get<string>(EffectDataKeys.AnimationName));
@@ -2843,3 +2960,15 @@ sealed class ScheduleProbeSystem : IRuntimeSystem, IRuntimeCommandHandler<int, i
 }
 
 readonly record struct RuntimeTestEvent(int Value) : IEntityEvent;
+
+sealed class TestOwnedReferenceCleaner : IOwnedReferenceCleaner
+{
+    public int CallCount { get; private set; }
+    public EntityId LastEntityId { get; private set; }
+
+    public void OnEntityDestroying(IEntity destroyed)
+    {
+        CallCount++;
+        LastEntityId = destroyed.EntityId;
+    }
+}

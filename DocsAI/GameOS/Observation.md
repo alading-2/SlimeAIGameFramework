@@ -174,37 +174,42 @@ Lifecycle artifact 文件名建议：
 artifacts/lifecycle-tree.json
 ```
 
-Relationship tree MUST 使用 `RelationshipManager` 快照查询，不持有内部索引引用。每条关系记录：
+Lifecycle tree MUST 使用 `LifecycleTree.GetChildren / GetParentEntityId / GetChildEntityIds` 快照查询，不持有内部索引引用。每条 lifecycle link 记录：
 
 | 字段 | 来源 | 说明 |
 | --- | --- | --- |
-| `parentEntityId` | `RelationshipRecord.ParentEntityId` | 父级或来源实体。 |
-| `childEntityId` | `RelationshipRecord.ChildEntityId` | 子级或目标实体。 |
-| `relationType` | `RelationshipRecord.RelationType` | `PARENT`、`SOURCE`、`TARGET` 等。 |
-| `priority` | `RelationshipRecord.Priority` | 排序优先级。 |
-| `data` | `RelationshipRecord.Data` | 低频附加数据。 |
+| `parentEntityId` | `LifecycleLink.ParentEntityId` | 父实体 typed `EntityId`，JSONL 序列化为底层 string。 |
+| `childEntityId` | `LifecycleLink.ChildEntityId` | 子实体 typed `EntityId`。 |
+| `destroyPolicy` | `LifecycleLink.DestroyPolicy` | `DestroyRecursively` 或 `Detach`。 |
+| `priority` | `LifecycleLink.Priority` | 排序优先级。 |
+
+> Observation MUST NOT 在 lifecycle dump 输出 `relationType` 字段；string-keyed business relations 已经从 `LifecycleTree` 移除，业务引用走 typed reference dump 段落。
 
 Entity snapshot SHOULD 包含：
 
 - `entityId`（JSON 输出底层 string；framework runtime 内部仍是 typed `EntityId`）
 - `dataKeys`
-- `parentChain`
-- `children`
-- `relationshipsByType`
+- `parentChain`（沿 `LifecycleTree.GetParentEntityId` 上溯）
+- `children`（`LifecycleTree.GetChildEntityIds`）
+- `typedReferences`（详见下一段）
 - `localEventBusSummary`
 
 > Observation JSONL artifact 中所有 entity-id 字段（`entityId / parentEntityId / childEntityId / sourceEntityId / targetEntityId / abilityEntityId / casterEntityId / projectileEntityId / capturedEntityId / createdEntityId / specificTargetEntityId / selectedEntityId`）保留底层 string 序列化格式，与历史 dump 一致；framework runtime 与 capability 在内存中持有 typed `EntityId`，序列化时通过 `EntityId.Value` 取出 string。
 
-Typed reference dump SHOULD 记录业务引用来源，不把 Relationship 扩展成通用 pair graph API：
+业务 typed reference dump 单独成段，与 lifecycle tree 分离。所有引用来源 MUST 是 Capability owner 的 typed `DataKey<EntityId?>` 或 `DataKey<EntityIdList>`：
 
 | 引用 | 常见来源 |
 | --- | --- |
 | `sourceEntity` | `ProjectileDataKeys.SourceEntity`、`EffectDataKeys.SourceEntity`、`DamageInfo.Attacker`。 |
 | `targetEntity` | `ProjectileDataKeys.TargetEntity`、`AbilityCastContext.Targets`、`AIDataKeys.TargetEntity`。 |
 | `abilityEntity` | `ProjectileDataKeys.AbilityEntity`、`EffectDataKeys.AbilityEntity`。 |
-| `projectileEntity` | `RelationshipType.EntityToProjectile`。 |
-| `effectEntity` | `RelationshipType.EntityToEffect`。 |
-| `godotNodeId` | `GodotNodeRegistry` 或 scene adapter 输出。 |
+| `spawnedProjectileIds` | `ProjectileDataKeys.SpawnedProjectileIds`（`EntityIdList`）。 |
+| `spawnedEffectIds` | `EffectDataKeys.SpawnedEffectIds`（`EntityIdList`）。 |
+| `ownedAbilityIds` | `AbilityDataKeys.OwnedAbilityIds`（`EntityIdList`）。 |
+| `ownerEntity` | `AbilityDataKeys.OwnerEntity`。 |
+| `godotAdapterIds` | `GodotNodeRegistry.GetAdaptersByEntity(entityId)`，不进入 `LifecycleTree`。 |
+
+> Owner cleanup hook 在 destroy artifact 中可附 `notifyDestroyingDescriptors:[ "Projectile.SourceEntity->Projectile.SpawnedProjectileIds", ... ]` 字段，便于排查 owner-list 一致性问题。
 
 ## Selector Dump
 

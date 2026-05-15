@@ -47,6 +47,11 @@ public static class EffectDataKeys
         category: EffectCategory.Basic,
         minValue: -1f);
 
+    /// <summary>由本实体作为 source 生成的效果 EntityId 列表（typed 多引用）。</summary>
+    public static readonly DataKey<EntityIdList> SpawnedEffectIds = DataKey.Create<EntityIdList>("Effect.SpawnedEffectIds",
+        defaultValue: EntityIdList.Empty,
+        category: EffectCategory.Runtime);
+
     /// <summary>
     /// 显式触发静态 DataKey 注册。
     /// </summary>
@@ -60,5 +65,6 @@ public static class EffectDataKeys
         _ = TargetEntity;
         _ = Position;
         _ = Duration;
+        _ = SpawnedEffectIds;
     }
 }

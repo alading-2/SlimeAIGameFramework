@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Events.Core;
-using SlimeAI.GameOS.Runtime.Relationship;
 
 namespace SlimeAI.GameOS.Runtime.Entity;
 
@@ -25,7 +24,7 @@ public static class EntityManager
         var entity = new RuntimeEntity(entityId, config.DataCatalog);
 
         Register(entity);
-        BindSpawnRelationships(entity.EntityId, config);
+        AttachLifecycleParentFromConfig(entity.EntityId, config);
         return entity;
     }
 
@@ -58,7 +57,8 @@ public static class EntityManager
         }
 
         DestroyOwnedChildren(entityId);
-        RelationshipManager.RemoveAllForEntity(entityId.Value);
+        LifecycleTree.DetachAll(entityId);
+        RuntimeOwnedReferenceRegistry.NotifyDestroying(entity);
         Entities.Remove(entityId);
         entity.Data.Reset();
         entity.Events.Publish(new EntityDestroyed(entity));
@@ -93,7 +93,7 @@ public static class EntityManager
     }
 
     /// <summary>
-    /// 清空实体、关系图和 world bus 状态。
+    /// 清空实体、lifecycle 树和 world bus 状态。
     /// </summary>
     public static void Clear()
     {
@@ -103,67 +103,49 @@ public static class EntityManager
         }
 
         Entities.Clear();
-        RelationshipManager.Clear();
+        LifecycleTree.Clear();
         WorldEvents.World.Clear();
     }
 
     /// <summary>
-    /// 为已存在实体绑定父子归属关系。
+    /// 为已存在实体绑定 lifecycle parent；薄包装做实体存在性校验，然后委托 <see cref="LifecycleTree.Attach"/>。
     /// </summary>
     /// <param name="childEntityId">子实体 Id。</param>
     /// <param name="parentEntityId">父实体 Id。</param>
-    /// <param name="autoAddParentRelation">是否自动补充 PARENT 关系。</param>
     /// <param name="parentDestroyPolicy">父实体销毁策略。</param>
-    /// <param name="relationTypes">额外业务关系类型。</param>
-    public static bool BindParentRelationships(
+    public static bool AttachLifecycleParent(
         EntityId childEntityId,
         EntityId parentEntityId,
-        bool autoAddParentRelation = true,
-        ParentDestroyPolicy parentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively,
-        params string[] relationTypes)
+        ParentDestroyPolicy parentDestroyPolicy = ParentDestroyPolicy.DestroyRecursively)
     {
         if (!Entities.ContainsKey(childEntityId) || !Entities.ContainsKey(parentEntityId))
         {
             return false;
         }
 
-        return RelationshipManager.BindParentRelationships(
-            childEntityId.Value,
-            parentEntityId.Value,
-            autoAddParentRelation,
-            parentDestroyPolicy,
-            relationTypes);
+        return LifecycleTree.Attach(parentEntityId, childEntityId, parentDestroyPolicy);
     }
 
-    private static void BindSpawnRelationships(EntityId childEntityId, EntitySpawnConfig config)
+    private static void AttachLifecycleParentFromConfig(EntityId childEntityId, EntitySpawnConfig config)
     {
         if (config.ParentEntityId.IsEmpty)
         {
             return;
         }
 
-        BindParentRelationships(
-            childEntityId,
-            config.ParentEntityId,
-            config.AutoAddParentRelation || config.ParentRelationTypes == null || config.ParentRelationTypes.Length == 0,
-            config.ParentDestroyPolicy,
-            config.ParentRelationTypes ?? []);
+        LifecycleTree.Attach(config.ParentEntityId, childEntityId, config.ParentDestroyPolicy);
     }
 
     private static void DestroyOwnedChildren(EntityId parentEntityId)
     {
-        var ownedChildren = RelationshipManager.GetChildRelationshipsByParentAndType(parentEntityId.Value, RelationshipType.Parent);
-        foreach (var relationship in ownedChildren)
+        var children = LifecycleTree.GetChildren(parentEntityId);
+        for (var i = 0; i < children.Count; i++)
         {
-            var policy = RelationshipLifecycle.ReadParentDestroyPolicy(parentEntityId.Value, relationship.ChildEntityId);
-            var childId = EntityId.From(relationship.ChildEntityId);
-            if (policy == ParentDestroyPolicy.DestroyRecursively)
+            var link = children[i];
+            if (link.DestroyPolicy == ParentDestroyPolicy.DestroyRecursively)
             {
-                Destroy(childId);
-                continue;
+                Destroy(link.ChildEntityId);
             }
-
-            RelationshipManager.RemoveRelationship(parentEntityId.Value, relationship.ChildEntityId, RelationshipType.Parent);
         }
     }
 }

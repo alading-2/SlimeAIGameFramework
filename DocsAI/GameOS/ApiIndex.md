@@ -53,14 +53,15 @@
 | `SlimeAI.GameOS.Runtime.Entity.EntityId` | record struct | migrated | Typed entity 身份 wrapper；`Empty / From(string?) / IsEmpty / Value`，禁止 implicit `string` 转换。 |
 | `SlimeAI.GameOS.Runtime.Entity.IEntity` | interface | migrated | Runtime Entity legacy interface；只暴露 typed `EntityId`、Runtime Data 和事件，不承载业务逻辑。 |
 | `SlimeAI.GameOS.Runtime.Entity.RuntimeEntity` | class | migrated | 纯 C# Runtime Entity 身份容器，构造接受 typed `EntityId`，不是 archetype entity。 |
-| `SlimeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数；`EntityId / ParentEntityId` 为 typed `EntityId`，以 `EntityId.Empty` 表达"未指定"。 |
-| `SlimeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | Runtime Entity 生命周期注册表，`Spawn / Register / Destroy / Get / Clear / BindParentRelationships` 全部使用 typed `EntityId`；不是 ECS world registry / query API。 |
-| `SlimeAI.GameOS.Runtime.Relationship.RelationshipConstraint` | enum | migrated | 关系写入约束。 |
-| `SlimeAI.GameOS.Runtime.Relationship.ParentDestroyPolicy` | enum | migrated | 父实体销毁时对子实体的处理策略。 |
-| `SlimeAI.GameOS.Runtime.Relationship.RelationshipType` | static class | migrated | GameOS 内置关系类型。 |
-| `SlimeAI.GameOS.Runtime.Relationship.RelationshipRecord` | class | migrated | 关系记录。 |
-| `SlimeAI.GameOS.Runtime.Relationship.RelationshipLifecycle` | static class | migrated | PARENT 关系生命周期数据工具。 |
-| `SlimeAI.GameOS.Runtime.Relationship.RelationshipManager` | static class | migrated | 三索引 Runtime 关系图。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntitySpawnConfig` | record struct | migrated | Runtime Entity 生成参数；`EntityId / ParentEntityId` 为 typed `EntityId`，以 `EntityId.Empty` 表达"未指定"；只含 `EntityId / DataCatalog / ParentEntityId / ParentDestroyPolicy`。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntityManager` | static class | migrated | Runtime Entity 生命周期注册表，`Spawn / Register / Destroy / Get / Clear / AttachLifecycleParent` 全部使用 typed `EntityId`；不是 ECS world registry / query API。 |
+| `SlimeAI.GameOS.Runtime.Entity.LifecycleTree` | static class | migrated | Lifecycle parent 单父树 facade；`Attach / Detach / GetChildren / GetParentEntityId / DetachAll / Clear` typed API，发布 `LifecycleChildAttached / LifecycleChildDetached`。 |
+| `SlimeAI.GameOS.Runtime.Entity.LifecycleLink` | record struct | migrated | `(ParentEntityId, ChildEntityId, DestroyPolicy, Priority)` 不可变 lifecycle 边。 |
+| `SlimeAI.GameOS.Runtime.Entity.ParentDestroyPolicy` | enum | migrated | `DestroyRecursively / Detach`，lifecycle 销毁策略；原位于 `Runtime.Relationship`，现迁入 `Runtime.Entity`。 |
+| `SlimeAI.GameOS.Runtime.Entity.EntityIdList` | record struct | migrated | typed entity-id 多引用不可变值；`Empty / Add / Remove / Contains / Count / [int]`，按内容与顺序 value-equality。 |
+| `SlimeAI.GameOS.Runtime.Entity.OwnedReferenceDescriptor` | record struct | migrated | Owner cleanup descriptor：`(DataKey<EntityId?> ChildToOwnerKey, DataKey<EntityIdList> OwnerListKey)`。 |
+| `SlimeAI.GameOS.Runtime.Entity.IOwnedReferenceCleaner` | interface | migrated | Capability 可注册的销毁回调接口，`OnEntityDestroying(IEntity destroyed)`。 |
+| `SlimeAI.GameOS.Runtime.Entity.RuntimeOwnedReferenceRegistry` | static class | migrated | `Register(OwnedReferenceDescriptor) / Register(IOwnedReferenceCleaner) / Clear()`；`EntityManager.Destroy` 销毁路径调用 `NotifyDestroying`。 |
 | `SlimeAI.GameOS.Runtime.Schedule.GameFlowState` | enum | migrated | 游戏流程状态。 |
 | `SlimeAI.GameOS.Runtime.Schedule.OverlayFlags` | enum | migrated | 项目覆盖层标记。 |
 | `SlimeAI.GameOS.Runtime.Schedule.SimulationState` | enum | migrated | 项目模拟状态。 |
@@ -85,7 +86,7 @@
 | `SlimeAI.GameOS.Runtime.Pool.ObjectPoolManager` | static class | migrated | 全局对象池注册和归还入口。 |
 | `SlimeAI.GameOS.Runtime.Timer.GameTimer` | class | migrated | 可池化运行时计时器。 |
 | `SlimeAI.GameOS.Runtime.Timer.TimerManager` | class | migrated | 由外部 Tick 驱动的计时器管理器。 |
-| `SlimeAI.GameOS.Runtime.Events.Core` | namespace | migrated | Runtime 基础事件 payload：`EntitySpawned / EntityDestroyed / DataPropertyChanged / RelationshipAdded / RelationshipRemoved / InputUseSkill / InputNextSkill / InputPreviousSkill`。 |
+| `SlimeAI.GameOS.Runtime.Events.Core` | namespace | migrated | Runtime 基础事件 payload：`EntitySpawned / EntityDestroyed / DataPropertyChanged / LifecycleChildAttached / LifecycleChildDetached / InputUseSkill / InputNextSkill / InputPreviousSkill`。 |
 | `SlimeAI.GameOS.Runtime.Events.Global` | namespace | migrated | 全局低频事件 payload：`WaveStarted / WaveCompleted / GameStart / GamePause / GameResume / GameOver / MouseSelection*`。 |
 | `SlimeAI.GameOS.Capabilities.Movement.Events` | namespace | migrated | Movement Capability 事件 payload：`Started / Stopped / Collision`。 |
 | `SlimeAI.GameOS.Capabilities.Collision.Events` | namespace | bootstrap | Collision Capability 事件 payload：`Entered / Exited / HurtboxEntered / HurtboxExited`。 |
@@ -263,7 +264,7 @@
 | `Tools/run-tests.sh` | script | active | 运行 DataOS schema 验证和 `SlimeAI.GameOS.Tests` 行为测试。 |
 | `DataOS/Generators/generate-runtime-snapshot.sh` | script | active | 从 SQLite authoring DB 生成 Runtime JSON snapshot。 |
 | `DataOS/Validation/validate-dataos.sh` | script | active | 校验 DataOS authoring DB 的外键、空键、bool、资源分类和路径。 |
-| `DocsAI/GameOS/Observation.md` | document | draft | 定义 Schedule、EventBus、Relationship lifecycle、Capability selector、DataOS trace、Command playback 和 BrotatoLike scene PASS/FAIL artifact contract。 |
+| `DocsAI/GameOS/Observation.md` | document | draft | 定义 Schedule、EventBus、Lifecycle Tree 与 Typed References、Capability selector、DataOS trace、Command playback 和 BrotatoLike scene PASS/FAIL artifact contract。 |
 | `Tests/SlimeAI.GameOS.Tests` | console project | active | 覆盖 Event/Data/DataOS snapshot/Entity/Relationship/Schedule/Pool/Timer/Resource/Movement/MovementCollision、DamageService、HealService、DamageTool、AbilityService 点选目标语义、Ability 自动索敌、ProjectileTool 生成与命中生命周期、EffectTool 动画名写入、FeatureService、AttackService、AI 行为树、AI 巡逻、AI 行为树预制块、AI 攻击请求、AI 自动索敌施法上下文准备、Damage 处理器管线、目标查询注入和 OrientationParams 最小行为。 |
 | `Games/BrotatoLike/Src/Game/BrotatoLikeDataOSBootstrap.cs` | class | active | 游戏侧正式 DataOS snapshot 入口，可读取 `res://DataOS/Snapshots/runtime_snapshot.json`、注册资源并按记录生成 Runtime Entity。 |
 | `Games/BrotatoLike/Src/Game/Main.cs` | Godot scene script | active | 当前 headless smoke 覆盖 Movement、MovementCollision、Damage / ContactDamage / Attack、旧 AttackComponent 兼容包装、Attack 动画播放、Godot AI bridge、Ability 点选目标、Ability 自动索敌、Projectile / Effect Runtime 与 Godot 实例化、DataOS bootstrap 生成 Runtime Entity、Godot Physics broadphase、GodotMovementDriver、GodotOrientationComponent、GodotBridge 和 GodotNodePool 接入。 |

@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using SlimeAI.GameOS.Runtime.Data;
+using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.Capabilities.Ability;
 
@@ -218,9 +218,13 @@ public static class AbilityDataKeys
         category: AbilityCategory.Runtime,
         minValue: 0f);
 
-    /// <summary>拥有的技能 EntityId 列表。</summary>
-    public static readonly DataKey<List<string>> OwnedAbilityIds = DataKey.Create<List<string>>("Ability.OwnedAbilityIds",
-        defaultValue: new List<string>(),
+    /// <summary>ability 实体上指向 owner（拥有该技能的单位）的 typed 单引用；null 表达未设置。</summary>
+    public static readonly DataKey<EntityId?> OwnerEntity = DataKey.Create<EntityId?>("Ability.OwnerEntity",
+        category: AbilityCategory.Runtime);
+
+    /// <summary>owner 实体拥有的技能 EntityId 列表（typed 多引用）。</summary>
+    public static readonly DataKey<EntityIdList> OwnedAbilityIds = DataKey.Create<EntityIdList>("Ability.OwnedAbilityIds",
+        defaultValue: EntityIdList.Empty,
         category: AbilityCategory.Runtime);
 
     /// <summary>
@@ -264,6 +268,7 @@ public static class AbilityDataKeys
         _ = DamageRepeatCount;
         _ = ApplyImmediateDamage;
         _ = CurrentAbilityIndex;
+        _ = OwnerEntity;
         _ = OwnedAbilityIds;
     }
 }

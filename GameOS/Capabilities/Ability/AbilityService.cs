@@ -27,7 +27,26 @@ public sealed class AbilityService
         this.timerManager = timerManager;
         AbilityDataKeys.RegisterAll();
         DamageDataKeys.RegisterAll();
+        RegisterOwnerCleanupHook();
     }
+
+    /// <summary>
+    /// 向 framework 注册 ability 的 owner cleanup descriptor，幂等。
+    /// </summary>
+    private static void RegisterOwnerCleanupHook()
+    {
+        if (ownerCleanupRegistered)
+        {
+            return;
+        }
+
+        RuntimeOwnedReferenceRegistry.Register(new OwnedReferenceDescriptor(
+            AbilityDataKeys.OwnerEntity,
+            AbilityDataKeys.OwnedAbilityIds));
+        ownerCleanupRegistered = true;
+    }
+
+    private static bool ownerCleanupRegistered;
 
     /// <summary>
     /// 尝试触发技能。
