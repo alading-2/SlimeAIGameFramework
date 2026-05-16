@@ -2,6 +2,7 @@
 
 > Status: runtime-validation-contract
 > First scene: `Runtime/Event/RuntimeEventValidation`
+> 标准答案集中索引：[ValidationCatalog.md](ValidationCatalog.md)
 
 ## 目标
 

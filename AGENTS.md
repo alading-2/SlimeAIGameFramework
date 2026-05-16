@@ -23,7 +23,7 @@
 - Capability 变更必须同步 DocsAI 下的 contract/debug、manifest、测试和 skill 路由。
 - DataOS schema 修改必须同步生成器、snapshot 和验证规则。
 - 新增 C# XML 注释默认使用中文；公开 API 保持简洁，不写大段教学型注释。
-- 默认不 commit、不 push。
+- AI 可自动 commit；push 需用户确认。
 
 ## 验证入口
 
