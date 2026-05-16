@@ -1051,7 +1051,7 @@ TS object / JSON dictionary
 目标：
 
 - 把本 ADR 的语言分层写入 `DocsAI/Framework/Principles.md`。
-- 在 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md` 增加"默认 C#，例外需说明"的门禁。
+- 在 `Workspace/DocsAI/AgentWorkflow/Protocols/AIFeatureDevelopmentProtocol.md` 增加"默认 C#，例外需说明"的门禁。
 - 在 owner skills 中加入 GDScript / TS / GDExtension 例外条件。
 
 验收：

@@ -43,6 +43,30 @@ public partial class RuntimeEventValidationScene : Node
             {
                 "data_to_event_bridge is a labelled cross-layer bridge check, not a pure EventBus core assertion.",
                 "WorldEventBus is cleared before and after validation."
+            },
+            expectedInputs: new[]
+            {
+                "local entity event bus and WorldEvents.World subscriptions",
+                "handler exception, same-type reentry and invalid scope publish attempts",
+                "RuntimeEntity.Data.Set bridge for DataPropertyChanged event"
+            },
+            expectedObservations: new[]
+            {
+                "registration order, unsubscribe and handler exception isolation are deterministic",
+                "same-type reentry is blocked and invalid entity/world event scope publishes do not dispatch",
+                "broadcast event reaches both entity and world buses and data bridge emits DataPropertyChanged"
+            },
+            passCriteria: new[]
+            {
+                "all Runtime/Event checks pass",
+                "stdout contains GameOS Runtime Event validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "any event ordering, subscription, guard, scope or bridge check fails",
+                "stdout contains GameOS Runtime Event validation FAIL",
+                "failureReasons identifies the failed event invariant"
             });
 
         validation.Info("validation start");

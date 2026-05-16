@@ -21,6 +21,10 @@ public sealed class SceneValidationSession : IDisposable
     private readonly List<string> failureReasons = new();
     private readonly List<string> dependencies = new();
     private readonly List<string> notes = new();
+    private readonly List<string> expectedInputs = new();
+    private readonly List<string> expectedObservations = new();
+    private readonly List<string> passCriteria = new();
+    private readonly List<string> failCriteria = new();
 
     public SceneValidationSession(
         GameOSObservationSession observation,
@@ -28,7 +32,11 @@ public sealed class SceneValidationSession : IDisposable
         string layer,
         string artifactFileName,
         IEnumerable<string>? dependencies = null,
-        IEnumerable<string>? notes = null)
+        IEnumerable<string>? notes = null,
+        IEnumerable<string>? expectedInputs = null,
+        IEnumerable<string>? expectedObservations = null,
+        IEnumerable<string>? passCriteria = null,
+        IEnumerable<string>? failCriteria = null)
     {
         Observation = observation;
         Context = context;
@@ -42,6 +50,26 @@ public sealed class SceneValidationSession : IDisposable
         if (notes != null)
         {
             this.notes.AddRange(notes);
+        }
+
+        if (expectedInputs != null)
+        {
+            this.expectedInputs.AddRange(expectedInputs);
+        }
+
+        if (expectedObservations != null)
+        {
+            this.expectedObservations.AddRange(expectedObservations);
+        }
+
+        if (passCriteria != null)
+        {
+            this.passCriteria.AddRange(passCriteria);
+        }
+
+        if (failCriteria != null)
+        {
+            this.failCriteria.AddRange(failCriteria);
         }
 
         GameOSLog.AddSink(memorySink);
@@ -121,6 +149,11 @@ public sealed class SceneValidationSession : IDisposable
             Observation.ScenePath,
             Layer,
             Observation.Mode,
+            ResolveArtifactPath(artifactPath),
+            expectedInputs,
+            expectedObservations,
+            passCriteria,
+            failCriteria,
             checks,
             memorySink.Entries.Select(SceneValidationLogEntry.From).ToArray(),
             failureReasons,
@@ -134,6 +167,17 @@ public sealed class SceneValidationSession : IDisposable
     public void Dispose()
     {
         GameOSLog.RemoveSink(memorySink);
+    }
+
+    private string ResolveArtifactPath(string artifactPath)
+    {
+        if (!string.IsNullOrWhiteSpace(Observation.ArtifactDirectoryRelative))
+        {
+            return System.IO.Path.Combine(Observation.ArtifactDirectoryRelative, ArtifactFileName)
+                .Replace(System.IO.Path.DirectorySeparatorChar, '/');
+        }
+
+        return artifactPath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
     }
 }
 
@@ -187,6 +231,11 @@ public sealed record SceneValidationArtifact(
     [property: JsonPropertyName("scene")] string Scene,
     [property: JsonPropertyName("layer")] string Layer,
     [property: JsonPropertyName("mode")] string Mode,
+    [property: JsonPropertyName("artifactPath")] string ArtifactPath,
+    [property: JsonPropertyName("expectedInputs")] IReadOnlyList<string> ExpectedInputs,
+    [property: JsonPropertyName("expectedObservations")] IReadOnlyList<string> ExpectedObservations,
+    [property: JsonPropertyName("passCriteria")] IReadOnlyList<string> PassCriteria,
+    [property: JsonPropertyName("failCriteria")] IReadOnlyList<string> FailCriteria,
     [property: JsonPropertyName("checks")] IReadOnlyList<SceneValidationCheck> Checks,
     [property: JsonPropertyName("logs")] IReadOnlyList<SceneValidationLogEntry> Logs,
     [property: JsonPropertyName("failureReasons")] IReadOnlyList<string> FailureReasons,

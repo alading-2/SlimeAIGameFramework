@@ -132,7 +132,8 @@ var tests = new (string Name, Action Run)[]
     ("Movement collision notify without stop", TestMovementCollisionNotifyWithoutStop),
     ("Observation log level filter and formatting", TestObservationLogLevelFilterAndFormatting),
     ("Observation JSONL serialization", TestObservationJsonlSerialization),
-    ("Scene validation session aggregates failures", TestSceneValidationSessionAggregatesFailures)
+    ("Scene validation session aggregates failures", TestSceneValidationSessionAggregatesFailures),
+    ("Scene validation session writes standard answer fields", TestSceneValidationSessionWritesStandardAnswerFields)
 };
 
 var failed = 0;
@@ -2805,6 +2806,53 @@ static void TestSceneValidationSessionAggregatesFailures()
         var artifact = File.ReadAllText(artifactPath!);
         AssertEqual("artifact status lower", true, artifact.Contains("\"status\": \"fail\"", StringComparison.Ordinal));
         AssertEqual("artifact includes fail reason", true, artifact.Contains("fails: not ok", StringComparison.Ordinal));
+    }
+    finally
+    {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        Directory.Delete(tempDir, recursive: true);
+    }
+}
+
+static void TestSceneValidationSessionWritesStandardAnswerFields()
+{
+    var tempDir = Path.Combine(Path.GetTempPath(), $"gameos-scene-validation-standard-answer-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(tempDir);
+    GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = true });
+    try
+    {
+        using var observation = GameOSObservationSession.FromEnvironment(
+            "res://Scenes/Validation/Test.tscn",
+            "validation",
+            tempDir);
+        using var validation = new SceneValidationSession(
+            observation,
+            "ValidationStandardAnswerTest",
+            "Runtime/Test",
+            "validation-standard-answer.json",
+            new[] { "DependencyA" },
+            new[] { "NoteA" },
+            expectedInputs: new[] { "input-a" },
+            expectedObservations: new[] { "observation-a" },
+            passCriteria: new[] { "pass-a" },
+            failCriteria: new[] { "fail-a" });
+
+        validation.Check("passes", "Core", () => CheckResult.Pass("ok"));
+        var artifactPath = validation.WriteArtifact();
+
+        var artifact = File.ReadAllText(artifactPath!);
+        using var json = System.Text.Json.JsonDocument.Parse(artifact);
+        var root = json.RootElement;
+
+        AssertEqual("expected inputs field exists", true, root.TryGetProperty("expectedInputs", out _));
+        AssertEqual("expected observations field exists", true, root.TryGetProperty("expectedObservations", out _));
+        AssertEqual("pass criteria field exists", true, root.TryGetProperty("passCriteria", out _));
+        AssertEqual("fail criteria field exists", true, root.TryGetProperty("failCriteria", out _));
+        AssertEqual("artifact path field exists", true, root.TryGetProperty("artifactPath", out _));
+        AssertEqual("expected inputs preserved", "input-a", root.GetProperty("expectedInputs")[0].GetString());
+        AssertEqual("expected observations preserved", "observation-a", root.GetProperty("expectedObservations")[0].GetString());
+        AssertEqual("pass criteria preserved", "pass-a", root.GetProperty("passCriteria")[0].GetString());
+        AssertEqual("fail criteria preserved", "fail-a", root.GetProperty("failCriteria")[0].GetString());
     }
     finally
     {

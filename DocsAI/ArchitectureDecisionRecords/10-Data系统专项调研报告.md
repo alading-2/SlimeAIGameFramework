@@ -338,4 +338,4 @@ Games/BrotatoLike/
 | GodotBridge | UI / HUD binder 通过 DataDescriptorRegistry 查装饰（不通过 Data） | `Adopt Now` | `SlimeAI/GameOS/GodotBridge/HUD/*` |
 | Validation | 新增 typed Data API smoke、Capability 裁剪 smoke、Descriptor 一致性测试 | `Adopt Now` | `SlimeAI/Tests/SlimeAI.GameOS.Tests/*` |
 | Observation | DataDescriptorRegistry dump、Capability 启用列表 dump、snapshot manifest dump | `Adopt Later` | `SlimeAI/GameOS/Observation/Contract.md` |
-| Agent Protocol | 新增禁止事项："不要在 C# 中 hardcode DisplayName / Description"；改 DataKey 装饰只能改 DB | `Adopt Now` | `SlimeAI/Agent/Protocols/*` |
+| Agent Protocol | 新增禁止事项："不要在 C# 中 hardcode DisplayName / Description"；改 DataKey 装饰只能改 DB | `Adopt Now` | `Workspace/DocsAI/AgentWorkflow/Protocols/*` |

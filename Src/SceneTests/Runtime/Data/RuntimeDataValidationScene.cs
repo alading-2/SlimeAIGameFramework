@@ -74,6 +74,30 @@ public partial class RuntimeDataValidationScene : Node
             {
                 "This scene validates Runtime/Data typed contract only.",
                 "DataOS SQLite schema, snapshot generator and validator are covered by Tools/run-dataos-validate.sh."
+            },
+            expectedInputs: new[]
+            {
+                "typed DataCatalog with Health, Energy, Mode and computed Power keys",
+                "RuntimeData values with clamp, option, modifier and reset operations",
+                "RuntimeEntity.Data.Set bridge for DataPropertyChanged event"
+            },
+            expectedObservations: new[]
+            {
+                "catalog resolves typed keys and capability metadata",
+                "typed set/get/tryget/has/remove/reset and modifier/computed dirty behavior match Runtime/Data contract",
+                "entity data change emits DataPropertyChanged with stable key, old value and new value"
+            },
+            passCriteria: new[]
+            {
+                "all Runtime/Data checks pass",
+                "stdout contains GameOS Runtime Data validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "any Runtime/Data lifecycle, clamp, option, modifier, reset or bridge check fails",
+                "stdout contains GameOS Runtime Data validation FAIL",
+                "failureReasons identifies the failed data invariant"
             });
 
         validation.Info("validation start");

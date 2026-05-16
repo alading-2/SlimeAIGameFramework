@@ -45,6 +45,30 @@ public partial class RuntimeCommandBufferValidationScene : Node
             {
                 "GodotNodeInstantiate and GodotNodeFree are validated with a fake Runtime handler.",
                 "Manual phase is used only for explicit validation playback."
+            },
+            expectedInputs: new[]
+            {
+                "RuntimeWorld.CreateScoped() command buffer with spawn, destroy, attach, detach, event, resource and fake Godot node commands",
+                "SchedulePhase.Manual and EndOfFrame playback calls",
+                "nested EnterGuard(reason) scopes and world dispose with pending commands"
+            },
+            expectedObservations: new[]
+            {
+                "all eight deferred command kinds are accepted and reported",
+                "only commands matching the requested phase are played and Manual is not auto-played by frame phases",
+                "guarded structural mutations defer until EndOfFrame and pending commands are skipped with WorldDisposing on dispose"
+            },
+            passCriteria: new[]
+            {
+                "all command kind, phase, guard and dispose checks pass",
+                "stdout contains GameOS Runtime CommandBuffer validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "any deferred command, phase playback, guard or discard-report check fails",
+                "stdout contains GameOS Runtime CommandBuffer validation FAIL",
+                "failureReasons identifies the failed command-buffer invariant"
             });
 
         validation.Info("validation start");

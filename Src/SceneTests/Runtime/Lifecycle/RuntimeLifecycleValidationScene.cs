@@ -46,6 +46,30 @@ public partial class RuntimeLifecycleValidationScene : Node
             {
                 "This scene validates lifecycle parent-child invariants and typed business reference cleanup.",
                 "RuntimeOwnedReferenceRegistry is cleared before and after owner cleanup checks."
+            },
+            expectedInputs: new[]
+            {
+                "scoped RuntimeWorld entities for parent, child, grandchild and owned references",
+                "LifecycleTree attach/detach requests including invalid self, empty and cycle cases",
+                "RuntimeOwnedReferenceRegistry descriptor using RuntimeLifecycleValidation.Owner and RuntimeLifecycleValidation.OwnedIds"
+            },
+            expectedObservations: new[]
+            {
+                "single parent is enforced and invalid attach cases are rejected",
+                "DestroyRecursively destroys recursive children while Detach keeps detached children alive",
+                "EntityIdList remains immutable/value-equal and owner cleanup removes destroyed child ids"
+            },
+            passCriteria: new[]
+            {
+                "all lifecycle and owner cleanup checks pass",
+                "stdout contains GameOS Runtime Lifecycle validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "any lifecycle invariant or owner cleanup check fails",
+                "stdout contains GameOS Runtime Lifecycle validation FAIL",
+                "failureReasons names the broken lifecycle or cleanup invariant"
             });
 
         validation.Info("validation start");

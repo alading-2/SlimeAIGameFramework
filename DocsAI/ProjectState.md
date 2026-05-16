@@ -10,11 +10,13 @@ Runtime 事件系统已作为 OpenSpec 基线完成：事件 API 换成 type-key
 
 计划系统已切换到 OpenSpec 口径：框架级功能、重构、架构调整、迁移账本和长期实施任务默认进入 `openspec/changes/<change>/`。第一轮 AI-first Runtime 大重构的总体纲领和当前进度维护在工作区根 `openspec/Plan/2026-05-15-ai-first-runtime-refactor-plan.md`；完成后的要求合入 `openspec/specs/` 作为当前规范基线；旧执行 checklist 和归档历史不再作为 AI 入口保留。
 
-AI-first Runtime 重构第一轮**已完成**：P2a `refactor-runtime-entity-id-typed-value` 已完成并 archived，typed `EntityId` baseline 已合入 `openspec/specs/runtime-entity-identity/spec.md`；P1 `refactor-runtime-relationship-as-lifecycle-tree` 已完成并 archived，`RelationshipManager / RelationshipType / RelationshipRecord` 已删除，LifecycleTree 与 typed business reference baseline 已合入 `openspec/specs/runtime-relationship-lifecycle/spec.md` 和 `openspec/specs/runtime-business-entity-references/spec.md`；P2b `refactor-runtime-world-facade` 已完成并 archived，`RuntimeWorld.Default / CreateScoped()` 与 world-scoped Entity / Lifecycle / Events / Resources / Pools baseline 已合入 `openspec/specs/runtime-world-container/spec.md`；P3 `refactor-runtime-events-purge-game-leakage` 已完成并 archived，game-leakage cleanup baseline 已合入 `openspec/specs/runtime-event-game-leakage-cleanup/spec.md`，`runtime-event-system` baseline 已强化事件归属边界；P4 `refactor-runtime-command-buffer-with-phases` 已完成并 archived，`SchedulePhase`、`RuntimeCommandBuffer` 8 种 typed command kind（包含 `GodotNodeInstantiate / GodotNodeFree`）、`EnterGuard(reason)` 保护域、`RuntimeWorld.Commands / Schedule` 与 `CommandPlaybackReport` typed observation 已合入 `openspec/specs/runtime-command-buffer/spec.md` 和 `openspec/specs/runtime-schedule-phase/spec.md`；P5 `enhance-ai-feature-development-skill` 已完成并 archived，`ai-feature-development-skill` baseline 已合入 `openspec/specs/ai-feature-development-skill/spec.md`，`.ai-config/skills/ai/ai-feature-development/` 现在固定 9 段 SKILL.md 与 11 个 references。P4 **未做** `IRuntimeSystem -> IRuntimeProcess` rename，也未合并 `SystemConfig + SystemDescriptor + SystemRuntimeInfo`，这两项列入 future backlog，后续必须新建 OpenSpec change。
+AI-first Runtime 重构第一轮**已完成**：P2a `refactor-runtime-entity-id-typed-value` 已完成并 archived，typed `EntityId` baseline 已合入 `openspec/specs/runtime-entity-identity/spec.md`；P1 `refactor-runtime-relationship-as-lifecycle-tree` 已完成并 archived，`RelationshipManager / RelationshipType / RelationshipRecord` 已删除，LifecycleTree 与 typed business reference baseline 已合入 `openspec/specs/runtime-relationship-lifecycle/spec.md` 和 `openspec/specs/runtime-business-entity-references/spec.md`；P2b `refactor-runtime-world-facade` 已完成并 archived，`RuntimeWorld.Default / CreateScoped()` 与 world-scoped Entity / Lifecycle / Events / Resources / Pools baseline 已合入 `openspec/specs/runtime-world-container/spec.md`；P3 `refactor-runtime-events-purge-game-leakage` 已完成并 archived，game-leakage cleanup baseline 已合入 `openspec/specs/runtime-event-game-leakage-cleanup/spec.md`，`runtime-event-system` baseline 已强化事件归属边界；P4 `refactor-runtime-command-buffer-with-phases` 已完成并 archived，`SchedulePhase`、`RuntimeCommandBuffer` 8 种 typed command kind（包含 `GodotNodeInstantiate / GodotNodeFree`）、`EnterGuard(reason)` 保护域、`RuntimeWorld.Commands / Schedule` 与 `CommandPlaybackReport` typed observation 已合入 `openspec/specs/runtime-command-buffer/spec.md` 和 `openspec/specs/runtime-schedule-phase/spec.md`；P5 `enhance-ai-feature-development-skill` 已完成并 archived，`ai-feature-development-skill` baseline 已合入 `openspec/specs/ai-feature-development-skill/spec.md`，`.ai-config/skills/ai/ai-feature-development/` 现在固定 9 段 SKILL.md 与 12 个 references。P4 **未做** `IRuntimeSystem -> IRuntimeProcess` rename，也未合并 `SystemConfig + SystemDescriptor + SystemRuntimeInfo`，这两项列入 future backlog，后续必须新建 OpenSpec change。
 
-DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、Agent Protocol、Observation 和 Godot 场景测试文档集中在 `SlimeAI/DocsAI/`；源码目录只保留允许例外和操作指针。
+DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、Observation 和 Godot 场景测试文档集中在 `SlimeAI/DocsAI/`；AI agent 工作流、协议、角色、hooks/subagent/MCP/git 策略集中在 `Workspace/DocsAI/AgentWorkflow/`，旧的框架仓 Agent 文档入口已删除，不再作为兼容入口；源码目录只保留允许例外和操作指针。
 
-AI 新功能开发入口已补齐：统一源为 `.ai-config/skills/ai/ai-feature-development/`，同步副本为 `.codex/skills/ai-feature-development` / `.claude/skills/ai-feature-development` / `.windsurf/skills/ai-feature-development`，协议入口为 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md`。P5 后 SKILL.md 固定为 9 段：目标、入口顺序、设计规则、文件修改前、实现优先级、功能收尾、验证、Skill 同步、完成检查；references 固定为 11 个文件，覆盖 validation closure、framework research filter、refactor decision tree、typed value、rename pipeline、framework/game boundary、structural guard、RuntimeWorld facade、lifecycle/business reference、spec/code alignment、skill sync discipline。该入口强调 AI 可路由、可验证、可观察优先，不为旧框架兼容保留新入口；新功能必须补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态和 owner skill 统一源。
+AI 新功能开发入口已补齐并开始进入统一 workflow governance：统一源为 `.ai-config/skills/ai/ai-feature-development/`，同步副本为 `.codex/skills/ai-feature-development` / `.claude/skills/ai-feature-development` / `.windsurf/skills/ai-feature-development`，协议入口为 `Workspace/DocsAI/AgentWorkflow/Protocols/AIFeatureDevelopmentProtocol.md`，工作区总纲入口为 `Workspace/DocsAI/AgentWorkflow/INDEX.md`。旧的框架仓 Agent 文档入口已删除，不再保存长期流程正文或兼容指针。SKILL.md 固定为 9 段：目标、入口顺序、设计规则、文件修改前、实现优先级、功能收尾、验证、Skill 同步、完成检查；references 固定为 12 个文件，覆盖 workflow governance、validation closure、framework research filter、refactor decision tree、typed value、rename pipeline、framework/game boundary、structural guard、RuntimeWorld facade、lifecycle/business reference、spec/code alignment、skill sync discipline。该入口强调 AI 可路由、可验证、可观察、可回顾优先，不为旧框架兼容保留新入口；新功能必须先写验收标准，补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态、owner skill 统一源和 retrospective 结论。
+
+当前正在执行 `unify-ai-agent-development-workflow` OpenSpec change：新增 `Workspace/DocsAI/AgentWorkflow/` 总纲、角色提示词和研究采纳记录；更新 `AIFeatureDevelopmentProtocol`、Godot Scene Validation / Testing 文档和 `ai-feature-development` skill，明确 SDD / OpenSpec、TDD / 标准答案、AI retrospective、hooks / subagent / MCP / git checkpoint 的统一流程。该 change 不修改 GameOS runtime、DataOS schema、GodotBridge 或 BrotatoLike gameplay。
 
 GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
 
@@ -27,7 +29,7 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 3. 继续把 BrotatoLike 真实 UI、SpawnSystem 专项场景和更细的输入专项测试接入统一 Godot scene runner 和 Observation artifact；普通主场景可玩切片和 smoke 已有 PASS artifact。
 4. 推进 DataOS snapshot 到真实 UI 和更多游戏场景内容；真实主场景 / 生成系统入口已有第一批 DataOS 驱动证据。
 5. 建立 Godot 引擎 trace 计划，源码入口是 `/home/slime/Code/SlimeAI/Resources/Engine/Engine/godot-4.6.2-stable`。
-6. 将后续框架级计划按 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
+6. 将后续框架级计划按 `Workspace/DocsAI/AgentWorkflow/Protocols/OpenSpecChangeProtocol.md` 创建 OpenSpec change，再进入实现。
 
 ## 风险
 
@@ -53,7 +55,7 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 Tools/run-build.sh
 Tools/run-tests.sh
 Tools/run-dataos-validate.sh
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
@@ -70,7 +72,7 @@ Tools/analyze-godot-scene-logs.sh
 ### AI-first Runtime refactor 场景验证（2026-05-15）
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate verify-ai-first-runtime-refactor-scenes --strict
 openspec validate --specs --strict
 ```
@@ -78,7 +80,7 @@ openspec validate --specs --strict
 结果：active change strict validate PASS；baseline specs strict validate 输出 `28 passed, 0 failed`。
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh
 Tools/run-tests.sh
 ```
@@ -86,7 +88,7 @@ Tools/run-tests.sh
 结果：框架 build PASS（0 errors；既有 XML comment warnings），Runtime tests 全部 PASS。
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
@@ -124,13 +126,13 @@ Tools/run-dataos-validate.sh   # PASS
 ### P1 LifecycleTree 框架仓实施验证（2026-05-15）
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh             # PASS（0 errors / 0 warnings）
 Tools/run-tests.sh             # 85/85 PASS（含 LifecycleTree、EntityIdList、RuntimeOwnedReferenceRegistry 新测试）
 ```
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh             # PASS（0 errors / 0 warnings）
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
@@ -140,7 +142,7 @@ Tools/analyze-godot-scene-logs.sh
 结果：普通主场景 playable slice 输出 `BrotatoLike playable slice PASS`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-15/09-40-30/index.json`；`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，analyzer 输出 `status: pass`、`firstError: none`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-15/09-47-27/index.json`。
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec archive refactor-runtime-relationship-as-lifecycle-tree -y
 openspec validate --specs --strict
 ```
@@ -150,13 +152,13 @@ openspec validate --specs --strict
 ### P2b RuntimeWorld facade 实施验证（2026-05-15）
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh             # PASS（0 errors / 0 warnings）
 Tools/run-tests.sh             # PASS（含 RuntimeWorld default / scoped isolation / dispose 顺序测试）
 ```
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh             # PASS（0 errors / 0 warnings）
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
@@ -165,7 +167,7 @@ Tools/analyze-godot-scene-logs.sh
 结果：`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，`bridge:True pool:True dataos:True main:True`；analyzer 输出 `status: pass`、`firstError: none`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-15/13-55-38/index.json`。
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec archive refactor-runtime-world-facade -y
 openspec validate --specs --strict
 ```
@@ -175,13 +177,13 @@ openspec validate --specs --strict
 ### P3 Runtime events leakage cleanup 实施验证（2026-05-15）
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh             # PASS（0 errors；既有 XML 注释 warnings）
 Tools/run-tests.sh             # PASS
 ```
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh             # PASS（0 errors；既有 XML 注释 warnings）
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
@@ -190,7 +192,7 @@ Tools/analyze-godot-scene-logs.sh
 结果：`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，`bridge:True pool:True dataos:True main:True`；analyzer 输出 `status: pass`、`firstError: none`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-15/14-39-45/index.json`。
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate refactor-runtime-events-purge-game-leakage --strict
 openspec archive refactor-runtime-events-purge-game-leakage -y
 openspec validate --specs --strict
@@ -201,13 +203,13 @@ openspec validate --specs --strict
 ### P4 Runtime CommandBuffer + Phase 实施验证（2026-05-15）
 
 ```bash
-cd /home/slime/Code/SkilmeAI/SlimeAI
+cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-build.sh             # PASS（0 errors / 0 warnings）
 Tools/run-tests.sh             # PASS（含 RuntimeCommandBuffer / SchedulePhase / StructuralChangeGuard tests）
 ```
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh             # PASS（0 errors；XML 注释 warnings 仍存在）
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
@@ -216,7 +218,7 @@ Tools/analyze-godot-scene-logs.sh
 结果：`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，`bridge:True pool:True dataos:True main:True`；analyzer 输出 `status: pass`、`firstError: none`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-15/16-45-27/index.json`。
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate refactor-runtime-command-buffer-with-phases --strict
 openspec validate --specs --strict
 ```
@@ -226,7 +228,7 @@ openspec validate --specs --strict
 ### P5 ai-feature-development skill enhancement 验证（2026-05-15）
 
 ```bash
-cd /home/slime/Code/SkilmeAI
+cd /home/slime/Code/SlimeAI
 openspec validate enhance-ai-feature-development-skill --strict
 openspec list --json
 find .ai-config/skills/ai/ai-feature-development/references -type f -name '*.md' | sort

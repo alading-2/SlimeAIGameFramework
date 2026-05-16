@@ -41,6 +41,30 @@ public partial class RuntimeEntityValidationScene : Node
             {
                 "This scene validates typed EntityId and Entity lifecycle behavior.",
                 "Lifecycle parent-child semantics are covered by Runtime/Lifecycle validation."
+            },
+            expectedInputs: new[]
+            {
+                "EntityId.Empty, default(EntityId), EntityId.From(null), EntityId.From(\"\")",
+                "RuntimeWorld.CreateScoped() with custom and generated entity spawn",
+                "EntitySpawned and EntityDestroyed subscriptions on the scoped world"
+            },
+            expectedObservations: new[]
+            {
+                "empty/default/null/empty-string entity ids are empty and equal",
+                "custom spawn keeps runtime-entity-custom while generated spawn is a 32-char Guid N value",
+                "spawn and destroy events carry typed EntityId payloads matching the entity"
+            },
+            passCriteria: new[]
+            {
+                "all checks have status=pass",
+                "stdout contains GameOS Runtime Entity validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "any check has status=fail",
+                "stdout contains GameOS Runtime Entity validation FAIL",
+                "failureReasons contains the failed check name and reason"
             });
 
         validation.Info("validation start");

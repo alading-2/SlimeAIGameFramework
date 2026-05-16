@@ -45,6 +45,30 @@ public partial class RuntimeWorldValidationScene : Node
             {
                 "The dispose order check uses the existing internal test hook through reflection because the hook is not public API.",
                 "No Runtime public API is added for this validation."
+            },
+            expectedInputs: new[]
+            {
+                "two RuntimeWorld.CreateScoped() instances with isolated entity/resource/event state",
+                "RuntimeWorld.Default dispose attempt",
+                "scoped world dispose with pending command and teardown event subscriptions"
+            },
+            expectedObservations: new[]
+            {
+                "scoped worlds do not share entities, resources or event bus state",
+                "RuntimeWorld.Default.Dispose() throws InvalidOperationException and remains usable",
+                "scoped world dispose order is Schedule,Commands,Pools,Resources,Lifecycle,Entities,Events and post-dispose access throws ObjectDisposedException"
+            },
+            passCriteria: new[]
+            {
+                "all world isolation and dispose checks pass",
+                "stdout contains GameOS Runtime World validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "isolation, default disposal, dispose order, teardown event or post-dispose access check fails",
+                "stdout contains GameOS Runtime World validation FAIL",
+                "failureReasons identifies the failed world invariant"
             });
 
         validation.Info("validation start");

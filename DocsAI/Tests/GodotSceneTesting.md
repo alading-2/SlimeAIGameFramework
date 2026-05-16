@@ -25,7 +25,7 @@ BrotatoLike 保留薄封装：
 ## 常用命令
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh list
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
@@ -62,10 +62,21 @@ Tools/analyze-godot-scene-logs.sh
 
 - `index.json`
 - per-scene `result.json`
-- `combined.log`
+- validation artifact，例如 `artifacts/runtime-*-validation.json`
 - `artifacts/logs/scene-log.jsonl`
+- `combined.log`
 
 需要看 Godot 打印记录时，优先打开 analyzer 输出的 `combinedLog`；原始 stdout 在同一 attempt 目录的 `stdout.log`。
+
+这些文件是 AI-first 验收事实源，不是附属日志。分析顺序固定：
+
+1. `index.json`：确认场景、attempt、exit code、artifact 列表。
+2. per-scene `result.json`：确认 runner 层状态。
+3. validation artifact：确认 `status`、`expectedObservations`、`checks`、`failureReasons`。
+4. `artifacts/logs/scene-log.jsonl`：定位 check start / pass / fail。
+5. `combined.log`：只在 artifact 或 JSONL 不足时补查 Godot 输出。
+
+如果 artifact 缺失、`expectedObservations` 为空、或 `[FAIL]` 日志无法对应 `failureReasons`，这属于验证证据不完整，不能仅凭进程退出码汇报通过。
 
 当前专项 artifact：
 

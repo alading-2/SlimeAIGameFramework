@@ -22,7 +22,7 @@ openspec status --change "<change>" --json
 openspec instructions apply --change "<change>" --json
 ```
 
-需要长期实施的工作应创建 `openspec/changes/<change>/`；完成后把要求合入 `openspec/specs/`。详细规则见 `DocsAI/Agent/Protocols/OpenSpecChangeProtocol.md`。
+需要长期实施的工作应创建 `openspec/changes/<change>/`；完成后把要求合入 `openspec/specs/`。详细规则见 `Workspace/DocsAI/AgentWorkflow/Protocols/OpenSpecChangeProtocol.md`。
 
 ## 构建
 

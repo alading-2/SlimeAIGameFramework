@@ -85,6 +85,7 @@ Games/BrotatoLike/Src/SceneTests/Game/Input/BrotatoLikeInputEventValidationScene
 - 允许依赖。
 - 不覆盖内容。
 - 运行命令。
+- 标准答案：expected inputs、expected observations、pass criteria、fail criteria。
 - PASS/FAIL 判定。
 - artifact 路径和字段。
 - 常见失败排查顺序。
@@ -121,6 +122,10 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
   "status": "pass",
   "scene": "res://Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn",
   "layer": "Runtime/Event",
+  "expectedInputs": [],
+  "expectedObservations": [],
+  "passCriteria": [],
+  "failCriteria": [],
   "checks": [],
   "logs": [],
   "failureReasons": [],
@@ -134,6 +139,10 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 - `status`: `pass` 或 `fail`。
 - `scene`: 当前运行的 `res://` 场景路径。
 - `layer`: 被验证的 GameOS 基础层。
+- `expectedInputs`: 场景预设输入、模拟输入、初始 DataKey / Event / Resource 条件。
+- `expectedObservations`: AI 用来判断方向是否正确的标准答案，例如期望实体状态、事件顺序、目标选择结果、UI/Bridge 状态或 artifact 字段。
+- `passCriteria`: 通过条件，必须能映射到 `checks` 或总 PASS marker。
+- `failCriteria`: 失败条件，必须能映射到 `failureReasons` 或 `[FAIL]` 日志。
 - `checks`: 每个检查项的结构化证据，至少包含 `name`、`status`、`category`。
 - `logs`: 与 stdout 同源的关键日志条目，至少包含 `level`、`context`、`message`。
 - `failureReasons`: 失败原因数组；PASS 时必须为空。
@@ -142,7 +151,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 
 ## 日志约定
 
-场景验证必须同时产出人类可读日志和机器可读 artifact。日志不是 artifact 的替代品；它用于快速定位“跑到哪一步、哪一步失败、关键观测值是什么”。artifact 是 AI / CI 复验事实源。
+场景验证必须同时产出人类可读日志和机器可读 artifact。日志不是 artifact 的替代品；它用于快速定位“跑到哪一步、哪一步失败、关键观测值是什么”。artifact 是 AI / CI 复验事实源。默认日志面向 AI 分析，不面向人工实时阅读；不要打印大量每帧噪声，除非写入单独 trace 文件并在 artifact 中索引。
 
 框架侧 `SceneValidationSession` 是默认 helper；场景脚本只声明检查项，helper 负责 check start、PASS/FAIL、失败聚合、JSONL 和 validation artifact。
 
@@ -157,6 +166,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 - stdout 日志使用 ASCII level 和 scene context，便于 `rg` 检索。
 - Godot 承载场景可以使用 `GD.PrintRich` 做颜色输出，但原始文本必须包含 `[INFO]`、`[PASS]`、`[FAIL]`、`[WARN]` 或 `[ERROR]`。
 - 失败日志必须和 artifact `failureReasons` 对应。
+- 每个检查日志的 `check <name>` 必须能对应 artifact `checks[].name`。
 - PASS/FAIL 总 marker 仍必须保留，不能只依赖逐项日志。
 - 低层验证不要把大量每帧日志作为默认输出；需要长 trace 时写入 artifact 或单独 trace 文件。
 

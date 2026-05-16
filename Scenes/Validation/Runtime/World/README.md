@@ -20,7 +20,7 @@
 ## 运行命令
 
 ```bash
-cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 ```
 

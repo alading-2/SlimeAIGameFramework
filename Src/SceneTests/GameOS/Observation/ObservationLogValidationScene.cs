@@ -44,6 +44,30 @@ public partial class ObservationLogValidationScene : Node
             new[]
             {
                 "Error/Fail level 的功能样例只写 memory/jsonl，不写 stdout，避免 runner 把通过场景误判为失败。"
+            },
+            expectedInputs: new[]
+            {
+                "GameOSLog configured with Trace minimum, stdout enabled and JSONL enabled",
+                "memory sink and JSONL sink sample log entries across all levels",
+                "GameOSObservationSession environment or fallback artifact paths"
+            },
+            expectedObservations: new[]
+            {
+                "log levels format stable text with context and structured values",
+                "minimum level filtering suppresses lower-level logs",
+                "JSONL and observation session paths are created under the scene artifact directory"
+            },
+            passCriteria: new[]
+            {
+                "all Observation logging checks pass",
+                "stdout contains GameOS Observation Log validation PASS",
+                "failureReasons is empty"
+            },
+            failCriteria: new[]
+            {
+                "formatting, filtering, JSONL or observation path check fails",
+                "stdout contains GameOS Observation Log validation FAIL",
+                "failureReasons identifies the failed observation invariant"
             });
 
         validation.Info("validation start");
