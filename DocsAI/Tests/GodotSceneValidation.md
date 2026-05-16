@@ -10,10 +10,17 @@ GameOS 基础层验证采用“框架规格 + 游戏承载”模式：
 - `SlimeAI/GameOS/Validation/` 定义验证契约、命名规则、artifact 字段和判定规则。
 - `Games/BrotatoLike` 承载实际可运行的 Godot `.tscn` 场景，因为 `res://` 绑定当前 `project.godot` root。
 
-该体系用于补齐纯 C# 测试之外的 Godot headless 运行证据。当前已覆盖 `Runtime/Data` 和 `Runtime/Event`；后续按基础层顺序扩展：
+该体系用于补齐纯 C# 测试之外的 Godot headless 运行证据。当前已覆盖：
 
 ```text
-Entity -> Pool -> Timer -> Resource -> Schedule -> Relationship -> Observation
+Runtime/Entity
+Runtime/Lifecycle
+Runtime/World
+Runtime/Data
+Runtime/Event
+Runtime/CommandBuffer
+GameOS/Observation
+BrotatoLike Game/Input
 ```
 
 新增功能如果依赖 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧胶水，必须新增独立验证场景。`run-main-smoke` 和普通主场景 playable acceptance 只能作为回归补充，不能替代该功能自己的验证场景。
@@ -40,6 +47,34 @@ Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Data/RuntimeDataValidationScene
 Games/BrotatoLike/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn
 Games/BrotatoLike/Scenes/Validation/Runtime/Event/README.md
 Games/BrotatoLike/Src/SceneTests/Runtime/Event/RuntimeEventValidationScene.cs
+```
+
+AI-first Runtime refactor validation scenes 固定为：
+
+```text
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Entity/README.md
+Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Entity/RuntimeEntityValidationScene.cs
+
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Lifecycle/README.md
+Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Lifecycle/RuntimeLifecycleValidationScene.cs
+
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/World/README.md
+Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/World/RuntimeWorldValidationScene.cs
+
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn
+Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/CommandBuffer/README.md
+Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/CommandBuffer/RuntimeCommandBufferValidationScene.cs
+```
+
+BrotatoLike game-owned input validation scene 固定为：
+
+```text
+Games/BrotatoLike/Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn
+Games/BrotatoLike/Scenes/Validation/Game/Input/README.md
+Games/BrotatoLike/Src/SceneTests/Game/Input/BrotatoLikeInputEventValidationScene.cs
 ```
 
 ## README 必填项
@@ -139,6 +174,21 @@ GameOS Runtime Event validation PASS
 GameOS Runtime Event validation FAIL
 ```
 
+新增 AI-first Runtime refactor 场景 marker：
+
+```text
+GameOS Runtime Entity validation PASS
+GameOS Runtime Entity validation FAIL
+GameOS Runtime Lifecycle validation PASS
+GameOS Runtime Lifecycle validation FAIL
+GameOS Runtime World validation PASS
+GameOS Runtime World validation FAIL
+GameOS Runtime CommandBuffer validation PASS
+GameOS Runtime CommandBuffer validation FAIL
+BrotatoLike Game Input validation PASS
+BrotatoLike Game Input validation FAIL
+```
+
 验收标准必须同时满足：
 
 - Godot 进程 exit code 为 `0`。
@@ -186,3 +236,42 @@ GameOS Runtime Event validation FAIL
 - `IEntityEvent` 被 `WorldEventBus.Publish` 时 log Error + return，不派发。
 - `IBroadcastEvent` 在 entity bus 一次 Publish MUST 同时派发到 entity bus 和 world bus。
 - `RuntimeEntity + Data.Set` 触发 `Runtime.Events.Core.DataPropertyChanged`，并标注为 Data-to-Event 跨层桥接检查。
+
+## AI-first Runtime refactor 场景覆盖
+
+`RuntimeEntityValidation` 必须验证：
+
+- `EntityId.Empty`、`default(EntityId)`、`EntityId.From(null)` 和 `EntityId.From("")` 的 empty 语义。
+- `new EntityId(value)` 和 `.Value / ToString()` 显式取值边界。
+- `RuntimeWorld.CreateScoped().Entities.Spawn` 的 custom id 和 generated id。
+- `EntitySpawned / EntityDestroyed` payload 使用 typed `EntityId`。
+
+`RuntimeLifecycleValidation` 必须验证：
+
+- attach / detach 事件与 parent 查询。
+- single-parent、self、empty 和 cycle attach 拒绝。
+- parent destroy 时 `DestroyRecursively` 子实体被销毁，`Detach` 子实体保留并断链。
+- `EntityIdList` 不重复、值相等、移除后保持不可变。
+- `RuntimeOwnedReferenceRegistry` descriptor 能从 owner list 清理被销毁 child。
+
+`RuntimeWorldValidation` 必须验证：
+
+- `CreateScoped()` 隔离 entity、resource 和 event bus。
+- `RuntimeWorld.Default.Dispose()` 抛 `InvalidOperationException` 且不进入 disposed 状态。
+- scoped world dispose 顺序为 `Schedule -> Commands -> Pools -> Resources -> Lifecycle -> Entities -> Events`。
+- dispose 期间 lifecycle detach 和 entity destroy event 可送达。
+- dispose 后 subsystem getter 抛 `ObjectDisposedException`，pending commands 生成 discard report。
+
+`RuntimeCommandBufferValidation` 必须验证：
+
+- 8 种 command kind：`Spawn / Destroy / Attach / Detach / QueuedEvent / ResourceRequest / GodotNodeInstantiate / GodotNodeFree`。
+- `SchedulePhase` 只播放目标 phase，`Manual` 不被 frame phases 自动播放。
+- `EnterGuard(reason)` 支持嵌套并在 outer dispose 后释放。
+- guard 内 spawn / destroy / attach / detach 延迟到 `EndOfFrame` playback。
+- world dispose 时 pending commands 标记为 `Skipped / WorldDisposing`。
+
+`BrotatoLikeInputEventValidation` 必须验证：
+
+- `BrotatoLikePlayerInputComponent` 写入 `MovementDataKeys.InputDirection`。
+- 技能输入事件类型归属 `BrotatoLike.Game.Events`。
+- `InputNextSkill / InputPreviousSkill / InputUseSkill` 能驱动 `GodotActiveSkillInputComponent` 切换并触发当前技能。

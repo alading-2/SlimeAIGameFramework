@@ -1,6 +1,6 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-15（P5 ai-feature-development skill enhancement 已 archived；第一轮 AI-first Runtime 重构完成）
+> 更新日期：2026-05-15（新增 AI-first Runtime refactor Godot validation scenes）
 
 ## 当前阶段
 
@@ -17,6 +17,8 @@ DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、A
 AI 新功能开发入口已补齐：统一源为 `.ai-config/skills/ai/ai-feature-development/`，同步副本为 `.codex/skills/ai-feature-development` / `.claude/skills/ai-feature-development` / `.windsurf/skills/ai-feature-development`，协议入口为 `DocsAI/Agent/Protocols/AIFeatureDevelopmentProtocol.md`。P5 后 SKILL.md 固定为 9 段：目标、入口顺序、设计规则、文件修改前、实现优先级、功能收尾、验证、Skill 同步、完成检查；references 固定为 11 个文件，覆盖 validation closure、framework research filter、refactor decision tree、typed value、rename pipeline、framework/game boundary、structural guard、RuntimeWorld facade、lifecycle/business reference、spec/code alignment、skill sync discipline。该入口强调 AI 可路由、可验证、可观察优先，不为旧框架兼容保留新入口；新功能必须补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态和 owner skill 统一源。
 
 GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
+
+`verify-ai-first-runtime-refactor-scenes` 正在补齐第一轮 AI-first Runtime 重构的独立 Godot headless 验证场景：框架侧新增 `res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn`、`Runtime/Lifecycle/RuntimeLifecycleValidation.tscn`、`Runtime/World/RuntimeWorldValidation.tscn`、`Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn`，并继续把既有 `Runtime/Event/RuntimeEventValidation.tscn` 纳入 P3 验证门禁；BrotatoLike 游戏侧新增 `res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn` 验证 game-side input events。每个场景必须写 `SceneValidationSession` artifact、固定 PASS/FAIL marker、逐项 `checks` 和 `failureReasons`。P5 skill/docs 变更不新增 Godot 场景，使用 OpenSpec strict validate 和 DocsAI consistency 覆盖。
 
 ## 下一步
 
@@ -51,11 +53,64 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 Tools/run-build.sh
 Tools/run-tests.sh
 Tools/run-dataos-validate.sh
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
 Tools/run-build.sh
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
+
+### P2a typed EntityId 实施验证
+
+### AI-first Runtime refactor 场景验证（2026-05-15）
+
+```bash
+cd /home/slime/Code/SkilmeAI
+openspec validate verify-ai-first-runtime-refactor-scenes --strict
+openspec validate --specs --strict
+```
+
+结果：active change strict validate PASS；baseline specs strict validate 输出 `28 passed, 0 failed`。
+
+```bash
+cd /home/slime/Code/SkilmeAI/SlimeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+```
+
+结果：框架 build PASS（0 errors；既有 XML comment warnings），Runtime tests 全部 PASS。
+
+```bash
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+结果：BrotatoLike build PASS（0 warnings / 0 errors）；新增和既有专项场景均输出 PASS marker，`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，analyzer 输出 `status: pass`、`firstError: none`。artifact 入口：
+
+- Runtime/Entity：`.ai-temp/scene-tests/runs/2026-05-15/18-32-43/index.json`
+- Runtime/Lifecycle：`.ai-temp/scene-tests/runs/2026-05-15/18-32-52/index.json`
+- Runtime/World：`.ai-temp/scene-tests/runs/2026-05-15/18-32-59/index.json`
+- Runtime/Event：`.ai-temp/scene-tests/runs/2026-05-15/18-33-06/index.json`
+- Runtime/CommandBuffer：`.ai-temp/scene-tests/runs/2026-05-15/18-33-18/index.json`
+- BrotatoLike Game/Input：`.ai-temp/scene-tests/runs/2026-05-15/18-36-50/index.json`
+- Main smoke：`.ai-temp/scene-tests/runs/2026-05-15/18-36-58/index.json`
+
+静态边界验证：`rg -n "using BrotatoLike" --type cs SlimeAI/` 无匹配；`rg -n "InputUseSkill|InputPreviousSkill|InputNextSkill|MouseSelection|WaveStarted|GameStart" --type cs SlimeAI/GameOS/Runtime/Events SlimeAI/GameOS/GodotBridge` 无匹配。
+
+P5 skill/docs 变更未新增 Godot 场景，已由 OpenSpec strict validate 和 DocsAI consistency 覆盖。
 
 ### P2a typed EntityId 实施验证
 

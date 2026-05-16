@@ -25,11 +25,16 @@ BrotatoLike 保留薄封装：
 ## 常用命令
 
 ```bash
-cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+cd /home/slime/Code/SkilmeAI/Games/BrotatoLike
 Tools/run-build.sh
 Tools/run-godot-scene.sh list
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
@@ -60,7 +65,18 @@ Tools/analyze-godot-scene-logs.sh
 - `combined.log`
 - `artifacts/logs/scene-log.jsonl`
 
-需要看 Godot 打印记录时，优先打开 analyzer 输出的 `combinedLog`；原始 stdout 在同一 attempt 目录的 `stdout.log`。Runtime/Data 场景写 `artifacts/runtime-data-validation.json`，Runtime/Event 场景写 `artifacts/runtime-event-validation.json`，Observation 日志验证场景还会写 `artifacts/observation-log-validation.json`。
+需要看 Godot 打印记录时，优先打开 analyzer 输出的 `combinedLog`；原始 stdout 在同一 attempt 目录的 `stdout.log`。
+
+当前专项 artifact：
+
+- Runtime/Entity：`artifacts/runtime-entity-validation.json`
+- Runtime/Lifecycle：`artifacts/runtime-lifecycle-validation.json`
+- Runtime/World：`artifacts/runtime-world-validation.json`
+- Runtime/Data：`artifacts/runtime-data-validation.json`
+- Runtime/Event：`artifacts/runtime-event-validation.json`
+- Runtime/CommandBuffer：`artifacts/runtime-command-buffer-validation.json`
+- BrotatoLike Game/Input：`artifacts/brotatolike-input-event-validation.json`
+- Observation 日志：`artifacts/observation-log-validation.json`
 
 ## 判定规则
 
