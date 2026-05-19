@@ -90,6 +90,19 @@ Tools/analyze-godot-scene-logs.sh
 结果：BrotatoLike build PASS（`0 Warning(s), 0 Error(s)`）；普通 Main 输出 `BrotatoLike playable slice PASS`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-19/20-58-59/index.json`；`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，analyzer 输出 `status: pass`、`firstError: none`，latest artifact 位于 `.ai-temp/scene-tests/runs/2026-05-19/20-59-07/index.json`。Scene gate 已检查 `index.json`、`result.json`、`scene-smoke.json` 和普通 Main 的 `scene-acceptance.json`，`expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 均非空。
 
 ```bash
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+结果：新增独立 `GameOS/Capabilities` convergence validation scene PASS，覆盖 Feature action / auto-trigger、typed Ability -> Feature result flow、注入 `DamageService`、neutral `Encounter*` damage stats、AI / Ability capability-owned selector query。框架 build PASS（`0 Warning(s), 0 Error(s)`）；框架 tests PASS；BrotatoLike build PASS（`180 Warning(s), 0 Error(s)`，warning 为既有 XML comment / nullable 类）。Scene artifact 位于 `.ai-temp/scene-tests/runs/2026-05-19/21-29-21/index.json`；已检查 `index.json`、`result.json` 和 `capability-convergence-validation.json`，`expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 均非空，`failureReasons` 为空。
+
+```bash
 Tools/run-build.sh
 Tools/run-tests.sh
 Tools/run-dataos-validate.sh

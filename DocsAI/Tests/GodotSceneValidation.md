@@ -20,6 +20,7 @@ Runtime/World
 Runtime/Data
 Runtime/Event
 Runtime/CommandBuffer
+GameOS/Capabilities
 GameOS/Observation
 BrotatoLike Game/Input
 ```
@@ -68,6 +69,14 @@ Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/World/RuntimeWorldValidationSce
 Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn
 Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/README.md
 Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidationScene.cs
+```
+
+GameOS Capability convergence validation scene 固定为：
+
+```text
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidationScene.cs
 ```
 
 BrotatoLike game-owned input validation scene 固定为：
@@ -196,6 +205,8 @@ GameOS Runtime World validation PASS
 GameOS Runtime World validation FAIL
 GameOS Runtime CommandBuffer validation PASS
 GameOS Runtime CommandBuffer validation FAIL
+GameOS Capability convergence validation PASS
+GameOS Capability convergence validation FAIL
 BrotatoLike Game Input validation PASS
 BrotatoLike Game Input validation FAIL
 ```

@@ -34,6 +34,7 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/World/RuntimeW
 Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Src/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
@@ -86,6 +87,7 @@ Tools/analyze-godot-scene-logs.sh
 - Runtime/Data：`artifacts/runtime-data-validation.json`
 - Runtime/Event：`artifacts/runtime-event-validation.json`
 - Runtime/CommandBuffer：`artifacts/runtime-command-buffer-validation.json`
+- GameOS/Capabilities：`artifacts/capability-convergence-validation.json`
 - BrotatoLike Game/Input：`artifacts/brotatolike-input-event-validation.json`
 - Observation 日志：`artifacts/observation-log-validation.json`
 
