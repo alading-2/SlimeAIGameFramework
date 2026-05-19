@@ -72,7 +72,7 @@ BrotatoLike Godot scene runner 使用新结构：
 
 ```bash
 cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-godot-scene.sh run res://Scenes/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Src/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
 

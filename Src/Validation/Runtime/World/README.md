@@ -21,7 +21,7 @@
 
 ```bash
 cd /home/slime/Code/SlimeAI/Games/BrotatoLike
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 ```
 
 ## PASS/FAIL 判定

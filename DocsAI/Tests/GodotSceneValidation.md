@@ -28,54 +28,54 @@ BrotatoLike Game/Input
 
 ## 场景命名
 
-- 目录使用层级路径：`Scenes/Validation/<Area>/<Layer>/`。
+- 目录使用层级路径：`Src/Validation/<Area>/<Layer>/`。
 - 文件名、目录名、C# 类名和 Godot 节点名使用英文 ASCII。
 - 场景名使用 `<Area><Layer>Validation.tscn` 或能表达同等层级的 ASCII 名称。
-- C# 脚本放在 `Src/SceneTests/<Area>/<Layer>/`。
+- C# 脚本放在 `Src/Validation/<Area>/<Layer>/`。
 - README 放在场景同目录，文件名固定为 `README.md`。
 
 当前 Runtime/Data 场景固定为：
 
 ```text
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Data/README.md
-Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Data/RuntimeDataValidationScene.cs
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Data/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidationScene.cs
 ```
 
 当前 Runtime/Event 场景固定为：
 
 ```text
-Games/BrotatoLike/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn
-Games/BrotatoLike/Scenes/Validation/Runtime/Event/README.md
-Games/BrotatoLike/Src/SceneTests/Runtime/Event/RuntimeEventValidationScene.cs
+Games/BrotatoLike/Src/Validation/Runtime/Event/RuntimeEventValidation.tscn
+Games/BrotatoLike/Src/Validation/Runtime/Event/README.md
+Games/BrotatoLike/Src/Validation/Runtime/Event/RuntimeEventValidationScene.cs
 ```
 
 AI-first Runtime refactor validation scenes 固定为：
 
 ```text
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Entity/README.md
-Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Entity/RuntimeEntityValidationScene.cs
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Entity/RuntimeEntityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Entity/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Entity/RuntimeEntityValidationScene.cs
 
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/Lifecycle/README.md
-Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/Lifecycle/RuntimeLifecycleValidationScene.cs
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Lifecycle/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/Lifecycle/RuntimeLifecycleValidationScene.cs
 
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/World/README.md
-Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/World/RuntimeWorldValidationScene.cs
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/World/RuntimeWorldValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/World/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/World/RuntimeWorldValidationScene.cs
 
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn
-Games/BrotatoLike/SlimeAI/Scenes/Validation/Runtime/CommandBuffer/README.md
-Games/BrotatoLike/SlimeAI/Src/SceneTests/Runtime/CommandBuffer/RuntimeCommandBufferValidationScene.cs
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidationScene.cs
 ```
 
 BrotatoLike game-owned input validation scene 固定为：
 
 ```text
-Games/BrotatoLike/Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn
-Games/BrotatoLike/Scenes/Validation/Game/Input/README.md
-Games/BrotatoLike/Src/SceneTests/Game/Input/BrotatoLikeInputEventValidationScene.cs
+Games/BrotatoLike/Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn
+Games/BrotatoLike/Src/Validation/Game/Input/README.md
+Games/BrotatoLike/Src/Validation/Game/Input/BrotatoLikeInputEventValidationScene.cs
 ```
 
 ## README 必填项
@@ -121,7 +121,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 ```json
 {
   "status": "pass",
-  "scene": "res://Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn",
+  "scene": "res://Src/Validation/Runtime/Event/RuntimeEventValidation.tscn",
   "layer": "Runtime/Event",
   "expectedInputs": [],
   "expectedObservations": [],

@@ -18,9 +18,9 @@ AI 新功能开发入口已补齐并开始进入统一 workflow governance：统
 
 当前正在执行 `unify-ai-agent-development-workflow` OpenSpec change：新增 `Workspace/SystemAgent/` 总纲、角色提示词和研究采纳记录；更新 `AIFeatureDevelopmentProtocol`、Godot Scene Validation / Testing 文档和 `ai-feature-development` skill，明确 SDD / OpenSpec、TDD / 标准答案、AI retrospective、hooks / subagent / MCP / git checkpoint 的统一流程。该 change 不修改 GameOS runtime、DataOS schema、GodotBridge 或 BrotatoLike gameplay。
 
-GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
+GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
 
-`verify-ai-first-runtime-refactor-scenes` 正在补齐第一轮 AI-first Runtime 重构的独立 Godot headless 验证场景：框架侧新增 `res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn`、`Runtime/Lifecycle/RuntimeLifecycleValidation.tscn`、`Runtime/World/RuntimeWorldValidation.tscn`、`Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn`，并继续把既有 `Runtime/Event/RuntimeEventValidation.tscn` 纳入 P3 验证门禁；BrotatoLike 游戏侧新增 `res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn` 验证 game-side input events。每个场景必须写 `SceneValidationSession` artifact、固定 PASS/FAIL marker、逐项 `checks` 和 `failureReasons`。P5 skill/docs 变更不新增 Godot 场景，使用 OpenSpec strict validate 和 DocsAI consistency 覆盖。
+`verify-ai-first-runtime-refactor-scenes` 正在补齐第一轮 AI-first Runtime 重构的独立 Godot headless 验证场景：框架侧新增 `res://SlimeAI/Src/Validation/Runtime/Entity/RuntimeEntityValidation.tscn`、`Runtime/Lifecycle/RuntimeLifecycleValidation.tscn`、`Runtime/World/RuntimeWorldValidation.tscn`、`Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn`，并继续把既有 `Runtime/Event/RuntimeEventValidation.tscn` 纳入 P3 验证门禁；BrotatoLike 游戏侧新增 `res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn` 验证 game-side input events。每个场景必须写 `SceneValidationSession` artifact、固定 PASS/FAIL marker、逐项 `checks` 和 `failureReasons`。P5 skill/docs 变更不新增 Godot 场景，使用 OpenSpec strict validate 和 DocsAI consistency 覆盖。
 
 ## 下一步
 
@@ -57,12 +57,12 @@ Tools/run-tests.sh
 Tools/run-dataos-validate.sh
 cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
@@ -90,12 +90,12 @@ Tools/run-tests.sh
 ```bash
 cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://Scenes/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Entity/RuntimeEntityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Lifecycle/RuntimeLifecycleValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/World/RuntimeWorldValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
@@ -243,4 +243,4 @@ openspec validate --specs --strict
 
 事件系统基线补充验证：`Tests/SlimeAI.GameOS.Tests/Events/EventBusTests.cs` 覆盖同类型 reentry 阻断、跨类型级联、跨 bus 同类型事件、handler 异常隔离、Dispose 退订、注册顺序、Broadcast 路由和 scope 越界拒绝；`Tools/run-tests.sh` 全部 PASS。BrotatoLike `run-main-smoke` 在 `.ai-temp/scene-tests/runs/2026-05-13/09-23-37/.../artifacts/eventbus-dump.json` 导出 world bus dump，`jq '.SameTypeReentryBlockedCounts, .HandlerExceptions'` 输出 `{}` 和 `[]`；普通 `Scenes/Main.tscn` acceptance 最新通过 artifact 为 `.ai-temp/scene-tests/runs/2026-05-13/09-24-15/index.json`。
 
-Runtime/Data 专项 Godot 验证补充：当前初始开发阶段默认选 BrotatoLike 作为承载游戏，已临时同步其 `SlimeAI/` submodule 工作树中的 `Scenes/Validation/Runtime/Data` 和 `Src/SceneTests/Runtime/Data`，并通过 `BrotatoLike.csproj` 重新包含 `SlimeAI/Src/SceneTests/**/*.cs`。后续多游戏 / 成品阶段不默认同步所有游戏，改按每个游戏的框架版本策略更新 submodule 指针。`Tools/run-godot-scene.sh list` 已能列出 `res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn`；`Tools/run-godot-scene.sh run res://SlimeAI/Scenes/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs && Tools/analyze-godot-scene-logs.sh` 输出 `GameOS Runtime Data validation PASS`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-13/15-47-30/index.json`。
+Runtime/Data 专项 Godot 验证补充：当前初始开发阶段默认选 BrotatoLike 作为承载游戏，已临时同步其 `SlimeAI/` submodule 工作树中的 `Src/Validation/Runtime/Data` 和 `Src/Validation/Runtime/Data`，并通过 `BrotatoLike.csproj` 重新包含 `SlimeAI/Src/Validation/**/*.cs`。后续多游戏 / 成品阶段不默认同步所有游戏，改按每个游戏的框架版本策略更新 submodule 指针。`Tools/run-godot-scene.sh list` 已能列出 `res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn`；`Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs && Tools/analyze-godot-scene-logs.sh` 输出 `GameOS Runtime Data validation PASS`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-13/15-47-30/index.json`。

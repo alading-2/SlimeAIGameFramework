@@ -29,7 +29,7 @@ Games/BrotatoLike/          (游戏仓根 = project.godot 所在 = res:// 根)
 ├── SlimeAI/               (git submodule)
 │   ├── GameOS/
 │   ├── DataOS/
-│   └── Scenes/Validation/
+│   └── Src/Validation/
 ├── Scenes/Main.tscn
 └── Src/Game/
 ```
@@ -59,7 +59,7 @@ Games/BrotatoLike/          (游戏仓根 = project.godot 所在 = res:// 根)
 
 | 场景类型 | 放哪里 | 原因 |
 |----------|--------|------|
-| 框架验证场景（Observation、Event 等） | SlimeAI 仓 `Scenes/Validation/` | 通用，所有游戏复用 |
+| 框架验证场景（Observation、Event 等） | SlimeAI 仓 `Src/Validation/` | 通用，所有游戏复用 |
 | 框架 prefab（可选） | SlimeAI 仓 `Scenes/Prefabs/` | 通用组件 |
 | 游戏主场景（Main.tscn） | 游戏仓 `Scenes/` | 游戏专属入口 |
 | 游戏玩法场景 | 游戏仓 `Scenes/Game/` | 游戏专属 |
