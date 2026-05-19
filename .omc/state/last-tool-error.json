@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"openspec instructions apply --change \\\"gameos-capability-owned-selectors\\\" --json\",\"description\":\"Get apply instructions for the change\"}",
+  "error": "Exit code 1\n\n✖ Error: Change 'gameos-capability-owned-selectors' not found. No changes exist. Create one with: openspec new change <name>",
+  "timestamp": "2026-05-19T10:36:22.606Z",
+  "retry_count": 2
+}

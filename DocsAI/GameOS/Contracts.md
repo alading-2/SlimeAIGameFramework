@@ -348,7 +348,7 @@
 - `BehaviorNode.Evaluate(AIContext)` 只返回 `AIState`，通过 Entity Data 或系统入口表达意图。
 - `AIService.Tick` 在 `AIDataKeys.IsEnabled=false` 或实体 `DamageDataKeys.IsDead=true` 时返回 Failure，并清空 `MovementDataKeys.AIMoveDirection`。
 - `MoveToTargetAction` 只写 `MovementDataKeys.AIMoveDirection / AIMoveSpeedMultiplier`，由 `AIControlledMovementStrategy` 实际移动。
-- `FindNearestTargetAction` 当前从 `EntityManager.GetAll()` 快照查询最近目标，支持 `range = -1` 不限距离、同队过滤、死亡过滤，并写入 `AIDataKeys.TargetEntity / TargetPosition / HasTargetPosition`。
+- `FindNearestTargetAction` 通过注入的 `IAITargetQuery`（默认 `RuntimeAITargetQuery`）获取候选目标，支持 `range = -1` 不限距离、同队过滤、死亡过滤，并写入 `AIDataKeys.TargetEntity / TargetPosition / HasTargetPosition`。
 - `IsTargetInRangeCondition` 使用当前目标实体或目标点检查距离，`range = -1` 表示不限距离；范围可从固定值或 DataKey 读取。
 - `RequestAttackAction` 发出 `Capabilities.Attack.Events.Requested`，payload 使用纯 Runtime `IEntity` 目标和 `Vector2Value` 目标点；动作会写入 `AIMoveDirection` 面向目标、`AIMoveSpeedMultiplier = 0` 停步，并把 `AIDataKeys.IsAttackRequested` 标记为本 Tick 已请求。
 - `PatrolAction` 是当前确定性巡逻最小动作，读取 `AIDataKeys.PatrolCenter / PatrolRadius / PatrolWaitTime`，写入 `PatrolTargetPosition / PatrolWaitRemaining` 和 `MovementDataKeys.AIMoveDirection / AIMoveSpeedMultiplier`；不直接移动 Godot 节点。

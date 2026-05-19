@@ -6,22 +6,28 @@ using SlimeAI.GameOS.Runtime.Entity;
 namespace SlimeAI.GameOS.Capabilities.AI;
 
 /// <summary>
-/// 从 Runtime Entity 快照中查找最近目标。
+/// 从候选实体中查找最近目标。
 /// </summary>
 public sealed class FindNearestTargetAction : BehaviorNode
 {
     private readonly float range;
     private readonly bool excludeSameTeam;
+    private readonly IAITargetQuery targetQuery;
 
     /// <summary>
     /// 创建最近目标查询动作。
     /// </summary>
     /// <param name="range">查询半径，-1 表示不限距离。</param>
     /// <param name="excludeSameTeam">是否过滤同队目标。</param>
-    public FindNearestTargetAction(float range = -1f, bool excludeSameTeam = true) : base("FindNearestTarget")
+    /// <param name="targetQuery">AI 目标候选查询；null 时使用 RuntimeAITargetQuery。</param>
+    public FindNearestTargetAction(
+        float range = -1f,
+        bool excludeSameTeam = true,
+        IAITargetQuery? targetQuery = null) : base("FindNearestTarget")
     {
         this.range = range;
         this.excludeSameTeam = excludeSameTeam;
+        this.targetQuery = targetQuery ?? new RuntimeAITargetQuery();
     }
 
     /// <inheritdoc />
@@ -31,7 +37,7 @@ public sealed class FindNearestTargetAction : BehaviorNode
         var selfTeam = context.Entity.Data.Get<int>(CollisionDataKeys.Team, 0);
         IEntity? bestTarget = null;
         var bestDistance = float.MaxValue;
-        var entities = EntityManager.GetAll();
+        var entities = targetQuery.GetCandidates(context.Entity);
 
         for (var i = 0; i < entities.Count; i++)
         {

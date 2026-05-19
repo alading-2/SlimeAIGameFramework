@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1779187594960,
+  "projectRoot": "/home/slime/Code/SlimeAI/SlimeAI",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "DataOS": {
+      "path": "DataOS",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1779187594956,
+      "keyFiles": []
+    },
+    "DocsAI": {
+      "path": "DocsAI",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1779187594957,
+      "keyFiles": [
+        "INDEX.md",
+        "MigrationFromBrotatoMy.md",
+        "ProjectState.md"
+      ]
+    },
+    "GameOS": {
+      "path": "GameOS",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1779187594957,
+      "keyFiles": [
+        "SlimeAI.GameOS.csproj"
+      ]
+    },
+    "Src": {
+      "path": "Src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1779187594958,
+      "keyFiles": []
+    },
+    "Tests": {
+      "path": "Tests",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1779187594959,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "Tools": {
+      "path": "Tools",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1779187594959,
+      "keyFiles": [
+        "README.md",
+        "run-build.sh",
+        "run-dataos-validate.sh",
+        "run-tests.sh"
+      ]
+    },
+    "DataOS/Migrations": {
+      "path": "DataOS/Migrations",
+      "purpose": "Database migrations",
+      "fileCount": 1,
+      "lastAccessed": 1779187594959,
+      "keyFiles": [
+        "001_initial.sql"
+      ]
+    },
+    "DocsAI/Tests": {
+      "path": "DocsAI/Tests",
+      "purpose": "Test files",
+      "fileCount": 4,
+      "lastAccessed": 1779187594959,
+      "keyFiles": [
+        "GodotSceneTesting.md",
+        "GodotSceneValidation.md",
+        "RuntimeTests.md"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "DocsAI/GameOS/Contracts.md",
+      "accessCount": 2,
+      "lastAccessed": 1779187716267,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -70,13 +70,19 @@
 
 - `SelectorNode` — 选择第一个成功的子节点
 - `SequenceNode` — 顺序执行所有子节点
-- `FindNearestTargetAction` — 查找最近目标
+- `FindNearestTargetAction` — 通过 `IAITargetQuery` 查找最近目标
 - `MoveToTargetAction` — 向目标移动
 - `RequestAttackAction` — 请求攻击
 - `PatrolAction` — 巡逻
 - `PrepareAbilityAutoTargetContextsAction` — 准备 Ability 上下文
 - `TickAbilityAutoTriggersAction` — Tick Ability 自动触发
 - `IsTargetInRangeCondition` — 目标是否在范围内
+
+### Target Query 接口
+
+- `IAITargetQuery` — AI 目标候选查询接口（Capability-owned selector）
+- `RuntimeAITargetQuery` — 默认实现，返回 EntityManager 快照（纯 Runtime 全量扫描回退）
+- Godot 项目可注入 physics-aware 实现替换
 
 ## 9. 如何启用和关闭
 

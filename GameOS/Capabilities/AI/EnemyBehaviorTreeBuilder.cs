@@ -13,16 +13,18 @@ public static class EnemyBehaviorTreeBuilder
     /// <param name="chaseSpeedMultiplier">追逐速度倍率。</param>
     /// <param name="patrolReachDistance">巡逻到达判定距离。</param>
     /// <param name="patrolSpeedMultiplier">巡逻速度倍率。</param>
+    /// <param name="targetQuery">AI 目标候选查询；null 时使用 RuntimeAITargetQuery。</param>
     public static BehaviorNode BuildMeleeEnemyTree(
         float targetSearchRange = -1f,
         float defaultAttackRange = -1f,
         float chaseSpeedMultiplier = 1f,
         float patrolReachDistance = 1f,
-        float patrolSpeedMultiplier = 1f)
+        float patrolSpeedMultiplier = 1f,
+        IAITargetQuery? targetQuery = null)
     {
         return new SelectorNode("Melee Enemy")
-            .Add(EnemyBehaviorBlocks.AttackBranch(targetSearchRange, AIDataKeys.AttackRange, defaultAttackRange))
-            .Add(EnemyBehaviorBlocks.ChaseBranch(targetSearchRange, chaseSpeedMultiplier))
+            .Add(EnemyBehaviorBlocks.AttackBranch(targetSearchRange, AIDataKeys.AttackRange, defaultAttackRange, targetQuery))
+            .Add(EnemyBehaviorBlocks.ChaseBranch(targetSearchRange, chaseSpeedMultiplier, targetQuery))
             .Add(EnemyBehaviorBlocks.PatrolBranch(patrolReachDistance, patrolSpeedMultiplier));
     }
 
@@ -34,17 +36,19 @@ public static class EnemyBehaviorTreeBuilder
     /// <param name="chaseSpeedMultiplier">追逐速度倍率。</param>
     /// <param name="patrolReachDistance">巡逻到达判定距离。</param>
     /// <param name="patrolSpeedMultiplier">巡逻速度倍率。</param>
+    /// <param name="targetQuery">AI 目标候选查询；null 时使用 RuntimeAITargetQuery。</param>
     public static BehaviorNode BuildAbilityMeleeEnemyTree(
         float targetSearchRange = -1f,
         float defaultAttackRange = -1f,
         float chaseSpeedMultiplier = 1f,
         float patrolReachDistance = 1f,
-        float patrolSpeedMultiplier = 1f)
+        float patrolSpeedMultiplier = 1f,
+        IAITargetQuery? targetQuery = null)
     {
         return new SelectorNode("Ability Melee Enemy")
             .Add(EnemyBehaviorBlocks.AbilityAutoTriggerBranch())
-            .Add(EnemyBehaviorBlocks.AttackBranch(targetSearchRange, AIDataKeys.AttackRange, defaultAttackRange))
-            .Add(EnemyBehaviorBlocks.ChaseBranch(targetSearchRange, chaseSpeedMultiplier))
+            .Add(EnemyBehaviorBlocks.AttackBranch(targetSearchRange, AIDataKeys.AttackRange, defaultAttackRange, targetQuery))
+            .Add(EnemyBehaviorBlocks.ChaseBranch(targetSearchRange, chaseSpeedMultiplier, targetQuery))
             .Add(EnemyBehaviorBlocks.PatrolBranch(patrolReachDistance, patrolSpeedMultiplier));
     }
 
@@ -65,14 +69,16 @@ public static class EnemyBehaviorTreeBuilder
     /// <param name="chaseSpeedMultiplier">追逐速度倍率。</param>
     /// <param name="patrolReachDistance">巡逻到达判定距离。</param>
     /// <param name="patrolSpeedMultiplier">巡逻速度倍率。</param>
+    /// <param name="targetQuery">AI 目标候选查询；null 时使用 RuntimeAITargetQuery。</param>
     public static BehaviorNode BuildChaserTree(
         float targetSearchRange = -1f,
         float chaseSpeedMultiplier = 1f,
         float patrolReachDistance = 1f,
-        float patrolSpeedMultiplier = 1f)
+        float patrolSpeedMultiplier = 1f,
+        IAITargetQuery? targetQuery = null)
     {
         return new SelectorNode("Chaser")
-            .Add(EnemyBehaviorBlocks.ChaseBranch(targetSearchRange, chaseSpeedMultiplier))
+            .Add(EnemyBehaviorBlocks.ChaseBranch(targetSearchRange, chaseSpeedMultiplier, targetQuery))
             .Add(EnemyBehaviorBlocks.PatrolBranch(patrolReachDistance, patrolSpeedMultiplier));
     }
 }

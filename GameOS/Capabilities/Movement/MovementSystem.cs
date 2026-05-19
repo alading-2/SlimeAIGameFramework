@@ -14,6 +14,7 @@ public sealed class MovementSystem : IRuntimeSystem
 {
     private sealed class ActiveMovement
     {
+        public required IEntity Entity { get; init; }
         public required IMovementStrategy Strategy { get; init; }
         public required MovementCollisionPolicy CollisionPolicy { get; init; }
         public MovementParams Params { get; set; }
@@ -64,6 +65,7 @@ public sealed class MovementSystem : IRuntimeSystem
         strategy.OnEnter(entity, entity.Data, in movementParams);
         activeMovements[entity.EntityId] = new ActiveMovement
         {
+            Entity = entity,
             Strategy = strategy,
             CollisionPolicy = collisionPolicy,
             Params = movementParams
@@ -102,10 +104,11 @@ public sealed class MovementSystem : IRuntimeSystem
             return;
         }
 
-        var snapshot = EntityManager.GetAll();
-        for (var i = 0; i < snapshot.Count; i++)
+        var keys = new List<EntityId>(activeMovements.Keys);
+        for (var i = 0; i < keys.Count; i++)
         {
-            TickEntity(snapshot[i], delta);
+            if (activeMovements.TryGetValue(keys[i], out var active))
+                TickEntity(active.Entity, delta);
         }
     }
 

@@ -38,13 +38,15 @@ public static class AbilityTargetingTool
     /// <param name="options">可选覆盖参数；为空时从 Ability Data 读取。</param>
     /// <param name="damageType">上下文伤害类型。</param>
     /// <param name="damageTags">上下文额外伤害标签。</param>
+    /// <param name="targetQuery">Ability 目标候选查询；null 时使用 RuntimeAbilityTargetQuery。</param>
     public static bool TryBuildContext(
         IEntity caster,
         IEntity ability,
         out AbilityCastContext? context,
         AbilityAutoTargetOptions? options = null,
         DamageType damageType = DamageType.Physical,
-        DamageTags damageTags = DamageTags.None)
+        DamageTags damageTags = DamageTags.None,
+        IAbilityTargetQuery? targetQuery = null)
     {
         ArgumentNullException.ThrowIfNull(caster);
         ArgumentNullException.ThrowIfNull(ability);
@@ -72,7 +74,7 @@ public static class AbilityTargetingTool
             return false;
         }
 
-        var targets = ResolveEntityTargets(caster, ability, options);
+        var targets = ResolveEntityTargets(caster, ability, options, targetQuery);
         if (targets.Count == 0)
         {
             return false;
@@ -97,10 +99,12 @@ public static class AbilityTargetingTool
     /// <param name="caster">施法者。</param>
     /// <param name="ability">技能实体。</param>
     /// <param name="options">自动索敌参数。</param>
+    /// <param name="targetQuery">Ability 目标候选查询；null 时使用 RuntimeAbilityTargetQuery。</param>
     public static IReadOnlyList<IEntity> ResolveEntityTargets(
         IEntity caster,
         IEntity ability,
-        AbilityAutoTargetOptions? options = null)
+        AbilityAutoTargetOptions? options = null,
+        IAbilityTargetQuery? targetQuery = null)
     {
         ArgumentNullException.ThrowIfNull(caster);
         ArgumentNullException.ThrowIfNull(ability);
@@ -116,7 +120,7 @@ public static class AbilityTargetingTool
         var distances = new List<float>();
         var origin = caster.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
         var casterTeam = caster.Data.Get<int>(CollisionDataKeys.Team, 0);
-        var entities = EntityManager.GetAll();
+        var entities = (targetQuery ?? new RuntimeAbilityTargetQuery()).GetCandidates(caster);
 
         for (var i = 0; i < entities.Count; i++)
         {

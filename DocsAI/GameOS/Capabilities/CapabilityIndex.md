@@ -84,7 +84,7 @@ Tools/analyze-godot-scene-logs.sh
 | Primary APIs | `MovementSystem`、`MovementDataKeys`、`MovementParams`、`IMovementStrategy`、`MovementStrategyRegistry`、`MovementCollisionPolicy` |
 | DataKeys | Position、Velocity、FacingDirection、IsMoving、MoveSpeed、Acceleration、InputDirection、AIMoveDirection、AIMoveSpeedMultiplier、CanMoveInput、LastMoveDirection、handler movement params、wave/orbit/boomerang/bezier/parabola/circular-arc params |
 | Events | `Movement.Started`、`Movement.Stopped`、`Movement.Collided` |
-| Selector owner | Movement 通过 `IMovementCollisionTargetQuery` 拥有 movement-collision target query 注入；玩法目标选择仍归 AI 或 Ability。 |
+| Selector owner | Movement 持有 `activeMovements` 集合（`Tick()` 只遍历活跃移动实体，不调 `EntityManager.GetAll()`）；碰撞候选通过 `IMovementCollisionTargetQuery` 注入；玩法目标选择仍归 AI 或 Ability。 |
 | RuntimeSchedule boundary | 每帧 movement tick；调用方负责 schedule 注册和 delta 来源。 |
 | GodotBridge boundary | `GodotMovementDriver`、`GodotOrientationComponent`、`GodotPlayerInputComponent`、`GodotPhysicsMovementCollisionTargetQuery` 把 Node2D / input / physics 同步到 Runtime data。 |
 | Dependencies | Runtime Entity/Data/Event；Collision 用于过滤；GodotBridge 用于场景同步。 |
@@ -189,7 +189,7 @@ Tools/analyze-godot-scene-logs.sh
 | Primary APIs | `AIService`、`AIContext`、`BehaviorNode`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、target/action nodes；`AIService.Default`（进程级默认入口）；`AIContext.AbilityService` 无默认值，调用方必须显式注入 |
 | DataKeys | IsEnabled、TargetEntity、TargetPosition、HasTargetPosition、IsAttackRequested、AttackRange、PatrolCenter、PatrolRadius、PatrolWaitTime、PatrolTargetPosition、HasPatrolTargetPosition、PatrolWaitRemaining、PatrolDirectionSign |
 | Events | `AI.TargetAcquired`、`AI.TargetLost`、`AI.PatrolStarted` |
-| Selector owner | AI 拥有行为树目标获取，用于 AI intent；Ability targeting 仍归 Ability。 |
+| Selector owner | AI 持有 `IAITargetQuery`，`FindNearestTargetAction` 通过注入 query 获取候选目标（默认 `RuntimeAITargetQuery`）；Ability targeting 仍归 Ability。 |
 | RuntimeSchedule boundary | AI tick 由调用方调度；AI 只写 intent/request DataKeys 和 events，不直接移动或造成伤害。 |
 | GodotBridge boundary | `GodotAIComponent` 导出参数并 tick `AIService`；不直接移动 Godot nodes。 |
 | Dependencies | Movement 用于移动意图；Attack 用于攻击请求；Ability 用于 auto-trigger contexts；Damage 用于死亡门禁。 |
@@ -210,7 +210,7 @@ Tools/analyze-godot-scene-logs.sh
 | Primary APIs | `AbilityService`、`AbilityDataKeys`、`AbilityCastContext`、`AbilityTriggerReport`、`AbilityTargetingTool` |
 | DataKeys | Name、Type、TriggerMode、TargetSelection、AutoTargetRange、AutoTargetMaxTargets、AutoTargetIgnoreSameTeam、AutoTargetRequiresDamageable、FeatureHandlerId、FeatureGroupId、Description、IconPath、Level、MaxLevel、CostType、CostAmount、ChargeTime、CastRange、EffectRadius、chain fields、LineEffectScenePath、IsEnabled、IsActive、Cooldown、CooldownRemaining、charge fields、Damage、DamageInterval、DamageRepeatCount、ApplyImmediateDamage |
 | Events | `Ability.Executed`、`Ability.Failed`、`Ability.CooldownStarted`、`Ability.CooldownFinished` |
-| Selector owner | Ability 拥有 ability casts 的显式目标校验和 `AbilityTargetingTool` auto-target preparation。 |
+| Selector owner | Ability 持有 `IAbilityTargetQuery`，`AbilityTargetingTool` 使用注入 query 获取候选目标（默认 `RuntimeAbilityTargetQuery`）。 |
 | RuntimeSchedule boundary | Manual/event/periodic trigger boundary；periodic auto-trigger tick 由调用方调度。 |
 | GodotBridge boundary | 暂无通用 Ability bridge；BrotatoLike game handlers 通过 `BrotatoLikeAbilityHandlers` 适配游戏侧技能。 |
 | Dependencies | Damage 用于 ability damage；Feature 用于 handler execution；Projectile/Effect/Movement 用于 game-side handler outputs；AI 可准备 auto-trigger contexts。 |

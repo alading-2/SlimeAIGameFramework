@@ -4,7 +4,9 @@ using SlimeAI.GameOS.Runtime.Entity;
 namespace SlimeAI.GameOS.Capabilities.Movement;
 
 /// <summary>
-/// 默认 Runtime 查询：返回当前 EntityManager 快照。
+/// 默认 Runtime 碰撞候选目标查询：返回当前 EntityManager 快照。
+/// 纯 Runtime / 无 physics 环境使用；
+/// Godot 项目必须注入 GodotPhysicsMovementCollisionTargetQuery。
 /// </summary>
 public sealed class MovementCollisionRuntimeTargetQuery : IMovementCollisionTargetQuery
 {

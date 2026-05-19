@@ -13,13 +13,15 @@ public static class EnemyBehaviorBlocks
     /// <param name="targetSearchRange">索敌范围，-1 表示不限距离。</param>
     /// <param name="attackRangeDataKey">攻击范围 DataKey。</param>
     /// <param name="defaultAttackRange">DataKey 未配置时的回退攻击范围，-1 表示不限距离。</param>
+    /// <param name="targetQuery">AI 目标候选查询；null 时使用 RuntimeAITargetQuery。</param>
     public static BehaviorNode AttackBranch(
         float targetSearchRange = -1f,
         DataKey<float>? attackRangeDataKey = null,
-        float defaultAttackRange = -1f)
+        float defaultAttackRange = -1f,
+        IAITargetQuery? targetQuery = null)
     {
         return new SequenceNode("Attack")
-            .Add(new FindNearestTargetAction(targetSearchRange))
+            .Add(new FindNearestTargetAction(targetSearchRange, targetQuery: targetQuery))
             .Add(attackRangeDataKey == null
                 ? new IsTargetInRangeCondition(defaultAttackRange)
                 : new IsTargetInRangeCondition(attackRangeDataKey, defaultAttackRange))
@@ -31,10 +33,14 @@ public static class EnemyBehaviorBlocks
     /// </summary>
     /// <param name="targetSearchRange">索敌范围，-1 表示不限距离。</param>
     /// <param name="speedMultiplier">写入 `AIMoveSpeedMultiplier` 的速度倍率。</param>
-    public static BehaviorNode ChaseBranch(float targetSearchRange = -1f, float speedMultiplier = 1f)
+    /// <param name="targetQuery">AI 目标候选查询；null 时使用 RuntimeAITargetQuery。</param>
+    public static BehaviorNode ChaseBranch(
+        float targetSearchRange = -1f,
+        float speedMultiplier = 1f,
+        IAITargetQuery? targetQuery = null)
     {
         return new SequenceNode("Chase")
-            .Add(new FindNearestTargetAction(targetSearchRange))
+            .Add(new FindNearestTargetAction(targetSearchRange, targetQuery: targetQuery))
             .Add(new MoveToTargetAction(speedMultiplier));
     }
 

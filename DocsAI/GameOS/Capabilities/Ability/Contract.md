@@ -68,6 +68,12 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 - `AbilityService` — Schedule Update 阶段 Tick
 - `AbilityTargetingTool` — 目标查询和筛选
 
+### Target Query 接口
+
+- `IAbilityTargetQuery` — Ability 目标候选查询接口（Capability-owned selector）
+- `RuntimeAbilityTargetQuery` — 默认实现，返回 EntityManager 快照（纯 Runtime 全量扫描回退）
+- Godot 项目可注入 physics-aware 实现替换
+
 ## 9. 如何启用和关闭
 
 启用：调用 `AbilityDataKeys.RegisterAll()`，在 Entity 上写入 Ability 相关 Data。
