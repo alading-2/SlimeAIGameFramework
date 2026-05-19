@@ -20,7 +20,7 @@ namespace SlimeAI.SceneTests.GameOS.Capabilities;
 /// </summary>
 public partial class CapabilityConvergenceValidationScene : Node
 {
-    private const string ScenePath = "res://SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn";
+    private const string ScenePath = "res://SlimeAI/Src/Validation/GameOS/Capabilities/Convergence/CapabilityConvergenceValidation.tscn";
     private const string ArtifactFileName = "capability-convergence-validation.json";
     private const string LogContext = "CapabilityConvergenceValidation";
 

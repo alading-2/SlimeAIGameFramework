@@ -20,7 +20,17 @@ Runtime/World
 Runtime/Data
 Runtime/Event
 Runtime/CommandBuffer
-GameOS/Capabilities
+GameOS/Capabilities/AI
+GameOS/Capabilities/Ability
+GameOS/Capabilities/Attack
+GameOS/Capabilities/Collision
+GameOS/Capabilities/Damage
+GameOS/Capabilities/Effect
+GameOS/Capabilities/Feature
+GameOS/Capabilities/Movement
+GameOS/Capabilities/Projectile
+GameOS/Capabilities/Unit
+GameOS/Capabilities/Convergence
 GameOS/Observation
 BrotatoLike Game/Input
 ```
@@ -71,12 +81,27 @@ Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/README.md
 Games/BrotatoLike/SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidationScene.cs
 ```
 
-GameOS Capability convergence validation scene 固定为：
+GameOS Capability owner validation scenes 固定为：
 
 ```text
-Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn
-Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/README.md
-Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidationScene.cs
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/AI/AICapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Ability/AbilityCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Attack/AttackCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Collision/CollisionCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Damage/DamageCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Effect/EffectCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Feature/FeatureCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Movement/MovementCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Projectile/ProjectileCapabilityValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Unit/UnitCapabilityValidation.tscn
+```
+
+GameOS Capability convergence validation scene 固定为跨 Capability 回归，不计作单个 owner-scoped 验收证据：
+
+```text
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Convergence/CapabilityConvergenceValidation.tscn
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Convergence/README.md
+Games/BrotatoLike/SlimeAI/Src/Validation/GameOS/Capabilities/Convergence/CapabilityConvergenceValidationScene.cs
 ```
 
 BrotatoLike game-owned input validation scene 固定为：
@@ -205,6 +230,26 @@ GameOS Runtime World validation PASS
 GameOS Runtime World validation FAIL
 GameOS Runtime CommandBuffer validation PASS
 GameOS Runtime CommandBuffer validation FAIL
+GameOS Capability AI validation PASS
+GameOS Capability AI validation FAIL
+GameOS Capability Ability validation PASS
+GameOS Capability Ability validation FAIL
+GameOS Capability Attack validation PASS
+GameOS Capability Attack validation FAIL
+GameOS Capability Collision validation PASS
+GameOS Capability Collision validation FAIL
+GameOS Capability Damage validation PASS
+GameOS Capability Damage validation FAIL
+GameOS Capability Effect validation PASS
+GameOS Capability Effect validation FAIL
+GameOS Capability Feature validation PASS
+GameOS Capability Feature validation FAIL
+GameOS Capability Movement validation PASS
+GameOS Capability Movement validation FAIL
+GameOS Capability Projectile validation PASS
+GameOS Capability Projectile validation FAIL
+GameOS Capability Unit validation PASS
+GameOS Capability Unit validation FAIL
 GameOS Capability convergence validation PASS
 GameOS Capability convergence validation FAIL
 BrotatoLike Game Input validation PASS

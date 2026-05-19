@@ -20,6 +20,8 @@ AI 新功能开发入口已补齐并开始进入统一 workflow governance：统
 
 GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
 
+`gameos-capability-specific-validation-scenes` 正在把 `Src/Validation/GameOS/Capabilities` 从单一 `CapabilityConvergenceValidation` 聚合场景拆成 10 个 owner-scoped Capability 验证场景：AI、Ability、Attack、Collision、Damage、Effect、Feature、Movement、Projectile、Unit。每个场景都有独立 README、PASS/FAIL marker、`SceneValidationSession` artifact 和 `ValidationCatalog.md` 条目；Convergence 场景迁到 `GameOS/Capabilities/Convergence/`，只作为跨 Capability 回归，不计作单个 owner 验收证据。
+
 `verify-ai-first-runtime-refactor-scenes` 正在补齐第一轮 AI-first Runtime 重构的独立 Godot headless 验证场景：框架侧新增 `res://SlimeAI/Src/Validation/Runtime/Entity/RuntimeEntityValidation.tscn`、`Runtime/Lifecycle/RuntimeLifecycleValidation.tscn`、`Runtime/World/RuntimeWorldValidation.tscn`、`Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn`，并继续把既有 `Runtime/Event/RuntimeEventValidation.tscn` 纳入 P3 验证门禁；BrotatoLike 游戏侧新增 `res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn` 验证 game-side input events。每个场景必须写 `SceneValidationSession` artifact、固定 PASS/FAIL marker、逐项 `checks` 和 `failureReasons`。P5 skill/docs 变更不新增 Godot 场景，使用 OpenSpec strict validate 和 DocsAI consistency 覆盖。
 
 ## 下一步

@@ -34,7 +34,17 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/World/RuntimeW
 Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Event/RuntimeEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/CommandBuffer/RuntimeCommandBufferValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
-Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/AI/AICapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Ability/AbilityCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Attack/AttackCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Collision/CollisionCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Damage/DamageCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Effect/EffectCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Feature/FeatureCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Movement/MovementCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Projectile/ProjectileCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Unit/UnitCapabilityValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Convergence/CapabilityConvergenceValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run res://Src/Validation/GameOS/Observation/ObservationLogValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
@@ -87,7 +97,17 @@ Tools/analyze-godot-scene-logs.sh
 - Runtime/Data：`artifacts/runtime-data-validation.json`
 - Runtime/Event：`artifacts/runtime-event-validation.json`
 - Runtime/CommandBuffer：`artifacts/runtime-command-buffer-validation.json`
-- GameOS/Capabilities：`artifacts/capability-convergence-validation.json`
+- GameOS/Capabilities/AI：`artifacts/ai-capability-validation.json`
+- GameOS/Capabilities/Ability：`artifacts/ability-capability-validation.json`
+- GameOS/Capabilities/Attack：`artifacts/attack-capability-validation.json`
+- GameOS/Capabilities/Collision：`artifacts/collision-capability-validation.json`
+- GameOS/Capabilities/Damage：`artifacts/damage-capability-validation.json`
+- GameOS/Capabilities/Effect：`artifacts/effect-capability-validation.json`
+- GameOS/Capabilities/Feature：`artifacts/feature-capability-validation.json`
+- GameOS/Capabilities/Movement：`artifacts/movement-capability-validation.json`
+- GameOS/Capabilities/Projectile：`artifacts/projectile-capability-validation.json`
+- GameOS/Capabilities/Unit：`artifacts/unit-capability-validation.json`
+- GameOS/Capabilities/Convergence：`artifacts/capability-convergence-validation.json`
 - BrotatoLike Game/Input：`artifacts/brotatolike-input-event-validation.json`
 - Observation 日志：`artifacts/observation-log-validation.json`
 

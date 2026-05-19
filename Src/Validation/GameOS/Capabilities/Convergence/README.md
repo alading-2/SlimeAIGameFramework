@@ -1,5 +1,7 @@
 # GameOS Capability Convergence Validation
 
+> 跨 Capability 回归场景。它不计作任何单个 Capability 的 owner-scoped 验收证据；单个 Capability 必须使用相邻 owner 目录下的 `<Capability>CapabilityValidation` 场景。
+
 ## 测试目标
 
 验证 7 个 GameOS OpenSpec 未完成项收敛后，Capability 层关键契约在 Godot headless 场景中可复验。
@@ -50,6 +52,6 @@
 ```bash
 cd /home/slime/Code/SlimeAI/Games/BrotatoLike
 Tools/run-build.sh
-Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/CapabilityConvergenceValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/Capabilities/Convergence/CapabilityConvergenceValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
 Tools/analyze-godot-scene-logs.sh
 ```
