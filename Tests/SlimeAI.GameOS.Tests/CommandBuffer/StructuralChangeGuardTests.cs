@@ -2,6 +2,7 @@ using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Schedule;
 using SlimeAI.GameOS.Runtime.World;
+using static TestAssert;
 
 internal static class StructuralChangeGuardTests
 {
@@ -100,26 +101,4 @@ internal static class StructuralChangeGuardTests
             () => world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("guard-limit-overflow") }));
     }
 
-    private static void AssertThrows<TException>(string name, Action action)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException($"{name}: expected {typeof(TException).Name}");
-    }
-
-    private static void AssertEqual<T>(string name, T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"{name}: expected {expected}, actual {actual}");
-        }
-    }
 }

@@ -1,4 +1,5 @@
 using SlimeAI.GameOS.Runtime.Entity;
+using static TestAssert;
 
 internal static class EntityIdTests
 {
@@ -41,11 +42,4 @@ internal static class EntityIdTests
         AssertEqual("ToString of default is empty", string.Empty, default(EntityId).ToString());
     }
 
-    private static void AssertEqual<T>(string name, T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"{name}: expected {expected}, actual {actual}");
-        }
-    }
 }

@@ -4,6 +4,7 @@ using SlimeAI.GameOS.Runtime.Events.Core;
 using SlimeAI.GameOS.Runtime.Pool;
 using SlimeAI.GameOS.Runtime.Resource;
 using SlimeAI.GameOS.Runtime.World;
+using static TestAssert;
 
 internal static class RuntimeWorldTests
 {
@@ -121,29 +122,6 @@ internal static class RuntimeWorldTests
         AssertEqual("pools handle", true, world.Pools != null);
         AssertEqual("schedule handle", true, world.Schedule != null);
         AssertEqual("commands handle", true, world.Commands != null);
-    }
-
-    private static void AssertThrows<TException>(string name, Action action)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException($"{name}: expected {typeof(TException).Name}");
-    }
-
-    private static void AssertEqual<T>(string name, T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"{name}: expected {expected}, actual {actual}");
-        }
     }
 
     private readonly record struct TestWorldEvent(int Value) : IGlobalEvent;

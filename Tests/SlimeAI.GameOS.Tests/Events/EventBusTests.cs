@@ -1,6 +1,7 @@
 using System.Text.Json;
 using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Event;
+using static TestAssert;
 
 internal static class EventBusTests
 {
@@ -191,14 +192,6 @@ internal static class EventBusTests
         finally
         {
             File.Delete(path);
-        }
-    }
-
-    private static void AssertEqual<T>(string name, T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"{name}: expected {expected}, actual {actual}");
         }
     }
 

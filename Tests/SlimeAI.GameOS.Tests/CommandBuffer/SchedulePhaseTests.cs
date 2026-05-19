@@ -2,6 +2,7 @@ using SlimeAI.GameOS.Runtime.CommandBuffer;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Schedule;
 using SlimeAI.GameOS.Runtime.World;
+using static TestAssert;
 
 internal static class SchedulePhaseTests
 {
@@ -76,26 +77,4 @@ internal static class SchedulePhaseTests
         AssertThrows<ObjectDisposedException>("run phase after clear", () => schedule.RunPhase(SchedulePhase.Manual));
     }
 
-    private static void AssertThrows<TException>(string name, Action action)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException($"{name}: expected {typeof(TException).Name}");
-    }
-
-    private static void AssertEqual<T>(string name, T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"{name}: expected {expected}, actual {actual}");
-        }
-    }
 }

@@ -5,6 +5,7 @@ using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Resource;
 using SlimeAI.GameOS.Runtime.Schedule;
 using SlimeAI.GameOS.Runtime.World;
+using static TestAssert;
 
 internal static class RuntimeCommandBufferTests
 {
@@ -157,29 +158,6 @@ internal static class RuntimeCommandBufferTests
         AssertEqual("discard status", DeferredCommandStatus.Skipped, commands.LastDiscardReport.Commands[0].Status);
         AssertEqual("discard reason", DeferredCommandFailureReason.WorldDisposing, commands.LastDiscardReport.Commands[0].FailureReason);
         AssertThrows<ObjectDisposedException>("enqueue after clear", () => commands.Enqueue(DeferredRuntimeCommand.ForGodotFree("/root/AfterDispose")));
-    }
-
-    private static void AssertThrows<TException>(string name, Action action)
-        where TException : Exception
-    {
-        try
-        {
-            action();
-        }
-        catch (TException)
-        {
-            return;
-        }
-
-        throw new InvalidOperationException($"{name}: expected {typeof(TException).Name}");
-    }
-
-    private static void AssertEqual<T>(string name, T expected, T actual)
-    {
-        if (!EqualityComparer<T>.Default.Equals(expected, actual))
-        {
-            throw new InvalidOperationException($"{name}: expected {expected}, actual {actual}");
-        }
     }
 
     private readonly record struct ExternalTestEvent(int Value) : IGlobalEvent;
