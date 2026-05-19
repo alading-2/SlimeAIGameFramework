@@ -112,7 +112,7 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
             return;
         }
 
-        DamageService.Instance.Process(new DamageInfo
+        DamageService.Default.Process(new DamageInfo
         {
             Attacker = attacker,
             Victim = entity,

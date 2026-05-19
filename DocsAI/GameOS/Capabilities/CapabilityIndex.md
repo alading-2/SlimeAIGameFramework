@@ -123,7 +123,7 @@ Tools/analyze-godot-scene-logs.sh
 | Normalized status | `Experimental` |
 | Owner skill | `damage-system` |
 | Contract / Debug | `GameOS/Capabilities/Damage/Contract.md`；`GameOS/Capabilities/Damage/Debug.md` |
-| Primary APIs | `DamageService`、`HealService`、`DamageTool`、`DamageInfo`、`DamageResult`、`IDamageProcessor`、`DamageDataKeys` |
+| Primary APIs | `DamageService`、`HealService`、`DamageTool`、`DamageInfo`、`DamageResult`、`IDamageProcessor`、`DamageDataKeys`；`DamageService.Default`（进程级默认入口）和 `DamageService.Instance`（向后兼容别名）语义相同；测试必须用 `new DamageService()` 独立实例 |
 | DataKeys | CurrentHp、MaxHp、IsDead、IsInvulnerable、Armor、DodgeChance、CritRate、CritDamage、DamageTakenMultiplier、LifeSteal、Shield、ContactDamage、ContactDamageInterval、total/wave damage、hit、crit、kill、healing、shield statistics |
 | Events | 事件目录 `SlimeAI/GameOS/Capabilities/Damage/Events/`：`Damaged / Dodged / Healed / HealthChanged / Killed`（全部 `IBroadcastEvent`）。 |
 | Selector owner | `None`；从 Attack、Ability、Projectile 或 contact bridge 接收明确 attacker/target 集合。 |
@@ -186,7 +186,7 @@ Tools/analyze-godot-scene-logs.sh
 | Normalized status | `Experimental` |
 | Owner skill | `ai-system` |
 | Contract / Debug | `GameOS/Capabilities/AI/Contract.md`；`GameOS/Capabilities/AI/Debug.md` |
-| Primary APIs | `AIService`、`AIContext`、`BehaviorNode`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、target/action nodes |
+| Primary APIs | `AIService`、`AIContext`、`BehaviorNode`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、target/action nodes；`AIService.Default`（进程级默认入口）；`AIContext.AbilityService` 无默认值，调用方必须显式注入 |
 | DataKeys | IsEnabled、TargetEntity、TargetPosition、HasTargetPosition、IsAttackRequested、AttackRange、PatrolCenter、PatrolRadius、PatrolWaitTime、PatrolTargetPosition、HasPatrolTargetPosition、PatrolWaitRemaining、PatrolDirectionSign |
 | Events | `AI.TargetAcquired`、`AI.TargetLost`、`AI.PatrolStarted` |
 | Selector owner | AI 拥有行为树目标获取，用于 AI intent；Ability targeting 仍归 Ability。 |

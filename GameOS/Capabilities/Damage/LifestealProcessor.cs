@@ -5,6 +5,13 @@ namespace SlimeAI.GameOS.Capabilities.Damage;
 /// </summary>
 public sealed class LifestealProcessor : IDamageProcessor
 {
+    private readonly HealService healService;
+
+    public LifestealProcessor(HealService healService)
+    {
+        this.healService = healService;
+    }
+
     /// <inheritdoc />
     public int Priority => DamageProcessorPriority.Lifesteal;
 
@@ -23,7 +30,7 @@ public sealed class LifestealProcessor : IDamageProcessor
         }
 
         var healAmount = info.FinalDamage * (chance / 100f);
-        var result = HealService.Instance.Process(new HealInfo
+        var result = healService.Process(new HealInfo
         {
             Healer = info.Attacker,
             Target = info.Attacker,

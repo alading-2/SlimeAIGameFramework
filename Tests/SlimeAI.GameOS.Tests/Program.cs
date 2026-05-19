@@ -886,7 +886,7 @@ static void TestDamageServiceAppliesHealth()
         AssertNear("health new", 13f, data.NewHp);
     });
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -920,7 +920,7 @@ static void TestDamageServiceKilledEvent()
         AssertEqual("killed killer", attacker.EntityId, data.Killer?.EntityId);
     });
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -954,7 +954,7 @@ static void TestDamagePipelineDodge()
         AssertEqual("dodged attacker", attacker.EntityId, data.Attacker?.EntityId);
     });
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -982,7 +982,7 @@ static void TestDamagePipelineCriticalArmorAndStats()
     victim.Data.Set(DamageDataKeys.CurrentHp, 100f);
     victim.Data.Set(DamageDataKeys.Armor, 15f);
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -1013,7 +1013,7 @@ static void TestDamagePipelineTrueDamageBypassesDodgeAndArmor()
     victim.Data.Set(DamageDataKeys.DodgeChance, 100f);
     victim.Data.Set(DamageDataKeys.Armor, 100f);
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -1047,7 +1047,7 @@ static void TestDamagePipelineLifesteal()
         AssertNear("lifesteal event amount", 10f, data.Amount);
     });
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -1072,7 +1072,7 @@ static void TestDamagePipelineShield()
     victim.Data.Set(DamageDataKeys.CurrentHp, 30f);
     victim.Data.Set(DamageDataKeys.Shield, 8f);
 
-    var result = DamageService.Instance.Process(new DamageInfo
+    var result = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -1089,7 +1089,7 @@ static void TestDamagePipelineShield()
 
     victim.Data.Set(DamageDataKeys.CurrentHp, 30f);
     victim.Data.Set(DamageDataKeys.Shield, 20f);
-    var blocked = DamageService.Instance.Process(new DamageInfo
+    var blocked = new DamageService().Process(new DamageInfo
     {
         Attacker = attacker,
         Victim = victim,
@@ -1121,7 +1121,7 @@ static void TestHealServiceAppliesAndClamps()
         AssertNear("heal event amount", 10f, data.Amount);
     });
 
-    var result = HealService.Instance.Process(new HealInfo
+    var result = new HealService().Process(new HealInfo
     {
         Healer = healer,
         Target = target,
@@ -1251,6 +1251,7 @@ static void TestAbilityServiceInstantDamageCooldownAndCharge()
 static void TestAbilityServiceRequiresTarget()
 {
     using var world = RuntimeWorld.CreateScoped();
+    var timerManager = new TimerManager("ability-no-target-test-timers");
     var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target-caster") });
     var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-no-target") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
@@ -1264,7 +1265,7 @@ static void TestAbilityServiceRequiresTarget()
         AssertEqual("ability fail reason", AbilityTriggerResult.FailNoTarget, data.Result);
     });
 
-    var report = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var report = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability
@@ -1273,24 +1274,26 @@ static void TestAbilityServiceRequiresTarget()
     AssertEqual("ability no target failed", AbilityTriggerResult.FailNoTarget, report.Result);
     AssertEqual("ability failed events", 1, failedEvents);
 
+    timerManager.Clear();
 }
 
 static void TestAbilityServiceAcceptsPointTarget()
 {
     using var world = RuntimeWorld.CreateScoped();
+    var timerManager = new TimerManager("ability-point-test-timers");
     var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point-caster") });
     var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-point") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Point);
 
-    var missingPoint = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var missingPoint = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability
     });
     AssertEqual("ability point missing failed", AbilityTriggerResult.FailNoTarget, missingPoint.Result);
 
-    var report = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var report = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability,
@@ -1298,24 +1301,26 @@ static void TestAbilityServiceAcceptsPointTarget()
     });
     AssertEqual("ability point success", AbilityTriggerResult.Success, report.Result);
 
+    timerManager.Clear();
 }
 
 static void TestAbilityServiceAcceptsEntityOrPointTarget()
 {
     using var world = RuntimeWorld.CreateScoped();
+    var timerManager = new TimerManager("ability-either-test-timers");
     var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-caster") });
     var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either") });
     ability.Data.Set(AbilityDataKeys.IsEnabled, true);
     ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.EntityOrPoint);
 
-    var missing = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var missing = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability
     });
     AssertEqual("ability either missing failed", AbilityTriggerResult.FailNoTarget, missing.Result);
 
-    var pointReport = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var pointReport = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability,
@@ -1324,7 +1329,7 @@ static void TestAbilityServiceAcceptsEntityOrPointTarget()
     AssertEqual("ability either point success", AbilityTriggerResult.Success, pointReport.Result);
 
     var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-either-target") });
-    var entityReport = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var entityReport = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability,
@@ -1332,6 +1337,7 @@ static void TestAbilityServiceAcceptsEntityOrPointTarget()
     });
     AssertEqual("ability either entity success", AbilityTriggerResult.Success, entityReport.Result);
 
+    timerManager.Clear();
 }
 
 static void TestAbilityServicePeriodicDamage()
@@ -1795,6 +1801,7 @@ static void TestFeatureServiceLifecycleHandler()
 static void TestAbilityServiceInvokesFeatureHandler()
 {
     using var world = RuntimeWorld.CreateScoped();
+    var timerManager = new TimerManager("ability-feature-test-timers");
     FeatureHandlerRegistry.Clear();
     var handler = new AbilityFeatureProbeHandler();
     FeatureHandlerRegistry.Register(handler);
@@ -1808,7 +1815,7 @@ static void TestAbilityServiceInvokesFeatureHandler()
     var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-target") });
     target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
-    var report = AbilityService.Instance.TryTrigger(new AbilityCastContext
+    var report = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
     {
         Caster = caster,
         Ability = ability,
@@ -1821,6 +1828,7 @@ static void TestAbilityServiceInvokesFeatureHandler()
     AssertNear("ability feature avoids fallback damage", 20f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
     AssertEqual("ability feature active reset", false, ability.Data.Get<bool>(FeatureDataKeys.IsActive));
 
+    timerManager.Clear();
     FeatureHandlerRegistry.Clear();
 }
 
@@ -1835,7 +1843,7 @@ static void TestAIServiceMovesTowardTarget()
 
     var context = new AIContext { Entity = agent, Delta = 0.1f };
     var action = new MoveToTargetAction(0.75f);
-    var result = AIService.Instance.Tick(context, action);
+    var result = new AIService().Tick(context, action);
 
     AssertEqual("ai move success", AIState.Success, result);
     AssertEqual("ai move direction", new Vector2Value(0.6f, 0.8f), agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
@@ -1843,7 +1851,7 @@ static void TestAIServiceMovesTowardTarget()
 
     agent.Data.Set(AIDataKeys.IsEnabled, false);
     agent.Data.Set(MovementDataKeys.AIMoveDirection, new Vector2Value(1f, 0f));
-    var disabled = AIService.Instance.Tick(context, action);
+    var disabled = new AIService().Tick(context, action);
     AssertEqual("ai disabled fails", AIState.Failure, disabled);
     AssertEqual("ai disabled clears movement", Vector2Value.Zero, agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
 
@@ -1879,7 +1887,7 @@ static void TestAIServiceFindsNearestTarget()
         .Add(new FindNearestTargetAction(5f))
         .Add(new MoveToTargetAction());
 
-    var state = AIService.Instance.Tick(context, root);
+    var state = new AIService().Tick(context, root);
 
     AssertEqual("ai query success", AIState.Success, state);
     AssertEqual("ai query target", (EntityId?)nearEnemy.EntityId, agent.Data.Get<EntityId?>(AIDataKeys.TargetEntity));
@@ -1888,7 +1896,7 @@ static void TestAIServiceFindsNearestTarget()
     AssertEqual("ai query move direction", new Vector2Value(1f, 0f), agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
 
     nearEnemy.Data.Set(DamageDataKeys.IsDead, true);
-    var failed = AIService.Instance.Tick(context, new FindNearestTargetAction(5f));
+    var failed = new AIService().Tick(context, new FindNearestTargetAction(5f));
     AssertEqual("ai query no target", AIState.Failure, failed);
     AssertEqual("ai query cleared target", false, agent.Data.Has(AIDataKeys.TargetEntity));
     AssertEqual("ai query cleared target position flag", false, agent.Data.Get<bool>(AIDataKeys.HasTargetPosition));
@@ -1907,7 +1915,7 @@ static void TestAIServicePatrolAction()
 
     var context = new AIContext { Entity = agent, Delta = 0.1f };
     var action = new PatrolAction(reachDistance: 0.25f, speedMultiplier: 0.5f);
-    var first = AIService.Instance.Tick(context, action);
+    var first = new AIService().Tick(context, action);
 
     AssertEqual("ai patrol running", AIState.Running, first);
     AssertEqual("ai patrol target right", new Vector2Value(10f, 0f), agent.Data.Get<Vector2Value>(AIDataKeys.PatrolTargetPosition));
@@ -1916,20 +1924,20 @@ static void TestAIServicePatrolAction()
     AssertNear("ai patrol speed", 0.5f, agent.Data.Get<float>(MovementDataKeys.AIMoveSpeedMultiplier));
 
     agent.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
-    var arrived = AIService.Instance.Tick(context, action);
+    var arrived = new AIService().Tick(context, action);
     AssertEqual("ai patrol arrived running", AIState.Running, arrived);
     AssertEqual("ai patrol stops at target", Vector2Value.Zero, agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
     AssertNear("ai patrol wait set", 0.5f, agent.Data.Get<float>(AIDataKeys.PatrolWaitRemaining));
     AssertEqual("ai patrol target cleared", false, agent.Data.Get<bool>(AIDataKeys.HasPatrolTargetPosition));
 
     context.Delta = 0.25f;
-    var waiting = AIService.Instance.Tick(context, action);
+    var waiting = new AIService().Tick(context, action);
     AssertEqual("ai patrol waiting", AIState.Running, waiting);
     AssertNear("ai patrol wait tick", 0.25f, agent.Data.Get<float>(AIDataKeys.PatrolWaitRemaining));
     AssertEqual("ai patrol waiting stopped", Vector2Value.Zero, agent.Data.Get<Vector2Value>(MovementDataKeys.AIMoveDirection));
 
     context.Delta = 0.25f;
-    var next = AIService.Instance.Tick(context, action);
+    var next = new AIService().Tick(context, action);
     AssertEqual("ai patrol next running", AIState.Running, next);
     AssertNear("ai patrol wait complete", 0f, agent.Data.Get<float>(AIDataKeys.PatrolWaitRemaining));
     AssertEqual("ai patrol target left", new Vector2Value(-10f, 0f), agent.Data.Get<Vector2Value>(AIDataKeys.PatrolTargetPosition));
@@ -1955,7 +1963,7 @@ static void TestAIBehaviorTreeBuilderMeleeAttackPriority()
 
     var context = new AIContext { Entity = agent, Delta = 0.1f };
     var root = EnemyBehaviorTreeBuilder.BuildMeleeEnemyTree(targetSearchRange: 20f, defaultAttackRange: 1f);
-    var state = AIService.Instance.Tick(context, root);
+    var state = new AIService().Tick(context, root);
 
     AssertEqual("ai builder attack running", AIState.Running, state);
     AssertEqual("ai builder target selected", (EntityId?)target.EntityId, agent.Data.Get<EntityId?>(AIDataKeys.TargetEntity));
@@ -1982,7 +1990,7 @@ static void TestAIBehaviorTreeBuilderPatrolFallback()
         defaultAttackRange: 2f,
         patrolReachDistance: 0.25f,
         patrolSpeedMultiplier: 0.4f);
-    var state = AIService.Instance.Tick(context, root);
+    var state = new AIService().Tick(context, root);
 
     AssertEqual("ai builder patrol running", AIState.Running, state);
     AssertEqual("ai builder no attack flag", false, agent.Data.Get<bool>(AIDataKeys.IsAttackRequested));
@@ -2016,7 +2024,7 @@ static void TestAIServiceRequestsAttackInRange()
         .Add(new IsTargetInRangeCondition(AIDataKeys.AttackRange, 0f))
         .Add(new RequestAttackAction());
 
-    var running = AIService.Instance.Tick(context, attackBranch);
+    var running = new AIService().Tick(context, attackBranch);
 
     AssertEqual("ai attack running", AIState.Running, running);
     AssertEqual("ai attack event count", 1, requested);
@@ -2028,7 +2036,7 @@ static void TestAIServiceRequestsAttackInRange()
     AssertNear("ai attack stops movement", 0f, agent.Data.Get<float>(MovementDataKeys.AIMoveSpeedMultiplier));
 
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
-    var outOfRange = AIService.Instance.Tick(context, attackBranch);
+    var outOfRange = new AIService().Tick(context, attackBranch);
     AssertEqual("ai attack out of range fails", AIState.Failure, outOfRange);
     AssertEqual("ai attack out of range no extra event", 1, requested);
     AssertEqual("ai attack out of range clears flag", false, agent.Data.Get<bool>(AIDataKeys.IsAttackRequested));
@@ -2069,13 +2077,13 @@ static void TestAIServiceAbilityAutoTriggerAction()
     };
     var root = new SequenceNode("AI Auto Cast").Add(new TickAbilityAutoTriggersAction());
 
-    var first = AIService.Instance.Tick(context, root);
+    var first = new AIService().Tick(context, root);
     AssertEqual("ai ability action success", AIState.Success, first);
     AssertEqual("ai ability reports", 1, context.LastAbilityReports?.Count);
     AssertNear("ai ability damage", 16f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
 
     context.Delta = 0.5f;
-    var blocked = AIService.Instance.Tick(context, root);
+    var blocked = new AIService().Tick(context, root);
     AssertEqual("ai ability action blocked", AIState.Failure, blocked);
     AssertEqual("ai ability blocked reports", 0, context.LastAbilityReports?.Count);
     AssertNear("ai ability cooldown tick", 0.5f, ability.Data.Get<float>(AbilityDataKeys.CooldownRemaining));
@@ -2121,7 +2129,7 @@ static void TestAIServicePreparesAbilityAutoTargetContexts()
         .Add(new PrepareAbilityAutoTargetContextsAction())
         .Add(new TickAbilityAutoTriggersAction());
 
-    var first = AIService.Instance.Tick(context, root);
+    var first = new AIService().Tick(context, root);
     AssertEqual("ai ability auto target success", AIState.Success, first);
     AssertEqual("ai ability auto target contexts", 1, context.AbilityContexts?.Count);
     AssertEqual("ai ability auto target selected", target, context.AbilityContexts?[0].Targets?[0]);
@@ -2130,7 +2138,7 @@ static void TestAIServicePreparesAbilityAutoTargetContexts()
     AssertNear("ai ability auto target same team hp", 20f, sameTeam.Data.Get<float>(DamageDataKeys.CurrentHp));
 
     target.Data.Set(MovementDataKeys.Position, new Vector2Value(20f, 0f));
-    var missing = AIService.Instance.Tick(context, root);
+    var missing = new AIService().Tick(context, root);
     AssertEqual("ai ability auto target missing fails", AIState.Failure, missing);
     AssertEqual("ai ability auto target missing contexts", 0, context.AbilityContexts?.Count);
 
@@ -2142,7 +2150,7 @@ static void TestAttackServiceConsumesRequestAndDamages()
 {
     using var world = RuntimeWorld.CreateScoped();
     var timer = new TimerManager("attack-service-instant-test-timers");
-    var service = new AttackService(timer, DamageService.Instance);
+    var service = new AttackService(timer, new DamageService());
     var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-attacker") });
     var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-instant-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
@@ -2184,7 +2192,7 @@ static void TestAttackServiceGatesRangeAndCooldown()
 {
     using var world = RuntimeWorld.CreateScoped();
     var timer = new TimerManager("attack-service-gates-test-timers");
-    var service = new AttackService(timer, DamageService.Instance);
+    var service = new AttackService(timer, new DamageService());
     var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-attacker") });
     var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-gate-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
@@ -2227,7 +2235,7 @@ static void TestAttackServiceWindupAndRecoveryTimers()
 {
     using var world = RuntimeWorld.CreateScoped();
     var timer = new TimerManager("attack-service-windup-test-timers");
-    var service = new AttackService(timer, DamageService.Instance);
+    var service = new AttackService(timer, new DamageService());
     var attacker = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-attacker") });
     var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("attack-windup-target") });
     attacker.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);

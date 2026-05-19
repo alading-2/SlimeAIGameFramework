@@ -1,4 +1,5 @@
 using Godot;
+using SlimeAI.GameOS.Capabilities.Ability;
 using SlimeAI.GameOS.Capabilities.AI;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Runtime.Entity;
@@ -69,7 +70,7 @@ public partial class GodotAIComponent : Node, IGodotComponent
     public void OnComponentRegistered(IEntity entity, Node entityNode)
     {
         this.entity = entity;
-        context = new AIContext { Entity = entity };
+        context = new AIContext { Entity = entity, AbilityService = AbilityService.Instance };
         AIDataKeys.RegisterAll();
         MovementDataKeys.RegisterAll();
         if (ApplyExportedDataOnRegister)
@@ -122,7 +123,7 @@ public partial class GodotAIComponent : Node, IGodotComponent
         }
 
         context.Delta = delta;
-        LastState = AIService.Instance.Tick(context, root);
+        LastState = AIService.Default.Tick(context, root);
         return LastState;
     }
 

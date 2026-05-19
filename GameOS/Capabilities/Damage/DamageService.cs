@@ -13,13 +13,19 @@ public sealed class DamageService
     /// <summary>进程级默认 DamageService。</summary>
     public static DamageService Instance { get; } = new();
 
+    /// <summary>进程级默认 DamageService；与 <see cref="Instance"/> 等价，语义更明确。</summary>
+    public static DamageService Default => Instance;
+
     private readonly List<IDamageProcessor> processors = new();
+    private readonly HealService healService;
 
     /// <summary>
     /// 创建 DamageService，并确保 Damage DataKey 已注册。
     /// </summary>
-    public DamageService()
+    /// <param name="healService">可选 HealService；为 null 时自动创建默认实例。</param>
+    public DamageService(HealService? healService = null)
     {
+        this.healService = healService ?? new HealService();
         DamageDataKeys.RegisterAll();
         RegisterDefaultProcessors();
     }
@@ -98,7 +104,7 @@ public sealed class DamageService
         RegisterProcessor(new ArmorDamageProcessor());
         RegisterProcessor(new DamageTakenAmplificationProcessor());
         RegisterProcessor(new HealthExecutionProcessor());
-        RegisterProcessor(new LifestealProcessor());
+        RegisterProcessor(new LifestealProcessor(healService));
         RegisterProcessor(new DamageStatisticsProcessor());
     }
 

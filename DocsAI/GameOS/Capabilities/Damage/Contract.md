@@ -10,7 +10,7 @@
 - 接触伤害（ContactDamage）
 - 实体死亡判定
 
-所有伤害通过 `DamageService.Instance.Process()` 统一入口，保证处理顺序和可扩展性。
+所有伤害通过 `DamageService.Default.Process()` 统一入口，保证处理顺序和可扩展性。测试中使用 `new DamageService()` 或 `new DamageService(new HealService())` 独立实例。
 
 ## 2. 不是本能力职责的内容
 
@@ -60,9 +60,9 @@
 
 ## 7. 挂载的 Component
 
-- `DamageService` — 全局伤害处理服务
+- `DamageService` — 伤害处理服务；`DamageService.Default` 是进程级入口，构造时可注入可选 `HealService`
 - `DamageTool` — 便捷伤害调用工具
-- `HealService` — 治疗服务
+- `HealService` — 治疗服务；由 `DamageService` 构造时注入，`LifestealProcessor` 不再直接访问 `HealService.Instance`
 - `GodotContactDamageComponent`（GodotBridge）— 接触伤害触发器
 
 ## 8. 注册的 System / Strategy / Handler
@@ -114,7 +114,7 @@ Runtime tests 覆盖暴击、闪避、护甲、吸血、护盾等全处理器链
 
 ### 禁止修改
 
-- 不直接修改 `CurrentHp`（必须用 `DamageService.Process()`）
+- 不直接修改 `CurrentHp`（必须用 `DamageService.Default.Process()` 或独立实例）
 - 不删除 `HealthExecutionProcessor`
 - 概率值必须保持 0-100 语义
 - 不在热路径分配对象

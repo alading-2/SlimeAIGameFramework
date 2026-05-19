@@ -16,7 +16,7 @@ public sealed class AIContext
     public float Delta { get; set; }
 
     /// <summary>自动施法使用的 AbilityService。</summary>
-    public AbilityService AbilityService { get; init; } = AbilityService.Instance;
+    public AbilityService? AbilityService { get; init; }
 
     /// <summary>外部系统准备好的自动施法上下文。</summary>
     public IReadOnlyList<AbilityCastContext>? AbilityContexts { get; set; }

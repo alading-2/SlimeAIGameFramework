@@ -276,6 +276,14 @@
 - `GodotAIComponent` 是 AI Godot bridge 第一段，注册时把导出 AI 参数写入 `AIDataKeys`，按 `GodotAIBehaviorTreeKind` 构建 Runtime 行为树，并通过 `_Process` 或 `TickAI(delta)` 调用 `AIService.Tick`；它只写 AI / Movement 意图，不直接移动 Godot 节点。
 - `GodotProjectileEffectSpawner` 监听 `Capabilities.Projectile.Events.Spawned / Capabilities.Effect.Events.Spawned`，从 `ScenePath` 读取 `res://` 路径并通过 `ResourceManagement.LoadPath<PackedScene>` 实例化视觉节点，按 Runtime EntityId 注册到 `GodotNodeRegistry`，并在对应 Runtime Entity 销毁时清理自己生成的视觉节点。
 
+## Capability Service 规范
+
+- `XxxService.Default` 是进程级默认入口；`XxxService.Instance` 是其别名，仅为向后兼容保留。新代码优先使用 `.Default`。
+- **测试代码必须用 `new XxxService(...)` 独立实例**，禁止在 `CreateScoped` 沙箱中使用 `Default / Instance`；两个 scoped world 的测试共享同一 `XxxService.Default` 会导致状态污染。
+- `LifestealProcessor` 通过 `DamageService` 构造时注入 `HealService`（`DamageService(HealService? healService = null)`），不再是进程级全局依赖；默认构造时自动创建 `new HealService()`。
+- `AIContext.AbilityService` 无默认值，调用方必须显式传入（或保留 `null`）；`AIService.Tick` 若 `AbilityService == null` 则 log Warning 并跳过 auto-trigger，不抛异常。
+- GodotBridge 使用进程级实例时，直接传入 `AbilityService.Instance`（语义：BrotatoLike 游戏内共享全局 Ability 计时器）。
+
 ## Damage Capability 契约
 
 - `DamageService` 是当前伤害和生命值扣减的唯一入口，按 `IDamageProcessor.Priority` 执行默认处理器管线。

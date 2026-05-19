@@ -1,5 +1,6 @@
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Observation;
 
 namespace SlimeAI.GameOS.Capabilities.AI;
 
@@ -10,6 +11,9 @@ public sealed class AIService
 {
     /// <summary>进程级默认 AIService。</summary>
     public static AIService Instance { get; } = new();
+
+    /// <summary>进程级默认 AIService；与 <see cref="Instance"/> 等价，语义更明确。</summary>
+    public static AIService Default => Instance;
 
     /// <summary>
     /// 创建 AIService，并确保 AI DataKey 已注册。
@@ -32,6 +36,12 @@ public sealed class AIService
             context.Entity.Data.Set(AIDataKeys.IsAttackRequested, false);
             context.Entity.Data.Set(MovementDataKeys.AIMoveDirection, Vector2Value.Zero);
             return AIState.Failure;
+        }
+
+        if (context.AbilityService == null)
+        {
+            GameOSLog.For("AIService").Warn(
+                "AIContext.AbilityService 为 null，跳过 auto-trigger。请确保 GodotAIComponent 显式注入 AbilityService。");
         }
 
         context.Entity.Data.Set(AIDataKeys.IsAttackRequested, false);
