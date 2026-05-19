@@ -175,7 +175,7 @@
 | `SlimeAI.GameOS.Capabilities.Damage.DamageTakenAmplificationProcessor` | class | bootstrap | 目标受伤倍率结算。 |
 | `SlimeAI.GameOS.Capabilities.Damage.HealthExecutionProcessor` | class | bootstrap | 生命值扣减、HealthChanged / Damaged / Killed 事件。 |
 | `SlimeAI.GameOS.Capabilities.Damage.LifestealProcessor` | class | bootstrap | 基于最终伤害和 LifeSteal 触发吸血恢复。 |
-| `SlimeAI.GameOS.Capabilities.Damage.DamageStatisticsProcessor` | class | bootstrap | 伤害、命中、暴击、击杀、波次统计写入。 |
+| `SlimeAI.GameOS.Capabilities.Damage.DamageStatisticsProcessor` | class | bootstrap | 伤害、命中、暴击、击杀、total/encounter 统计写入；旧 Wave* 统计命名已改为 Encounter*。 |
 | `SlimeAI.GameOS.Capabilities.Damage.DamageService` | class | bootstrap | 统一伤害入口，管理默认处理器管线并返回 DamageResult。 |
 | `SlimeAI.GameOS.Capabilities.Damage.HealSource` | enum | bootstrap | 治疗来源：Direct / Lifesteal / Regeneration。 |
 | `SlimeAI.GameOS.Capabilities.Damage.HealInfo` | class | bootstrap | 单次治疗上下文。 |
@@ -190,12 +190,14 @@
 | `SlimeAI.GameOS.Capabilities.Ability.AbilityTriggerMode` | enum flags | bootstrap | 技能触发模式：Manual / OnEvent / Periodic / Permanent。 |
 | `SlimeAI.GameOS.Capabilities.Ability.AbilityTargetSelection` | enum | bootstrap | 技能目标输入语义：None / Entity / Point / EntityOrPoint。 |
 | `SlimeAI.GameOS.Capabilities.Ability.AbilityTriggerResult` | enum | bootstrap | 技能触发结果和失败原因。 |
-| `SlimeAI.GameOS.Capabilities.Ability.AbilityCastContext` | class | bootstrap | 单次技能触发上下文，支持显式实体目标和点选目标位置。 |
-| `SlimeAI.GameOS.Capabilities.Ability.AbilityExecutedResult` | class | bootstrap | 技能执行结果。 |
+| `SlimeAI.GameOS.Capabilities.Ability.AbilityCastContext` | class | bootstrap | 单次技能触发上下文，支持显式实体目标和点选目标位置；实现 Feature typed activation payload。 |
+| `SlimeAI.GameOS.Capabilities.Ability.AbilityExecutedResult` | class | bootstrap | 技能执行结果；实现 Feature typed execution result。 |
 | `SlimeAI.GameOS.Capabilities.Ability.AbilityTriggerReport` | record struct | bootstrap | 技能触发报告。 |
-| `SlimeAI.GameOS.Capabilities.Ability.AbilityService` | class | bootstrap | Ability 最小运行时服务，负责实体 / 点选目标正式触发、冷却、充能、Periodic 自动触发 Tick、DamageTool 命中和可选 Feature handler 调用。 |
+| `SlimeAI.GameOS.Capabilities.Ability.AbilityService` | class | bootstrap | Ability 最小运行时服务，构造注入 TimerManager，并可注入 FeatureService / DamageService；负责实体 / 点选目标正式触发、冷却、充能、Periodic 自动触发 Tick、DamageTool 命中和 typed Feature handler 调用。 |
 | `SlimeAI.GameOS.Capabilities.Ability.AbilityAutoTargetOptions` | class | bootstrap | Ability 自动索敌参数：Range / MaxTargets / IgnoreSameTeam / RequiresDamageable / IncludeDeadTargets。 |
-| `SlimeAI.GameOS.Capabilities.Ability.AbilityTargetingTool` | static class | bootstrap | Ability 显式目标准备工具，按 Ability 自动索敌 DataKey 从 Runtime Entity 快照构造 `AbilityCastContext`。 |
+| `SlimeAI.GameOS.Capabilities.Ability.IAbilityTargetQuery` | interface | bootstrap | Ability-owned target selector，返回候选目标快照。 |
+| `SlimeAI.GameOS.Capabilities.Ability.RuntimeAbilityTargetQuery` | class | bootstrap | Ability 纯 Runtime fallback target query，封装 `EntityManager.GetAll()` 全量扫描。 |
+| `SlimeAI.GameOS.Capabilities.Ability.AbilityTargetingTool` | static class | bootstrap | Ability 显式目标准备工具，按 Ability 自动索敌 DataKey 和注入的 `IAbilityTargetQuery` 构造 `AbilityCastContext`。 |
 | `SlimeAI.GameOS.Capabilities.Projectile.ProjectileCategory` | enum | bootstrap | Projectile DataKey 分类。 |
 | `SlimeAI.GameOS.Capabilities.Projectile.ProjectileDataKeys` | static class | bootstrap | Projectile 运行时 DataKey：ScenePath / SourceEntity / AbilityEntity / TargetEntity / SpawnPosition / TargetPosition / Direction / Speed / MaxHitCount / HitCount / MaxLifeTime / Damage / DamageType / DamageTags。 |
 | `SlimeAI.GameOS.Capabilities.Projectile.ProjectileSpawnOptions` | class | bootstrap | 投射物生成参数。 |
@@ -207,14 +209,18 @@
 | `SlimeAI.GameOS.Capabilities.Effect.EffectSpawnOptions` | class | bootstrap | 效果生成参数。 |
 | `SlimeAI.GameOS.Capabilities.Effect.EffectSpawnResult` | record struct | bootstrap | 效果生成结果。 |
 | `SlimeAI.GameOS.Capabilities.Effect.EffectTool` | static class | bootstrap | 纯 Runtime 效果生成工具，写入 Data、位置、关系并发布 `effect:spawned`。 |
-| `SlimeAI.GameOS.Capabilities.Feature.FeatureDataKeys` | static class | bootstrap | Feature 运行时 DataKey：FeatureId / HandlerId / Description / Category / modifier authoring 字段 / IsEnabled / IsActive / ActivationCount。 |
-| `SlimeAI.GameOS.Capabilities.Feature.FeatureDefinition` | class | bootstrap | 可授予能力定义，包含 FeatureId、HandlerId 和授予时 Modifier 列表。 |
+| `SlimeAI.GameOS.Capabilities.Feature.FeatureDataKeys` | static class | bootstrap | Feature 运行时 DataKey：FeatureId / HandlerId / Description / Category / TriggerMode / Cooldown / TriggerEventType / TriggerChance / modifier authoring 字段 / IsEnabled / IsActive / ActivationCount。 |
+| `SlimeAI.GameOS.Capabilities.Feature.FeatureDefinition` | class | bootstrap | 可授予能力定义，包含 FeatureId、HandlerId、授予时 Modifier 列表和 `IFeatureAction` action 列表。 |
 | `SlimeAI.GameOS.Capabilities.Feature.FeatureModifierEntry` | record struct | bootstrap | Feature 授予时应用到 Owner Data 的 Modifier 配置。 |
-| `SlimeAI.GameOS.Capabilities.Feature.FeatureContext` | class | bootstrap | Feature 生命周期上下文，承载 Owner / Feature / Definition / ActivationData / ExecuteResult。 |
+| `SlimeAI.GameOS.Capabilities.Feature.IFeatureActivationPayload` | interface | bootstrap | Feature typed activation payload marker，替代新框架 raw activation object bag。 |
+| `SlimeAI.GameOS.Capabilities.Feature.IFeatureExecutionResult` | interface | bootstrap | Feature typed execution result marker，替代新框架 raw result object bag。 |
+| `SlimeAI.GameOS.Capabilities.Feature.FeatureContext` | class | bootstrap | Feature 生命周期上下文，承载 Owner / Feature / Definition / typed ActivationPayload / ExecutionResult / SourceEventPayload；raw members 仅为 obsolete 兼容入口。 |
 | `SlimeAI.GameOS.Capabilities.Feature.FeatureEndReason` | enum | bootstrap | Feature 单次运行结束原因：Completed / Cancelled / Interrupted / Failed。 |
+| `SlimeAI.GameOS.Capabilities.Feature.IFeatureAction` | interface | bootstrap | Feature 原子动作扩展点，`FeatureService.ExecuteActions` 批量执行。 |
 | `SlimeAI.GameOS.Capabilities.Feature.IFeatureHandler` | interface | bootstrap | Feature 处理器协议：OnGranted / OnRemoved / OnEnabled / OnDisabled / OnActivated / OnExecute / OnEnded。 |
+| `SlimeAI.GameOS.Capabilities.Feature.FeatureAutoTriggerService` | class | bootstrap | Feature Periodic / OnEvent 自动触发注册服务，返回 `IDisposable` 控制生命周期。 |
 | `SlimeAI.GameOS.Capabilities.Feature.FeatureHandlerRegistry` | static class | bootstrap | Feature handler 注册表，以完整 HandlerId 查询。 |
-| `SlimeAI.GameOS.Capabilities.Feature.FeatureService` | class | bootstrap | Feature 最小生命周期服务，负责授予 / 移除 Modifier、生命周期事件和 handler 调用。 |
+| `SlimeAI.GameOS.Capabilities.Feature.FeatureService` | class | bootstrap | Feature 生命周期服务，负责授予 / 移除 Modifier、action 执行、生命周期事件和 handler 调用。 |
 | `SlimeAI.GameOS.Capabilities.Attack.AttackDataKeys` | static class | bootstrap | Attack 运行时 DataKey：Damage / Range / Interval / WindUpTime / RecoveryTime / CanAttack / IsAttacking / State / CooldownRemaining。 |
 | `SlimeAI.GameOS.Capabilities.Attack.AttackState` | enum | bootstrap | 普通攻击状态：Idle / WindUp / Recovery。 |
 | `SlimeAI.GameOS.Capabilities.Attack.AttackCancelReason` | enum | bootstrap | 攻击流程取消原因。 |
@@ -229,7 +235,9 @@
 | `SlimeAI.GameOS.Capabilities.AI.SequenceNode` | class | bootstrap | 顺序组合节点。 |
 | `SlimeAI.GameOS.Capabilities.AI.SelectorNode` | class | bootstrap | 选择组合节点。 |
 | `SlimeAI.GameOS.Capabilities.AI.AIService` | class | bootstrap | AI 最小 Tick 服务，负责启用 / 死亡门禁并执行行为树。 |
-| `SlimeAI.GameOS.Capabilities.AI.FindNearestTargetAction` | class | bootstrap | 从 Runtime Entity 快照中查找最近目标并写入 AI 目标 Data。 |
+| `SlimeAI.GameOS.Capabilities.AI.IAITargetQuery` | interface | bootstrap | AI-owned target selector，返回候选目标快照。 |
+| `SlimeAI.GameOS.Capabilities.AI.RuntimeAITargetQuery` | class | bootstrap | AI 纯 Runtime fallback target query，封装 `EntityManager.GetAll()` 全量扫描。 |
+| `SlimeAI.GameOS.Capabilities.AI.FindNearestTargetAction` | class | bootstrap | 通过注入的 `IAITargetQuery` 查找最近目标并写入 AI 目标 Data。 |
 | `SlimeAI.GameOS.Capabilities.AI.MoveToTargetAction` | class | bootstrap | 向目标写入 Movement AI 移动意图。 |
 | `SlimeAI.GameOS.Capabilities.AI.IsTargetInRangeCondition` | class | bootstrap | 检查当前目标实体或目标点是否在固定范围或 DataKey 范围内。 |
 | `SlimeAI.GameOS.Capabilities.AI.RequestAttackAction` | class | bootstrap | 行为树中发出 `Capabilities.Attack.Events.Requested`，并写入停步和面向目标意图。 |
@@ -262,8 +270,10 @@
 | `SlimeAI.GameOS.GodotBridge.GodotEntity2D` | Node2D | migrated | 可挂 2D 场景的 GameOS Entity 基类，会把初始 Node2D Position 写入 Movement Data。 |
 | `SlimeAI.GameOS.GodotBridge.GodotAreaEntity2D` | Area2D | bootstrap | 可挂 2D 物理场景的 GameOS Entity 基类，会同步 Position 和 Collision layer/mask 到 Runtime Data。 |
 | `SlimeAI.GameOS.GodotBridge.IGodotComponent` | interface | migrated | GodotBridge Adapter 生命周期协议的 legacy compatibility name；不是 ECS data component。 |
-| `SlimeAI.GameOS.GodotBridge.GameOSGodotBridge` | static class | migrated | SceneTree 与 Runtime 生命周期桥接入口。 |
-| `SlimeAI.GameOS.GodotBridge.GodotNodeRegistry` | static class | migrated | Godot Node 到稳定运行时 Id 的注册表。 |
+| `SlimeAI.GameOS.GodotBridge.GameOSGodotBridge` | static class | migrated | SceneTree 与 Runtime 生命周期桥接入口；static facade 转发默认 GodotBridge context。 |
+| `SlimeAI.GameOS.GodotBridge.GodotBridgeContext` | class | bootstrap | GodotBridge scoped context，绑定 `RuntimeWorld` 和 context-owned registry。 |
+| `SlimeAI.GameOS.GodotBridge.GodotBridgeNodeRegistry` | class | bootstrap | context-owned Godot Node / adapter registry，支持 adapter mapping 隔离。 |
+| `SlimeAI.GameOS.GodotBridge.GodotNodeRegistry` | static class | migrated | Godot Node 到稳定运行时 Id 的默认 context facade。 |
 | `SlimeAI.GameOS.GodotBridge.GameOSTimerDriver` | Node | migrated | 用 `_Process` 驱动 `TimerManager.Instance.Tick`。 |
 | `SlimeAI.GameOS.GodotBridge.GodotMovementDriver` | Node | migrated | 用 `_Process` 驱动 `MovementSystem.Tick` 并同步 Runtime Position 到 Node2D。 |
 | `SlimeAI.GameOS.GodotBridge.GodotOrientationComponent` | Node | bootstrap | 消费 `MovementDataKeys.FacingDirection` / `MovementParams.Orientation`，输出 `RotationDegrees` 或 `AnimatedSprite2D.FlipH`。 |
@@ -272,11 +282,11 @@
 | `SlimeAI.GameOS.GodotBridge.GodotCollisionBridge` | static class | bootstrap | Godot `CollisionObject2D` / Node 到 Collision Runtime 的实体解析、Data 同步和事件桥。 |
 | `SlimeAI.GameOS.GodotBridge.GodotCollisionComponent` | Node | bootstrap | 桥接 Entity 根 `Area2D` 进入 / 离开信号到 `Capabilities.Collision.Events.Entered / Exited`。 |
 | `SlimeAI.GameOS.GodotBridge.GodotHurtboxComponent` | Area2D | bootstrap | 桥接 Hurtbox `Area2D` 进入 / 离开信号到 `Capabilities.Collision.Events.HurtboxEntered / HurtboxExited`。 |
-| `SlimeAI.GameOS.GodotBridge.GodotContactDamageComponent` | Node | bootstrap | 消费 Hurtbox 事件并通过 `DamageService` 结算接触伤害。 |
-| `SlimeAI.GameOS.GodotBridge.GodotAttackComponent` | Node | bootstrap | 注册默认 `AttackService`，把导出攻击参数写入 Runtime Data，把 Godot 节点目标解析为 Runtime 攻击请求，并可选把 Attack 事件转为 Unit 动画请求；配置动画不存在时可从 `attack*` 可用动画中回退选择，可选择保留注册前已有 Attack Data。 |
+| `SlimeAI.GameOS.GodotBridge.GodotContactDamageComponent` | Node | bootstrap | 消费 Hurtbox 事件并通过可替换 `DamageService` / `TimerManager` 结算接触伤害。 |
+| `SlimeAI.GameOS.GodotBridge.GodotAttackComponent` | Node | bootstrap | 默认使用 `AttackService.Default`，可替换 `AttackService`；把导出攻击参数写入 Runtime Data，把 Godot 节点目标解析为 Runtime 攻击请求，并可选把 Attack 事件转为 Unit 动画请求；配置动画不存在时可从 `attack*` 可用动画中回退选择，可选择保留注册前已有 Attack Data。 |
 | `SlimeAI.GameOS.GodotBridge.AttackComponent` | Node | bootstrap | 旧项目 `AttackComponent` 类名 / 场景名兼容包装，默认保留已有 Attack Data。 |
 | `SlimeAI.GameOS.GodotBridge.GodotAIBehaviorTreeKind` | enum | bootstrap | Godot AI bridge 内置行为树类型：Melee / AbilityMelee / PatrolOnly / Chaser。 |
-| `SlimeAI.GameOS.GodotBridge.GodotAIComponent` | Node | bootstrap | 驱动 `AIService.Tick` 的 Godot AI 组件，写入导出 AI 参数和 Movement AI 意图，不直接移动节点。 |
+| `SlimeAI.GameOS.GodotBridge.GodotAIComponent` | Node | bootstrap | 驱动 `AIService.Tick` 的 Godot AI adapter，写入导出 AI 参数和 Movement AI 意图；可替换 `AbilityService`，不直接移动节点。 |
 | `SlimeAI.GameOS.GodotBridge.GodotProjectileEffectSpawner` | Node | bootstrap | 监听 Projectile / Effect Runtime 生成事件，通过 `ScenePath` 加载 `PackedScene`，实例化视觉节点并按 Runtime EntityId 注册到 `GodotNodeRegistry`，并自动播放 Effect `AnimatedSprite2D`。 |
 | `SlimeAI.GameOS.GodotBridge.GodotBridgeStats` | record struct | migrated | 桥接注册状态快照。 |
 | `SlimeAI.GameOS.GodotBridge.GodotNodePoolConfig` | record struct | migrated | Godot Node 池配置。 |

@@ -53,11 +53,11 @@ Unit DataKey 主要是配置型，在 DataOS seed 中定义，Runtime 读取。
 
 同写入。Unit DataKey 主要被其他 Capability 和 GodotBridge 读取。
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 无独立系统。Unit DataKey 在 `BrotatoLikeDataOSBootstrap` 中从 snapshot 写入 Entity Data。
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 无。
 

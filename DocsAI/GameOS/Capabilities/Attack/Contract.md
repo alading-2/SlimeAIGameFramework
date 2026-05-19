@@ -51,12 +51,12 @@
 | Attack.RecoveryTime | 后摇时间 |
 | Attack.CanAttack | 是否可攻击 |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 - `AttackService` — 全局攻击服务
 - `GodotAttackComponent`（GodotBridge）— 参数导出和动画事件转发
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 - `AttackService` — Schedule Update 阶段 Tick
 

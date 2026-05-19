@@ -63,6 +63,9 @@ public partial class GodotAIComponent : Node, IGodotComponent
     [Export]
     public float PatrolSpeedMultiplier { get; set; } = 1f;
 
+    /// <summary>AI 自动施法使用的 AbilityService；默认是进程级兼容入口，验证代码可替换。</summary>
+    public AbilityService AbilityService { get; set; } = SlimeAI.GameOS.Capabilities.Ability.AbilityService.Instance;
+
     /// <summary>最近一次 Tick 返回状态。</summary>
     public AIState LastState { get; private set; } = AIState.Success;
 
@@ -70,7 +73,7 @@ public partial class GodotAIComponent : Node, IGodotComponent
     public void OnComponentRegistered(IEntity entity, Node entityNode)
     {
         this.entity = entity;
-        context = new AIContext { Entity = entity, AbilityService = AbilityService.Instance };
+        context = new AIContext { Entity = entity, AbilityService = AbilityService };
         AIDataKeys.RegisterAll();
         MovementDataKeys.RegisterAll();
         if (ApplyExportedDataOnRegister)

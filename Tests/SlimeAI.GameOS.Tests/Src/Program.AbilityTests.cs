@@ -404,7 +404,13 @@ internal partial class Program
         service.Grant(owner, feature, definition);
         service.Disable(owner, feature);
         service.Enable(owner, feature);
-        var context = new FeatureContext { Owner = owner, Feature = feature, Definition = definition, ActivationData = "payload" };
+        var context = new FeatureContext
+        {
+            Owner = owner,
+            Feature = feature,
+            Definition = definition,
+            ActivationPayload = new TestFeatureActivationPayload("payload")
+        };
         service.Activate(context);
         service.End(context);
         service.Remove(owner, feature);
@@ -416,9 +422,102 @@ internal partial class Program
         AssertEqual("feature executed", 1, handler.Executed);
         AssertEqual("feature ended", 1, handler.Ended);
         AssertEqual("feature removed", 1, handler.Removed);
-        AssertEqual("feature execute result", "executed:payload", context.ExecuteResult);
+        AssertEqual("feature typed result", true, context.TryGetExecutionResult<TestFeatureExecutionResult>(out var result));
+        AssertEqual("feature execute result", "executed:payload", result.Value);
         AssertEqual("feature active reset", false, feature.Data.Get<bool>(FeatureDataKeys.IsActive));
         AssertEqual("feature activation count", 1, feature.Data.Get<int>(FeatureDataKeys.ActivationCount));
+
+        FeatureHandlerRegistry.Clear();
+    }
+
+    static void TestFeatureActionsExecuteAndGrant()
+    {
+        using var world = RuntimeWorld.CreateScoped();
+        var owner = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-action-owner") });
+        var feature = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-action") });
+        var actionA = new CountingFeatureAction();
+        var actionB = new CountingFeatureAction();
+        var service = new FeatureService();
+        var context = new FeatureContext { Owner = owner, Feature = feature };
+
+        service.ExecuteActions(new IFeatureAction[] { actionA, actionB }, context);
+        AssertEqual("feature execute actions a", 1, actionA.Count);
+        AssertEqual("feature execute actions b", 1, actionB.Count);
+
+        var grantAction = new CountingFeatureAction();
+        service.Grant(owner, feature, new FeatureDefinition
+        {
+            FeatureId = "feature.action",
+            Actions = new[] { grantAction }
+        });
+
+        AssertEqual("feature grant action", 1, grantAction.Count);
+    }
+
+    static void TestFeatureAutoTriggerPeriodic()
+    {
+        using var world = RuntimeWorld.CreateScoped();
+        FeatureHandlerRegistry.Clear();
+        var timerManager = new TimerManager("feature-periodic-test-timers");
+        var featureService = new FeatureService();
+        var autoTrigger = new FeatureAutoTriggerService(featureService, timerManager);
+        var handler = new CountingFeatureHandler("feature.periodic");
+        FeatureHandlerRegistry.Register(handler);
+
+        var owner = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-periodic-owner") });
+        var feature = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-periodic") });
+        feature.Data.Set(FeatureDataKeys.IsEnabled, true);
+        feature.Data.Set(FeatureDataKeys.Cooldown, 0.5f);
+        var definition = new FeatureDefinition
+        {
+            FeatureId = "feature.periodic",
+            HandlerId = handler.FeatureId
+        };
+
+        var registration = autoTrigger.RegisterPeriodic(owner, feature, definition);
+        timerManager.Tick(0.49f);
+        AssertEqual("feature periodic before cooldown", 0, handler.Activated);
+
+        timerManager.Tick(0.01f);
+        AssertEqual("feature periodic activated", 1, handler.Activated);
+        AssertEqual("feature periodic executed", 1, handler.Executed);
+
+        registration.Dispose();
+        timerManager.Tick(0.5f);
+        AssertEqual("feature periodic disposed", 1, handler.Activated);
+
+        timerManager.Clear();
+        FeatureHandlerRegistry.Clear();
+    }
+
+    static void TestFeatureAutoTriggerOnEvent()
+    {
+        using var world = RuntimeWorld.CreateScoped();
+        FeatureHandlerRegistry.Clear();
+        var featureService = new FeatureService();
+        var autoTrigger = new FeatureAutoTriggerService(featureService, new TimerManager("feature-event-test-timers"));
+        var handler = new EventFeatureHandler("feature.event");
+        FeatureHandlerRegistry.Register(handler);
+
+        var owner = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-event-owner") });
+        var feature = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-event") });
+        feature.Data.Set(FeatureDataKeys.IsEnabled, true);
+        feature.Data.Set(FeatureDataKeys.TriggerChance, 100f);
+        var definition = new FeatureDefinition
+        {
+            FeatureId = "feature.event",
+            HandlerId = handler.FeatureId
+        };
+
+        using var registration = autoTrigger.RegisterOnEvent<TestFeatureEvent>(owner, feature, definition, owner.Events);
+        owner.Events.Publish(new TestFeatureEvent(7));
+
+        AssertEqual("feature event activated", 1, handler.Activated);
+        AssertEqual("feature event value", 7, handler.LastValue);
+
+        feature.Data.Set(FeatureDataKeys.TriggerChance, 0f);
+        owner.Events.Publish(new TestFeatureEvent(9));
+        AssertEqual("feature event zero chance", 1, handler.Activated);
 
         FeatureHandlerRegistry.Clear();
     }
@@ -440,7 +539,13 @@ internal partial class Program
         var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-feature-target") });
         target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
-        var report = new AbilityService(timerManager).TryTrigger(new AbilityCastContext
+        var featureService = new FeatureService();
+        var damageService = new DamageService();
+        var abilityService = new AbilityService(timerManager, featureService, damageService);
+        AssertEqual("ability feature service injected", true, ReferenceEquals(featureService, abilityService.FeatureService));
+        AssertEqual("ability damage service injected", true, ReferenceEquals(damageService, abilityService.DamageService));
+
+        var report = abilityService.TryTrigger(new AbilityCastContext
         {
             Caster = caster,
             Ability = ability,
@@ -455,6 +560,35 @@ internal partial class Program
 
         timerManager.Clear();
         FeatureHandlerRegistry.Clear();
+    }
+
+    static void TestAbilityServiceUsesInjectedDamageService()
+    {
+        using var world = RuntimeWorld.CreateScoped();
+        var timerManager = new TimerManager("ability-injected-damage-test-timers");
+        var damageService = new DamageService();
+        damageService.RegisterProcessor(new BlockingDamageProcessor());
+        var service = new AbilityService(timerManager, new FeatureService(), damageService);
+
+        var caster = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-injected-damage-caster") });
+        var ability = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-injected-damage") });
+        ability.Data.Set(AbilityDataKeys.IsEnabled, true);
+        ability.Data.Set(AbilityDataKeys.TargetSelection, AbilityTargetSelection.Entity);
+        ability.Data.Set(AbilityDataKeys.Damage, 10f);
+        var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ability-injected-damage-target") });
+        target.Data.Set(DamageDataKeys.CurrentHp, 20f);
+
+        var report = service.TryTrigger(new AbilityCastContext
+        {
+            Caster = caster,
+            Ability = ability,
+            Targets = new[] { target }
+        });
+
+        AssertEqual("ability injected damage success", AbilityTriggerResult.Success, report.Result);
+        AssertNear("ability injected damage blocked hp", 20f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
+
+        timerManager.Clear();
     }
 
     sealed class CountingFeatureHandler : IFeatureHandler
@@ -479,13 +613,57 @@ internal partial class Program
         public void OnDisabled(FeatureContext context) => Disabled++;
         public void OnActivated(FeatureContext context) => Activated++;
 
-        public object? OnExecute(FeatureContext context)
+        public IFeatureExecutionResult? OnExecute(FeatureContext context)
         {
             Executed++;
-            return $"executed:{context.ActivationData}";
+            return context.TryGetActivation<TestFeatureActivationPayload>(out var payload)
+                ? new TestFeatureExecutionResult($"executed:{payload.Value}")
+                : new TestFeatureExecutionResult("missing-payload");
         }
 
         public void OnEnded(FeatureContext context, FeatureEndReason reason) => Ended++;
+    }
+
+    sealed class EventFeatureHandler : IFeatureHandler
+    {
+        public EventFeatureHandler(string featureId)
+        {
+            FeatureId = featureId;
+        }
+
+        public string FeatureId { get; }
+        public int Activated { get; private set; }
+        public int LastValue { get; private set; }
+
+        public void OnActivated(FeatureContext context)
+        {
+            Activated++;
+            if (context.SourceEventPayload is FeatureEventActivationPayload<TestFeatureEvent> payload)
+            {
+                LastValue = payload.Event.Value;
+            }
+        }
+    }
+
+    sealed class CountingFeatureAction : IFeatureAction
+    {
+        public int Count { get; private set; }
+
+        public void Execute(FeatureContext context)
+        {
+            Count++;
+        }
+    }
+
+    sealed class BlockingDamageProcessor : IDamageProcessor
+    {
+        public int Priority => DamageProcessorPriority.HealthExecution - 1;
+
+        public void Process(DamageInfo info)
+        {
+            info.FinalDamage = 0f;
+            info.IsBlocked = true;
+        }
     }
 
     sealed class AbilityFeatureProbeHandler : IFeatureHandler
@@ -493,10 +671,10 @@ internal partial class Program
         public string FeatureId => "ability.probe";
         public int Executed { get; private set; }
 
-        public object? OnExecute(FeatureContext context)
+        public IFeatureExecutionResult? OnExecute(FeatureContext context)
         {
             Executed++;
-            var cast = context.ActivationData as AbilityCastContext;
+            context.TryGetActivation<AbilityCastContext>(out var cast);
             return new AbilityExecutedResult
             {
                 TargetsHit = cast?.Targets?.Count ?? 0,
@@ -504,4 +682,10 @@ internal partial class Program
             };
         }
     }
+
+    sealed record TestFeatureActivationPayload(string Value) : IFeatureActivationPayload;
+
+    sealed record TestFeatureExecutionResult(string Value) : IFeatureExecutionResult;
+
+    readonly record struct TestFeatureEvent(int Value) : IEntityEvent;
 }

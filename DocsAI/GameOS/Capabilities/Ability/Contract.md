@@ -5,10 +5,10 @@
 提供技能的完整生命周期管理：
 
 - 触发模式：Manual / Periodic / Permanent / None
-- 目标选择：None / Entity / Point / Direction
+- 目标选择：None / Entity / Point / EntityOrPoint
 - 自动索敌：基于范围、同队过滤、死亡过滤
 - 冷却和充能管理
-- 委托给 FeatureHandler 执行具体逻辑
+- 通过 typed `AbilityCastContext` 委托给 Feature handler 执行具体逻辑
 
 Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 
@@ -32,8 +32,9 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 
 ## 4. 需要哪些其他 Capability
 
-- Damage（死亡判定、伤害门禁）
-- Feature（handler 委托执行）
+- Damage（死亡判定、伤害门禁；`AbilityService` 可注入 `DamageService`）
+- Feature（handler 委托执行；`AbilityService` 可注入 `FeatureService`）
+- Timer（冷却和周期伤害；`AbilityService` 构造必须显式传入 `TimerManager`）
 
 ## 5. 写入的 DataKey
 
@@ -57,16 +58,18 @@ Ability 是"何时触发 + 选什么目标"，Feature 是"触发后做什么"。
 | Ability.IsEnabled | 是否启用 |
 | Ability.Damage | 技能伤害 |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
-- `AbilityService` — 全局技能服务
+- `AbilityService` — 技能服务；构造注入 `TimerManager`，并可注入 `FeatureService` / `DamageService`；`Default` 是进程级默认入口。
 - `AbilityTargetingTool` — 自动索敌工具
-- `GodotAbilityComponent`（GodotBridge）— UI 参数导出
+- `IAbilityTargetQuery` / `RuntimeAbilityTargetQuery` — Ability-owned selector。
+- 暂无框架通用 `GodotAbilityComponent`；BrotatoLike 输入和 UI 属于游戏侧 adapter。
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
-- `AbilityService` — Schedule Update 阶段 Tick
+- `AbilityService` — service-driven trigger / cooldown / charge / periodic tick，不隐式挂入 RuntimeSchedule。
 - `AbilityTargetingTool` — 目标查询和筛选
+- `AbilityService` 调用 Feature handler 时把 `AbilityCastContext` 放入 `FeatureContext.ActivationPayload`，并通过 typed `AbilityExecutedResult` 读取结果；不再依赖 raw object bag。
 
 ### Target Query 接口
 

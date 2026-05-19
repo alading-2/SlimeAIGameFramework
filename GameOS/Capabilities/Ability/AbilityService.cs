@@ -14,21 +14,42 @@ namespace SlimeAI.GameOS.Capabilities.Ability;
 public sealed class AbilityService
 {
     private readonly TimerManager timerManager;
+    private readonly FeatureService featureService;
+    private readonly DamageService damageService;
 
     /// <summary>进程级默认 AbilityService。</summary>
-    public static AbilityService Instance { get; } = new(TimerManager.Instance);
+    public static AbilityService Default { get; } = new(TimerManager.Instance, FeatureService.Default, DamageService.Default);
+
+    /// <summary>进程级默认 AbilityService；向后兼容别名。</summary>
+    public static AbilityService Instance => Default;
 
     /// <summary>
     /// 创建 AbilityService。
     /// </summary>
     /// <param name="timerManager">周期伤害使用的计时器管理器。</param>
-    public AbilityService(TimerManager timerManager)
+    /// <param name="featureService">Feature 生命周期服务；为空时使用进程级默认入口。</param>
+    /// <param name="damageService">伤害服务；为空时使用进程级默认入口。</param>
+    public AbilityService(
+        TimerManager timerManager,
+        FeatureService? featureService = null,
+        DamageService? damageService = null)
     {
-        this.timerManager = timerManager;
+        this.timerManager = timerManager ?? throw new ArgumentNullException(nameof(timerManager));
+        this.featureService = featureService ?? FeatureService.Default;
+        this.damageService = damageService ?? DamageService.Default;
         AbilityDataKeys.RegisterAll();
         DamageDataKeys.RegisterAll();
         RegisterOwnerCleanupHook();
     }
+
+    /// <summary>当前 AbilityService 使用的计时器管理器。</summary>
+    public TimerManager TimerManager => timerManager;
+
+    /// <summary>当前 AbilityService 使用的 Feature 服务。</summary>
+    public FeatureService FeatureService => featureService;
+
+    /// <summary>当前 AbilityService 使用的伤害服务。</summary>
+    public DamageService DamageService => damageService;
 
     /// <summary>
     /// 向 framework 注册 ability 的 owner cleanup descriptor，幂等。
@@ -245,12 +266,12 @@ public sealed class AbilityService
                 FeatureId = context.Ability.EntityId.Value,
                 HandlerId = handlerId
             },
-            ActivationData = context
+            ActivationPayload = context
         };
-        FeatureService.Instance.Activate(featureContext);
-        FeatureService.Instance.End(featureContext, FeatureEndReason.Completed);
+        featureService.Activate(featureContext);
+        featureService.End(featureContext, FeatureEndReason.Completed);
 
-        if (featureContext.ExecuteResult is AbilityExecutedResult result)
+        if (featureContext.TryGetExecutionResult<AbilityExecutedResult>(out var result))
         {
             return result;
         }
@@ -284,8 +305,9 @@ public sealed class AbilityService
                     RepeatCount = repeatCount,
                     ApplyImmediately = immediate
                 },
-                timerManager)
-            : DamageTool.Apply(context.Targets, options);
+                timerManager,
+                damageService)
+            : DamageTool.Apply(context.Targets, options, damageService);
 
         var totalDamage = 0f;
         for (var i = 0; i < result.Results.Count; i++)

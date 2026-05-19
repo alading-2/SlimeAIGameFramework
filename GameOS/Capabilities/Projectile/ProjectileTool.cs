@@ -92,7 +92,7 @@ public static class ProjectileTool
     /// <param name="projectile">投射物实体。</param>
     /// <param name="movementSystem">Movement 调度系统。</param>
     /// <param name="options">飞行和命中参数。</param>
-    /// <param name="damageService">伤害服务；为空时使用默认实例。</param>
+    /// <param name="damageService">伤害服务；为空时使用进程级兼容默认入口。测试和局部运行域应显式传入。</param>
     public static bool StartMovement(
         IEntity projectile,
         MovementSystem movementSystem,
@@ -185,7 +185,7 @@ public static class ProjectileTool
         var damage = default(DamageResult);
         if (options.ApplyDamageOnHit)
         {
-            damageService ??= DamageService.Instance;
+            damageService ??= DamageService.Default;
             damage = damageService.Process(new DamageInfo
             {
                 Attacker = source,

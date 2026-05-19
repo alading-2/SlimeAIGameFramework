@@ -92,6 +92,8 @@
 - `SlimeAI.GameOS.GodotBridge.GodotEntity2D`
 - `SlimeAI.GameOS.GodotBridge.IGodotComponent`
 - `SlimeAI.GameOS.GodotBridge.GameOSGodotBridge`
+- `SlimeAI.GameOS.GodotBridge.GodotBridgeContext`
+- `SlimeAI.GameOS.GodotBridge.GodotBridgeNodeRegistry`
 - `SlimeAI.GameOS.GodotBridge.GodotNodeRegistry`
 - `SlimeAI.GameOS.GodotBridge.GameOSTimerDriver`
 - `SlimeAI.GameOS.GodotBridge.GodotMovementDriver`
@@ -113,13 +115,21 @@
 - `SlimeAI.GameOS.Capabilities.Damage.DamageTool`
 - `SlimeAI.GameOS.Capabilities.Ability.AbilityService`
 - `SlimeAI.GameOS.Capabilities.Ability.AbilityDataKeys`
+- `SlimeAI.GameOS.Capabilities.Ability.IAbilityTargetQuery`
+- `SlimeAI.GameOS.Capabilities.Ability.RuntimeAbilityTargetQuery`
 - `SlimeAI.GameOS.Capabilities.Feature.FeatureService`
 - `SlimeAI.GameOS.Capabilities.Feature.FeatureDataKeys`
 - `SlimeAI.GameOS.Capabilities.Feature.FeatureDefinition`
+- `SlimeAI.GameOS.Capabilities.Feature.IFeatureActivationPayload`
+- `SlimeAI.GameOS.Capabilities.Feature.IFeatureExecutionResult`
+- `SlimeAI.GameOS.Capabilities.Feature.IFeatureAction`
+- `SlimeAI.GameOS.Capabilities.Feature.FeatureAutoTriggerService`
 - `SlimeAI.GameOS.Capabilities.Feature.IFeatureHandler`
 - `SlimeAI.GameOS.Capabilities.Feature.FeatureHandlerRegistry`
 - `SlimeAI.GameOS.Capabilities.AI.AIService`
 - `SlimeAI.GameOS.Capabilities.AI.AIDataKeys`
+- `SlimeAI.GameOS.Capabilities.AI.IAITargetQuery`
+- `SlimeAI.GameOS.Capabilities.AI.RuntimeAITargetQuery`
 - `SlimeAI.GameOS.Capabilities.AI.BehaviorNode`
 - `SlimeAI.GameOS.Capabilities.AI.IsTargetInRangeCondition`
 - `SlimeAI.GameOS.Capabilities.AI.RequestAttackAction`
@@ -258,22 +268,23 @@
 
 ## GodotBridge 契约
 
-- `GodotEntity` 是可挂场景的 `Node + IEntity` 基类，进入 SceneTree 时注册到 `EntityManager` 和 `GodotNodeRegistry`，离开 SceneTree 时注销并清理 Runtime Entity。
-- `GodotEntity2D` 是可挂 2D 场景的 `Node2D + IEntity` 基类，额外接入 Movement `Position` 初始同步。
+- `GodotEntity` 是可挂场景的 `Node + IEntity` 基类，进入 SceneTree 时通过 `BridgeContext` 注册到目标 `RuntimeWorld.Entities` 和 context registry，离开 SceneTree 时注销并清理 Runtime Entity。
+- `GodotEntity2D` 是可挂 2D 场景的 `Node2D + IEntity` 基类，额外接入 Movement `Position` 初始同步；未显式设置 context 时使用默认 GodotBridge context。
 - `IGodotComponent` 是 GodotBridge Adapter 生命周期协议的 legacy compatibility name；`GameOSGodotBridge.RegisterComponents` 会递归扫描子节点，识别实现 `IGodotComponent` 或类型名以 `Component` 结尾的节点。
 - Entity-Adapter 绑定记录在 GodotBridge 内部 typed registry：`GodotNodeRegistry.RegisterAdapter / UnregisterAdapter / IsAdapterRegistered / GetAdaptersByEntity`；不进入框架 `LifecycleTree`，也不通过 typed DataKey 暴露给 Capability。
 - `GodotNodeRegistry` 同时保存 Node 注册表和 entity→adapter ids 映射，不替代 SceneTree，也不持有业务状态。
+- `GodotBridgeContext` 绑定一个 `RuntimeWorld` 和一份 `GodotBridgeNodeRegistry`；static `GameOSGodotBridge` / `GodotNodeRegistry` 只是默认 context facade。显式 context 注册的 adapter callback guard 必须使用目标 context 的 `World.Commands.EnterGuard("godot-bridge-callback")`，两个 context 的 adapter mapping 不共享。
 - `GameOSTimerDriver._Process` 不分配对象，不使用 LINQ，只把 Godot delta 传给 `TimerManager.Tick`。
 - `GodotMovementDriver._Process` 推进 `MovementSystem.Tick`，并同步已注册 `Node2D + IEntity` 的运行时位置；需要固定步长或测试时可关闭 `AutoTick` 并手动调用 `TickMovement(delta)`。
 - `GodotNodePool<T>` 管理 Godot Node 池化，支持 `Get(false)` 延迟激活、`Activate`、`Release`、`ReleaseAll`、`Destroy` 和 `PoolStats`。
 - `GodotCollisionIsolation` 负责回池时递归隔离 2D 碰撞：`CollisionObject2D` layer/mask 清零并缓存、`Area2D` 关闭 monitoring/monitorable、`CollisionShape2D / CollisionPolygon2D` 禁用、`CharacterBody2D` 清零速度。
 - `GodotNodePool<T>` 对 `CollisionObject2D` 根节点默认执行泊车位移动和脱树；重新出池时先挂回 `ActiveParent` 并同步禁用碰撞，再由 `Activate` 恢复处理、可见性和碰撞。
-- `GodotContactDamageComponent` 消费 `Capabilities.Collision.Events.HurtboxEntered / HurtboxExited`，只把接触转换为 `DamageService` 请求，不直接修改 HP。
+- `GodotContactDamageComponent` 消费 `Capabilities.Collision.Events.HurtboxEntered / HurtboxExited`，只把接触转换为 `DamageService` 请求，不直接修改 HP；`DamageService` / `TimerManager` 可替换，默认只在 adapter boundary 使用进程级入口。
 - `GodotUnitAnimationComponent` 消费 `Capabilities.Unit.Events.PlayAnimationRequested / StopAnimationRequested`，驱动 `VisualRoot` 或子节点中的 `AnimatedSprite2D`，缓存 `UnitDataKeys.AvailableAnimations`，并在非循环动画结束后发布 `Capabilities.Unit.Events.AnimationFinished` 回退到 idle。
-- `GodotAttackComponent` 是普通攻击 Godot bridge 第一段，注册默认 `AttackService`，把导出攻击参数写入 `AttackDataKeys`，并把 Godot 节点目标解析为 Runtime `IEntity` 后交给 `AttackService.TryRequest`。
+- `GodotAttackComponent` 是普通攻击 Godot bridge 第一段，默认使用 `AttackService.Default`，也可替换 `AttackService`；它把导出攻击参数写入 `AttackDataKeys`，并把 Godot 节点目标解析为 Runtime `IEntity` 后交给 `AttackService.TryRequest`。
 - `GodotAttackComponent` 可选把 `Attack.Started / Cancelled` 转成 Unit 动画请求；默认优先使用 `AttackAnimation`，当该动画不在 `UnitDataKeys.AvailableAnimations` 中时，会选择第一个 `attack*` 可用动画作为旧资源兼容回退；`PreferExistingDataOnRegister=true` 时会保留注册前已有 Attack Data。
 - `AttackComponent` 是旧项目类名 / 场景名兼容包装，继承 `GodotAttackComponent`，默认启用 `PreferExistingDataOnRegister`，用于旧场景迁移时保留 DataNew / 初始化流程写入的攻击参数。
-- `GodotAIComponent` 是 AI Godot bridge 第一段，注册时把导出 AI 参数写入 `AIDataKeys`，按 `GodotAIBehaviorTreeKind` 构建 Runtime 行为树，并通过 `_Process` 或 `TickAI(delta)` 调用 `AIService.Tick`；它只写 AI / Movement 意图，不直接移动 Godot 节点。
+- `GodotAIComponent` 是 AI Godot bridge 第一段，注册时把导出 AI 参数写入 `AIDataKeys`，按 `GodotAIBehaviorTreeKind` 构建 Runtime 行为树，并通过 `_Process` 或 `TickAI(delta)` 调用 `AIService.Tick`；`AbilityService` 可替换，默认只在 adapter boundary 使用进程级入口；它只写 AI / Movement 意图，不直接移动 Godot 节点。
 - `GodotProjectileEffectSpawner` 监听 `Capabilities.Projectile.Events.Spawned / Capabilities.Effect.Events.Spawned`，从 `ScenePath` 读取 `res://` 路径并通过 `ResourceManagement.LoadPath<PackedScene>` 实例化视觉节点，按 Runtime EntityId 注册到 `GodotNodeRegistry`，并在对应 Runtime Entity 销毁时清理自己生成的视觉节点。
 
 ## Capability Service 规范
@@ -295,7 +306,7 @@
 - `HealthExecutionProcessor` 写入 `CurrentHp / IsDead` 并发布 `HealthChanged / Damaged / Killed`；`DodgeProcessor` 发布 `Dodged`；`LifestealProcessor` 通过 `HealService` 恢复攻击者 HP。
 - `HealService` 是当前恢复生命值的唯一入口，负责 MaxHp 夹取、`TotalHealingDone / TotalHealingReceived` 统计和 `HealthChanged / Healed` 事件。
 - `DamageTool` 是多目标和周期伤害入口，内部统一调用 `DamageService` 和 `TimerManager`。
-- `DamageStatisticsProcessor` 写入 `TotalDamageDealt / Taken`、`WaveDamageDealt / Taken`、命中、暴击、击杀和最高单次伤害统计。
+- `DamageStatisticsProcessor` 写入 `TotalDamageDealt / Taken`、`EncounterDamageDealt / Taken`、total/encounter 命中、暴击、击杀和最高单次伤害统计；`Wave*` 统计命名已作为 Bucket C 改为中性 encounter 语义。
 - 接触伤害由 `GodotContactDamageComponent` 监听 Hurtbox 事件触发，攻击者伤害读取 `DamageDataKeys.ContactDamage`，同队过滤读取 `CollisionDataKeys.Team`。
 
 ## Ability Capability 契约
@@ -305,10 +316,11 @@
 - `TryTrigger` 顺序是：施法者死亡检查、启用检查、执行中检查、冷却检查、充能检查、目标检查、消耗充能、启动冷却、执行伤害或 Feature handler、发布事件。
 - `TickAutoTriggers` 只消费外部系统准备好的 `AbilityCastContext`，当前支持 `AbilityTriggerMode.Periodic`，先推进冷却，再对冷却归零的周期技能调用 `TryTrigger`。
 - `AbilityCastContext.TargetPosition` 承载输入层完成点选后的目标点；`AbilityTargetSelection.Entity` 要求 `Targets`，`Point` 要求 `TargetPosition`，`EntityOrPoint` 接受二者任一。
-- `AbilityTargetingTool` 是当前显式自动索敌辅助入口，会读取 `AbilityDataKeys.AutoTargetRange / AutoTargetMaxTargets / AutoTargetIgnoreSameTeam / AutoTargetRequiresDamageable`，从 Runtime Entity 快照中按距离准备 `AbilityCastContext`；`AutoTargetRange = -1` 表示不限距离，`AutoTargetMaxTargets = -1` 表示不限数量。
+- `AbilityTargetingTool` 是当前显式自动索敌辅助入口，会读取 `AbilityDataKeys.AutoTargetRange / AutoTargetMaxTargets / AutoTargetIgnoreSameTeam / AutoTargetRequiresDamageable`，通过注入的 `IAbilityTargetQuery` 获取候选目标（默认 `RuntimeAbilityTargetQuery` 作为纯 Runtime 全量扫描回退），再按距离准备 `AbilityCastContext`；`AutoTargetRange = -1` 表示不限距离，`AutoTargetMaxTargets = -1` 表示不限数量。
 - 当前不做隐式统一自动索敌和异步点选会话；输入层、AI 行为节点或具体 handler 仍负责显式准备目标。
 - 技能伤害统一走 `DamageTool`，周期伤害使用 `AbilityDataKeys.DamageInterval / DamageRepeatCount / ApplyImmediateDamage`。
-- 当 `AbilityDataKeys.FeatureHandlerId` 非空时，`AbilityService` 会把 `AbilityCastContext` 放入 `FeatureContext.ActivationData`，调用 `FeatureService.Activate / End`；若 handler 返回 `AbilityExecutedResult` 则作为施法结果，否则回退到默认 `DamageTool` 伤害逻辑。
+- `AbilityService` 构造注入 `TimerManager`，并可注入 `FeatureService` / `DamageService`；默认构造路径只在进程级兼容入口使用 `FeatureService.Default` / `DamageService.Default`。
+- 当 `AbilityDataKeys.FeatureHandlerId` 非空时，`AbilityService` 会把 `AbilityCastContext` 放入 `FeatureContext.ActivationPayload`，调用注入的 `FeatureService.Activate / End`；若 handler 通过 typed `IFeatureExecutionResult` 返回 `AbilityExecutedResult` 则作为施法结果，否则回退到注入 `DamageService` 的默认 `DamageTool` 伤害逻辑。
 
 ## Projectile Capability 契约
 
@@ -333,13 +345,15 @@
 
 ## Feature Capability 契约
 
-- `FeatureService` 是当前 Feature 最小生命周期入口，负责 `Grant / Remove / Enable / Disable / Activate / End`。
-- Feature 核心不引用 Ability 专有类型；子系统上下文统一通过 `FeatureContext.ActivationData` 传入，执行结果统一从 `FeatureContext.ExecuteResult` 取出。
-- `FeatureDefinition` 当前包含 `FeatureId / HandlerId / Modifiers`；纯属性 Feature 可以只配置 `FeatureModifierEntry`，复杂逻辑通过 `IFeatureHandler` 扩展。
+- `FeatureService` 是当前 Feature 生命周期入口，负责 `Grant / Remove / Enable / Disable / Activate / End`，并提供 `ExecuteActions(IEnumerable<IFeatureAction>, FeatureContext)`。
+- Feature 核心不引用 Ability 专有类型；子系统上下文统一通过 `FeatureContext.ActivationPayload` / `TryGetActivation<T>()` 传入，执行结果通过 `ExecutionResult` / `TryGetExecutionResult<T>()` 读取。`ActivationData / ExecuteResult / SourceEventData / ExtraData` 仅为 `[Obsolete]` 兼容迁移入口。
+- `FeatureDefinition` 当前包含 `FeatureId / HandlerId / Modifiers / Actions`；纯属性 Feature 可以只配置 `FeatureModifierEntry`，数据驱动原子效果可配置 `IFeatureAction`，复杂逻辑通过 `IFeatureHandler` 扩展。
 - `FeatureService.Grant` 会把 `FeatureModifierEntry` 转成 `DataModifier` 写入 Owner Data，Modifier source 标记为 Feature 实体；`Remove` 通过 `Data.RemoveModifiersBySource(feature)` 回滚。
+- `FeatureService.Grant` 在 modifier 写入后执行 `FeatureDefinition.Actions`；action 是纯逻辑扩展点，不依赖 Godot，也不把 BrotatoLike handler body 提升为框架默认。
+- `FeatureAutoTriggerService` 负责 Feature 自身的 Periodic / OnEvent 自动触发注册；Periodic 读取 `Feature.Cooldown` 并使用调用方注入的 `TimerManager`，OnEvent 订阅调用方提供的 `IEventBus` 并按 `Feature.TriggerChance` 0-100 gating，两个注册都返回 `IDisposable`。
 - `FeatureHandlerRegistry` 以完整 `HandlerId` 查询 handler，不使用分组作为运行时查找键。
 - `GameEventType.Feature` 已删除；Feature 事件 payload 位于 `SlimeAI/GameOS/Capabilities/Feature/Events/`，覆盖 `Granted / Removed / Enabled / Disabled / Activated / Executed / Ended`。
-- `FeatureDataKeys` 当前覆盖 Feature Id / HandlerId / 描述 / 分类 / 启用状态和 modifier authoring 字段；复杂 Feature action 仍通过 handler 扩展。
+- `FeatureDataKeys` 当前覆盖 Feature Id / HandlerId / 描述 / 分类 / TriggerMode / Cooldown / TriggerEventType / TriggerChance / 启用状态和 modifier authoring 字段。
 
 ## AI Capability 契约
 

@@ -34,6 +34,9 @@ public partial class GodotEntity2D : Node2D, IEntity
     [Export]
     public bool AutoRegisterComponents { get; set; } = true;
 
+    /// <summary>当前 Entity 使用的 GodotBridge context；默认转发进程级 context。</summary>
+    public GodotBridgeContext BridgeContext { get; set; } = GameOSGodotBridge.DefaultContext;
+
     /// <inheritdoc />
     public EntityId EntityId => EntityId.From(
         string.IsNullOrWhiteSpace(EntityIdOverride)
@@ -49,7 +52,7 @@ public partial class GodotEntity2D : Node2D, IEntity
     /// <inheritdoc />
     public override void _EnterTree()
     {
-        if (GameOSGodotBridge.RegisterEntity(this, this, AutoRegisterComponents))
+        if (BridgeContext.RegisterEntity(this, this, AutoRegisterComponents))
         {
             Data.Set(MovementDataKeys.Position, new Vector2Value(Position.X, Position.Y));
             OnGameOSEntityRegistered();
@@ -59,7 +62,7 @@ public partial class GodotEntity2D : Node2D, IEntity
     /// <inheritdoc />
     public override void _ExitTree()
     {
-        if (GameOSGodotBridge.UnregisterEntity(this, this, unregisterComponents: true, destroyRuntimeEntity: true))
+        if (BridgeContext.UnregisterEntity(this, this, unregisterComponents: true, destroyRuntimeEntity: true))
         {
             OnGameOSEntityUnregistered();
         }
@@ -70,7 +73,7 @@ public partial class GodotEntity2D : Node2D, IEntity
     /// </summary>
     public void DestroyEntity()
     {
-        GameOSGodotBridge.DestroyEntity(this, this);
+        BridgeContext.DestroyEntity(this, this);
     }
 
     /// <summary>

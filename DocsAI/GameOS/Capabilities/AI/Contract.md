@@ -24,7 +24,7 @@
 - Data
 - Event
 - Schedule
-- Relationship（目标查询）
+- AI-owned target query（`IAITargetQuery`，纯 Runtime fallback 可扫描 EntityManager）
 
 事件目录：`SlimeAI/GameOS/Capabilities/AI/Events/`（本 Capability 不发布独立事件，直接写入 AI DataKey 并向目标 Entity 发布 `Attack.Requested`；目录可缺省）
 
@@ -58,13 +58,14 @@
 | AI.PatrolRadius | 巡逻半径 |
 | AI.PatrolWaitTime | 巡逻等待时间 |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 - `AIService` — 全局 AI 服务
 - `EnemyBehaviorTreeBuilder` — 敌人行为树构建器
-- `GodotAIComponent`（GodotBridge）— 参数导出
+- `IAITargetQuery` / `RuntimeAITargetQuery` — AI-owned selector。
+- `GodotAIComponent`（GodotBridge Adapter，legacy class name）— 参数导出和 `_Process` Tick。
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 ### BehaviorNode 类型
 

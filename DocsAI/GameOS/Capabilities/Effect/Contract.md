@@ -48,12 +48,12 @@
 | Effect.TargetEntity | DataKey<EntityId?>；目标实体 Id |
 | Effect.Duration | 持续时间（-1 表示不自动销毁） |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 - `EffectTool` — 特效生成工具
 - `GodotProjectileEffectSpawner`（GodotBridge，共享）— 场景实例化
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 - `EffectTool` — 生成和生命周期管理
 

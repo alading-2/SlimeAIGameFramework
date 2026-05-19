@@ -27,6 +27,30 @@ public static class FeatureDataKeys
         defaultValue: string.Empty,
         category: FeatureCategory.Basic);
 
+    /// <summary>Feature 触发模式。</summary>
+    public static readonly DataKey<FeatureTriggerMode> TriggerMode = DataKey.Create<FeatureTriggerMode>("Feature.TriggerMode",
+        defaultValue: FeatureTriggerMode.None,
+        category: FeatureCategory.Basic);
+
+    /// <summary>Feature 周期触发间隔 / 冷却时间。</summary>
+    public static readonly DataKey<float> Cooldown = DataKey.Create<float>("Feature.Cooldown",
+        defaultValue: 1f,
+        category: FeatureCategory.Basic,
+        minValue: 0.01f);
+
+    /// <summary>OnEvent 触发模式监听的事件类型 stable key。</summary>
+    public static readonly DataKey<string> TriggerEventType = DataKey.Create<string>("Feature.TriggerEventType",
+        defaultValue: string.Empty,
+        category: FeatureCategory.Basic);
+
+    /// <summary>OnEvent 触发概率，0-100。</summary>
+    public static readonly DataKey<float> TriggerChance = DataKey.Create<float>("Feature.TriggerChance",
+        defaultValue: 100f,
+        category: FeatureCategory.Basic,
+        minValue: 0f,
+        maxValue: 100f,
+        isPercentage: true);
+
     /// <summary>修改器目标 DataKey。</summary>
     public static readonly DataKey<string> ModifierTargetKey = DataKey.Create<string>("Feature.Modifier.TargetKey",
         defaultValue: string.Empty,
@@ -72,6 +96,10 @@ public static class FeatureDataKeys
         _ = HandlerId;
         _ = Description;
         _ = Category;
+        _ = TriggerMode;
+        _ = Cooldown;
+        _ = TriggerEventType;
+        _ = TriggerChance;
         _ = ModifierTargetKey;
         _ = ModifierType;
         _ = ModifierValue;

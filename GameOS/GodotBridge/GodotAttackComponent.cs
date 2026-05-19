@@ -24,6 +24,9 @@ public partial class GodotAttackComponent : Node, IGodotComponent
     [Export]
     public bool AutoRegisterService { get; set; } = true;
 
+    /// <summary>当前 Adapter 使用的攻击服务；默认是进程级兼容入口，验证代码可替换。</summary>
+    public AttackService AttackService { get; set; } = SlimeAI.GameOS.Capabilities.Attack.AttackService.Default;
+
     /// <summary>是否在注册时把导出攻击参数写入 Runtime Data。</summary>
     [Export]
     public bool ApplyExportedDataOnRegister { get; set; } = true;
@@ -80,7 +83,7 @@ public partial class GodotAttackComponent : Node, IGodotComponent
 
         if (AutoRegisterService)
         {
-            AttackService.Instance.Register(entity);
+            AttackService.Register(entity);
         }
 
         if (RequestAnimationEvents)
@@ -97,10 +100,10 @@ public partial class GodotAttackComponent : Node, IGodotComponent
         {
             if (HasRunningAttack(this.entity))
             {
-                AttackService.Instance.Cancel(this.entity, AttackCancelReason.ExternalCancel);
+                AttackService.Cancel(this.entity, AttackCancelReason.ExternalCancel);
             }
 
-            AttackService.Instance.Unregister(this.entity);
+            AttackService.Unregister(this.entity);
         }
 
         attackStartedToken?.Dispose();
@@ -142,7 +145,7 @@ public partial class GodotAttackComponent : Node, IGodotComponent
         }
 
         var targetPosition = target.Data.Get<Vector2Value>(MovementDataKeys.Position, Vector2Value.Zero);
-        return AttackService.Instance.TryRequest(new Requested(entity, target, targetPosition));
+        return AttackService.TryRequest(new Requested(entity, target, targetPosition));
     }
 
     /// <summary>

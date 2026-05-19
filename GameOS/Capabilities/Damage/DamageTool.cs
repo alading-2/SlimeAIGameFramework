@@ -15,14 +15,14 @@ public static class DamageTool
     /// </summary>
     /// <param name="targets">目标集合。</param>
     /// <param name="options">伤害参数。</param>
-    /// <param name="service">伤害服务；为空时使用默认实例。</param>
+    /// <param name="service">伤害服务；为空时使用进程级兼容默认入口。测试和局部运行域应显式传入。</param>
     public static DamageApplyResult Apply(
         IEnumerable<IEntity> targets,
         DamageApplyOptions options,
         DamageService? service = null)
     {
         ArgumentNullException.ThrowIfNull(targets);
-        service ??= DamageService.Instance;
+        service ??= DamageService.Default;
 
         var result = new DamageApplyResult();
         foreach (var target in targets)
@@ -53,8 +53,8 @@ public static class DamageTool
     /// <param name="targets">目标集合。</param>
     /// <param name="options">伤害参数。</param>
     /// <param name="repeat">周期参数。</param>
-    /// <param name="timerManager">计时器管理器；为空时使用默认实例。</param>
-    /// <param name="service">伤害服务；为空时使用默认实例。</param>
+    /// <param name="timerManager">计时器管理器；为空时使用进程级兼容默认入口。测试和局部运行域应显式传入。</param>
+    /// <param name="service">伤害服务；为空时使用进程级兼容默认入口。测试和局部运行域应显式传入。</param>
     public static DamageApplyResult ApplyPeriodic(
         IEnumerable<IEntity> targets,
         DamageApplyOptions options,
@@ -64,7 +64,7 @@ public static class DamageTool
     {
         ArgumentNullException.ThrowIfNull(targets);
         timerManager ??= TimerManager.Instance;
-        service ??= DamageService.Instance;
+        service ??= DamageService.Default;
 
         var snapshot = SnapshotTargets(targets);
         var result = repeat.ApplyImmediately

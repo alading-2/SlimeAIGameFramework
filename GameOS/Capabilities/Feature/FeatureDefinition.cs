@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace SlimeAI.GameOS.Capabilities.Feature;
 
 /// <summary>
@@ -13,4 +16,7 @@ public sealed class FeatureDefinition
 
     /// <summary>授予时应用的修改器。</summary>
     public FeatureModifierEntry[] Modifiers { get; init; } = [];
+
+    /// <summary>授予或 handler 执行时可消费的原子动作列表。</summary>
+    public IReadOnlyList<IFeatureAction> Actions { get; init; } = Array.Empty<IFeatureAction>();
 }

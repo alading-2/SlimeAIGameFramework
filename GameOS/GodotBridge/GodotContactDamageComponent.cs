@@ -31,6 +31,12 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
     [Export]
     public bool RepeatWhileContact { get; set; } = true;
 
+    /// <summary>当前 Adapter 使用的伤害服务；默认是进程级兼容入口，验证代码可替换。</summary>
+    public DamageService DamageService { get; set; } = SlimeAI.GameOS.Capabilities.Damage.DamageService.Default;
+
+    /// <summary>当前 Adapter 使用的计时器管理器；默认是进程级兼容入口，验证代码可替换。</summary>
+    public TimerManager TimerManager { get; set; } = SlimeAI.GameOS.Runtime.Timer.TimerManager.Instance;
+
     /// <inheritdoc />
     public void OnComponentRegistered(IEntity entity, Node entityNode)
     {
@@ -72,7 +78,7 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
         var interval = MathF.Max(
             0.01f,
             data.Contact.Target.Data.Get<float>(DamageDataKeys.ContactDamageInterval, 1f));
-        contactTimers[data.Contact.Target.EntityId] = TimerManager.Instance
+        contactTimers[data.Contact.Target.EntityId] = TimerManager
             .Loop(interval)
             .OnLoop(() => ApplyContactDamage(data.Contact.Target));
     }
@@ -112,7 +118,7 @@ public partial class GodotContactDamageComponent : Node, IGodotComponent
             return;
         }
 
-        DamageService.Default.Process(new DamageInfo
+        DamageService.Process(new DamageInfo
         {
             Attacker = attacker,
             Victim = entity,

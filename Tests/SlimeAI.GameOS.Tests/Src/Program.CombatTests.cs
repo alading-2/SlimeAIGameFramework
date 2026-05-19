@@ -182,10 +182,10 @@ internal partial class Program
         AssertNear("crit armor hp", 80f, victim.Data.Get<float>(DamageDataKeys.CurrentHp));
         AssertNear("crit highest", 20f, attacker.Data.Get<float>(DamageDataKeys.HighestSingleDamage));
         AssertEqual("crit count", 1, attacker.Data.Get<int>(DamageDataKeys.TotalCriticalHits));
-        AssertEqual("crit wave count", 1, attacker.Data.Get<int>(DamageDataKeys.WaveCriticalHits));
+        AssertEqual("crit encounter count", 1, attacker.Data.Get<int>(DamageDataKeys.EncounterCriticalHits));
         AssertEqual("hit count", 1, attacker.Data.Get<int>(DamageDataKeys.TotalHits));
-        AssertNear("wave damage dealt", 20f, attacker.Data.Get<float>(DamageDataKeys.WaveDamageDealt));
-        AssertNear("wave damage taken", 20f, victim.Data.Get<float>(DamageDataKeys.WaveDamageTaken));
+        AssertNear("encounter damage dealt", 20f, attacker.Data.Get<float>(DamageDataKeys.EncounterDamageDealt));
+        AssertNear("encounter damage taken", 20f, victim.Data.Get<float>(DamageDataKeys.EncounterDamageTaken));
 
     }
 

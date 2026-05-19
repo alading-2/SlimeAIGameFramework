@@ -1,6 +1,6 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-19（`gameos-capability-scoped-services` change 完成）
+> 更新日期：2026-05-19（OpenSpec 未完成项收敛中）
 
 ## 当前阶段
 
@@ -16,7 +16,7 @@ DocsAI 已成为框架长期知识事实源。GameOS、Capabilities、DataOS、O
 
 AI 新功能开发入口已补齐并开始进入统一 workflow governance：统一源为 `.ai-config/skills/ai/ai-feature-development/`，同步副本为 `.codex/skills/ai-feature-development` / `.claude/skills/ai-feature-development` / `.windsurf/skills/ai-feature-development`，协议入口为 `Workspace/SystemAgent/Protocols/AIFeatureDevelopmentProtocol.md`，工作区总纲入口为 `Workspace/SystemAgent/INDEX.md`。旧的框架仓 Agent 文档入口已删除，不再保存长期流程正文或兼容指针。SKILL.md 固定为 9 段：目标、入口顺序、设计规则、文件修改前、实现优先级、功能收尾、验证、Skill 同步、完成检查；references 固定为 12 个文件，覆盖 workflow governance、validation closure、framework research filter、refactor decision tree、typed value、rename pipeline、framework/game boundary、structural guard、RuntimeWorld facade、lifecycle/business reference、spec/code alignment、skill sync discipline。该入口强调 AI 可路由、可验证、可观察、可回顾优先，不为旧框架兼容保留新入口；新功能必须先写验收标准，补专项 Runtime test 或独立 Godot 验证场景，主场景 smoke 只作回归补充，并在结束前同步相关 DocsAI、Contract、Debug、ApiIndex、ProjectState、游戏侧状态、owner skill 统一源和 retrospective 结论。
 
-当前正在执行 `unify-ai-agent-development-workflow` OpenSpec change：新增 `Workspace/SystemAgent/` 总纲、角色提示词和研究采纳记录；更新 `AIFeatureDevelopmentProtocol`、Godot Scene Validation / Testing 文档和 `ai-feature-development` skill，明确 SDD / OpenSpec、TDD / 标准答案、AI retrospective、hooks / subagent / MCP / git checkpoint 的统一流程。该 change 不修改 GameOS runtime、DataOS schema、GodotBridge 或 BrotatoLike gameplay。
+当前正在收敛 7 个未完成 OpenSpec changes：Feature actions / auto-trigger、Feature typed execution、Capability scoped dependencies、GodotBridge adapter runtime context、game-specific leakage cleanup、legacy Component/System API migration 和 Capability-owned selectors。目标是让代码、DocsAI、DataOS snapshot、owner skills、OpenSpec delta 和验证证据一致。
 
 GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameOSLog`、`GameOSObservationSession`、`SceneValidationSession`、memory sink 和 JSONL sink 已进入框架侧；BrotatoLike scene runner 委托 `.codex/skills/godot-scene-test/scripts/godot-scene-runner.mjs`，新日志结构为 `index.json + per-scene result/combined/artifacts/logs/scene-log.jsonl`。Runtime/Data 已补独立 Godot validation scene：`res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn`，覆盖 typed `DataKey<T>` lifecycle、`DataCatalog` resolve、modifier/computed dirty、category reset 和 Data-to-Event bridge artifact。
 
@@ -41,15 +41,53 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 - LifecycleTree / Schedule 已迁入纯 C# 最小内核；ScheduleDataKeys 和 BrotatoLike 第一批系统配置 / 预设 / Spawn config 已进入 DataOS snapshot，但尚未接完整 RuntimeSchedule 自动装载。
 - Movement Capability 已覆盖旧项目 `None / Charge / Orbit / SineWave / BezierCurve / Boomerang / AttachToHost / PlayerInput / AIControlled / Parabola / CircularArc` 纯运行时策略，并完成运行时圆形扫描版运动碰撞、同帧多命中派发、目标查询注入、Godot Physics broadphase、Godot 朝向输出第一批和 DataOS 可写入的 handler authoring DataKey；BrotatoLike 已接入 SineWave / Orbit / Boomerang / Bezier / CircularArc / AttachToHost / Charge 从 DataOS 组装 `MovementParams` 的执行路径，真实输入 UI 和更多游戏侧宿主内容仍未迁入。
 - Collision Capability 已迁入旧碰撞层常量、`CollisionDataKeys`、`CollisionFilterPolicy`、`CollisionContact`、`CollisionSystem`、`Capabilities.Collision.Events`、`GodotAreaEntity2D`、`GodotCollisionBridge`、`GodotCollisionComponent` 和 `GodotHurtboxComponent` 第一批；ContactDamage bridge 已接入 DamageService。
-- Damage Capability 已迁入 `DamageDataKeys`、`DamageType`、`DamageTags`、`DamageInfo`、`DamageService`、`HealService`、`DamageTool`、`IDamageProcessor`、默认处理器优先级、基础检查、闪避、暴击、护盾、护甲、受伤倍率、生命值结算、吸血、统计处理器、`Capabilities.Damage.Events` 和 Godot `GodotContactDamageComponent` 第一批；SystemCore 门禁尚未迁入。`gameos-capability-scoped-services` change（2026-05-19）完成：`DamageService` 构造加可选 `HealService` 参数（`Default + Instance` 别名）；`LifestealProcessor` 移除硬编码 `HealService.Instance`，改用构造注入；`AIContext.AbilityService` 移除默认值，`AIService.Tick` 加 null Warning；`GodotAIComponent` 显式注入 `AbilityService.Instance`；测试全部改为 `new DamageService()` 等独立实例。
-- Ability Capability 已迁入 `AbilityDataKeys`、`AbilityType`、`AbilityTriggerMode`、`AbilityTargetSelection`、`AbilityTriggerResult`、`AbilityCastContext`、`AbilityExecutedResult`、`AbilityAutoTargetOptions`、`AbilityTargetingTool`、`AbilityService` 和 `Capabilities.Ability.Events` 最小切片；当前覆盖显式目标正式触发、点选目标正式触发、启用 / 执行中 / 冷却 / 充能检查、冷却 Tick、`AbilityTriggerMode.Periodic` 自动触发 Tick、显式自动索敌上下文准备、通过 `DamageTool` 造成即时或周期伤害，并可通过 `AbilityDataKeys.FeatureHandlerId` 调用 Feature handler。
-- Feature Capability 已迁入 `FeatureDataKeys`、`FeatureDefinition`、`FeatureModifierEntry`、`FeatureContext`、`FeatureEndReason`、`IFeatureHandler`、`FeatureHandlerRegistry`、`FeatureService` 和 `Capabilities.Feature.Events` 最小生命周期；当前覆盖授予 / 移除 Modifier、启用 / 禁用、激活 / 执行 / 结束、handler 生命周期和 AbilityService 可选接入；Feature actions、自动触发、点选、Projectile / Effect、AI 和 DataOS authoring 适配尚未迁入。
+- Damage Capability 已迁入 `DamageDataKeys`、`DamageType`、`DamageTags`、`DamageInfo`、`DamageService`、`HealService`、`DamageTool`、`IDamageProcessor`、默认处理器优先级、基础检查、闪避、暴击、护盾、护甲、受伤倍率、生命值结算、吸血、统计处理器、`Capabilities.Damage.Events` 和 Godot `GodotContactDamageComponent` 第一批；SystemCore 门禁尚未迁入。`DamageService` 构造加可选 `HealService` 参数（`Default + Instance` 别名）；`LifestealProcessor` 移除硬编码 `HealService.Instance`，改用构造注入；测试全部改为 `new DamageService()` 等独立实例。当前收敛项已把 Damage `Wave*` 统计按 Bucket C 改为 neutral `Encounter*` DataKeys，`GodotContactDamageComponent` 可注入 `DamageService` / `TimerManager`。
+- Ability Capability 已迁入 `AbilityDataKeys`、`AbilityType`、`AbilityTriggerMode`、`AbilityTargetSelection`、`AbilityTriggerResult`、`AbilityCastContext`、`AbilityExecutedResult`、`AbilityAutoTargetOptions`、`IAbilityTargetQuery`、`RuntimeAbilityTargetQuery`、`AbilityTargetingTool`、`AbilityService` 和 `Capabilities.Ability.Events` 最小切片；当前覆盖显式目标正式触发、点选目标正式触发、启用 / 执行中 / 冷却 / 充能检查、冷却 Tick、`AbilityTriggerMode.Periodic` 自动触发 Tick、显式自动索敌上下文准备、通过注入 `DamageService` 的 `DamageTool` 造成即时或周期伤害，并可通过 `AbilityDataKeys.FeatureHandlerId` 调用注入 `FeatureService` 的 typed Feature handler。
+- Feature Capability 已迁入 `FeatureDataKeys`、`FeatureDefinition`、`FeatureModifierEntry`、typed `FeatureContext`、`FeatureEndReason`、`IFeatureActivationPayload`、`IFeatureExecutionResult`、`IFeatureAction`、`IFeatureHandler`、`FeatureHandlerRegistry`、`FeatureService`、`FeatureAutoTriggerService` 和 `Capabilities.Feature.Events` 生命周期；当前覆盖授予 / 移除 Modifier、授予时 action 执行、启用 / 禁用、激活 / 执行 / 结束、handler 生命周期、AbilityService typed 接入、Periodic 和 OnEvent 自动触发。DataOS framework seed、BrotatoLike seed 和 generated snapshot 已包含 Feature trigger descriptors/records。
 - Attack Capability 已迁入 `AttackDataKeys`、`AttackState`、`AttackTriggerResult`、`AttackTriggerReport`、`AttackCancelReason`、`AttackService` 最小 Runtime、`GodotAttackComponent` bridge 第一段、`AttackComponent` 旧类名兼容包装、`UnitDataKeys`、`Capabilities.Unit.Events` 和 `GodotUnitAnimationComponent` 动画事件桥第二段，以及旧 Attack 动画选择兼容第一段；当前覆盖消费 `Capabilities.Attack.Events.Requested`、前摇 / 后摇 / 冷却 Timer、距离 / 死亡 / 可攻击门禁、通过 `DamageService` 造成 `DamageTags.Attack` 伤害，并发布 Started / Finished / Cancelled 事件；Godot bridge 可注册服务、写入导出参数、保留注册前已有 Attack Data、把节点目标映射为 Runtime 攻击请求，把 Attack Started / Cancelled 转为 AnimatedSprite2D 播放 / 停止请求，缓存可用动画，在配置动画不存在时从 `attack*` 可用动画中选择，并在一次性动画完成后发布 `Capabilities.Unit.Events.AnimationFinished` 回 idle。
-- AI Capability 已迁入 `AIDataKeys`、`AIContext`、`AIState`、`AIService`、`BehaviorNode`、`SequenceNode`、`SelectorNode`、`FindNearestTargetAction`、`MoveToTargetAction`、`IsTargetInRangeCondition`、`RequestAttackAction`、`PrepareAbilityAutoTargetContextsAction`、`TickAbilityAutoTriggersAction`、`PatrolAction`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、`GodotAIComponent` 和 `GodotAIBehaviorTreeKind`；当前覆盖启用 / 死亡门禁、Runtime Entity 快照最近目标查询、同队 / 死亡 / 距离过滤、向目标写入 `MovementDataKeys.AIMoveDirection / AIMoveSpeedMultiplier`、范围内发出 `Capabilities.Attack.Events.Requested` 并停步面向目标、确定性左右巡逻和等待倒计时、标准近战树攻击优先 / 追逐 / 巡逻回退、Godot 组件导出参数写入和手动 / `_Process` Tick，通过 AbilityTargetingTool 准备自动索敌施法上下文，以及通过 AbilityService 推进 Periodic 自动施法。
+- GodotBridge 已新增 scoped `GodotBridgeContext` 和 context-owned `GodotBridgeNodeRegistry`；static `GameOSGodotBridge` / `GodotNodeRegistry` 只转发默认 context。显式 context 的 adapter callback guard 使用目标 `RuntimeWorld.Commands`，测试已覆盖两个 context 不共享 adapter mapping。`IGodotComponent`、`Godot*Component`、`AttackComponent`、`MovementSystem`、`CollisionSystem`、`IRuntimeSystem` 等 public legacy names 仅作为兼容符号保留，新 docs/skills 使用 GodotBridge Adapter 和 Runtime Process 术语。
+- AI Capability 已迁入 `AIDataKeys`、`AIContext`、`AIState`、`AIService`、`BehaviorNode`、`SequenceNode`、`SelectorNode`、`IAITargetQuery`、`RuntimeAITargetQuery`、`FindNearestTargetAction`、`MoveToTargetAction`、`IsTargetInRangeCondition`、`RequestAttackAction`、`PrepareAbilityAutoTargetContextsAction`、`TickAbilityAutoTriggersAction`、`PatrolAction`、`EnemyBehaviorBlocks`、`EnemyBehaviorTreeBuilder`、`GodotAIComponent` 和 `GodotAIBehaviorTreeKind`；当前覆盖启用 / 死亡门禁、AI-owned target query 最近目标查询、同队 / 死亡 / 距离过滤、向目标写入 `MovementDataKeys.AIMoveDirection / AIMoveSpeedMultiplier`、范围内发出 `Capabilities.Attack.Events.Requested` 并停步面向目标、确定性左右巡逻和等待倒计时、标准近战树攻击优先 / 追逐 / 巡逻回退、Godot adapter 导出参数写入和手动 / `_Process` Tick，通过 AbilityTargetingTool 准备自动索敌施法上下文，以及通过注入 AbilityService 推进 Periodic 自动施法。
 - Runtime Data 已切换到 typed contract：业务访问入口是 `DataKey<T>`，`Data` 绑定 frozen `DataCatalog` 并使用 typed slot 存储，旧 string/object/DataMeta/DataRegistry 正式入口已移除；DataOS descriptor 持有 authoring metadata 和 default mirror，snapshot loader 必须先校验 manifest/descriptors/catalog 后再按 resolved `DataKey<T>` typed apply。DataOS schema / migration / generator / validator / Runtime snapshot loader 已创建 typed snapshot 闭环，validator 会阻断 descriptor missing/extra、type/default drift、disabled capability 未裁剪、wrong snapshot type 和 unknown key；当前覆盖 BrotatoLike 玩家 / 敌人 / TargetingIndicator / Ability / ChainAbility / Ability handler-specific 参数第三段 / Feature definition / modifier / 系统配置 / 预设 / Spawn config / 资源路径第一批，尚未覆盖旧 DataNew 全量字段和编辑器 authoring UI。
 - 玩家输入系统已迁入游戏侧：`BrotatoLikePlayerInputComponent`（`Games/BrotatoLike/Src/Game/Bridge/`）读取 Godot Input Map 的 MoveLeft/Right/Up/Down、UseSkill、PreviousSkill、NextSkill，将移动方向写入 `MovementDataKeys.InputDirection`，并发布 game-side `InputUseSkill / InputPreviousSkill / InputNextSkill` 到 Entity EventBus；支持 `CanMoveInput` 门禁和 `Movement.Acceleration` 平滑移动插值。`GodotActiveSkillInputComponent`（游戏侧）订阅技能输入事件，管理 `AbilityDataKeys.OwnedAbilityIds` 和 `CurrentAbilityIndex`，通过 `AbilityTargetingTool` 自动索敌后调用 `AbilityService.TryTrigger`。BrotatoLike `SpawnPlayer` 已接入：生成玩家时从 DataOS 创建 slam / chain_lightning 初始技能实体，挂载双输入组件，启动 PlayerInput 移动策略；框架 GodotBridge 不再持有 BrotatoLike-specific 输入组件。
 
 ## 最新验证
+
+### 7 个 OpenSpec 未完成项收敛验证（2026-05-19）
+
+```bash
+cd /home/slime/Code/SlimeAI
+openspec validate gameos-feature-actions-and-auto-trigger --strict
+openspec validate refactor-feature-context-typed-execution --strict
+openspec validate refactor-capability-services-scoped-dependencies --strict
+openspec validate refactor-godotbridge-adapter-runtime-context --strict
+openspec validate purge-game-specific-capability-leakage --strict
+openspec validate rename-legacy-component-system-apis --strict
+openspec validate gameos-capability-owned-selectors --strict
+openspec validate --specs --strict
+bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
+Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only
+```
+
+结果：7 个 active change strict validate 均 PASS；baseline specs strict validate 输出 `41 passed, 0 failed`。AI config 只从 `.ai-config` 统一源同步 skill/rule/command，hook/subagent 未纳入同步；skill lint 输出 `Critical:0`。
+
+```bash
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+Tools/run-dataos-validate.sh
+```
+
+结果：框架 build PASS（`181 Warning(s), 0 Error(s)`，警告为既有 XML comment / nullable 类）；框架 tests 全部 PASS；DataOS validation PASS。
+
+```bash
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+结果：BrotatoLike build PASS（`0 Warning(s), 0 Error(s)`）；普通 Main 输出 `BrotatoLike playable slice PASS`，artifact 位于 `.ai-temp/scene-tests/runs/2026-05-19/20-58-59/index.json`；`run-main-smoke` 输出 `BrotatoLike GameOS smoke PASS`，analyzer 输出 `status: pass`、`firstError: none`，latest artifact 位于 `.ai-temp/scene-tests/runs/2026-05-19/20-59-07/index.json`。Scene gate 已检查 `index.json`、`result.json`、`scene-smoke.json` 和普通 Main 的 `scene-acceptance.json`，`expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 均非空。
 
 ```bash
 Tools/run-build.sh

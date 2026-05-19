@@ -6,7 +6,7 @@
 
 - 多级伤害处理器（暴击、闪避、护甲、吸血、护盾、承伤倍率）
 - 治疗系统
-- 伤害统计（累计/波次/最高单次）
+- 伤害统计（累计/encounter/最高单次）
 - 接触伤害（ContactDamage）
 - 实体死亡判定
 
@@ -58,14 +58,14 @@
 | Damage.Shield | float | 护盾值（支持 Modifier） |
 | Damage.IsInvulnerable | bool | 是否无敌 |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 - `DamageService` — 伤害处理服务；`DamageService.Default` 是进程级入口，构造时可注入可选 `HealService`
 - `DamageTool` — 便捷伤害调用工具
 - `HealService` — 治疗服务；由 `DamageService` 构造时注入，`LifestealProcessor` 不再直接访问 `HealService.Instance`
-- `GodotContactDamageComponent`（GodotBridge）— 接触伤害触发器
+- `GodotContactDamageComponent`（GodotBridge Adapter，legacy class name）— 接触伤害触发器；可注入 `DamageService` / `TimerManager`，默认使用进程级入口。
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 ### DamageProcessor（按优先级排序）
 
@@ -114,7 +114,8 @@ Runtime tests 覆盖暴击、闪避、护甲、吸血、护盾等全处理器链
 
 ### 禁止修改
 
-- 不直接修改 `CurrentHp`（必须用 `DamageService.Default.Process()` 或独立实例）
+- 不直接修改 `CurrentHp`（必须用 `DamageService.Default.Process()` 或测试/局部运行域独立实例）
+- 不新增 game-specific 统计命名；framework 统计使用 total/encounter/combat/session 等中性词。
 - 不删除 `HealthExecutionProcessor`
 - 概率值必须保持 0-100 语义
 - 不在热路径分配对象

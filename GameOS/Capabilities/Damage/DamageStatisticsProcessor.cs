@@ -17,12 +17,12 @@ public sealed class DamageStatisticsProcessor : IDamageProcessor
         }
 
         info.Attacker?.Data.Add(DamageDataKeys.TotalDamageDealt, info.FinalDamage);
-        info.Attacker?.Data.Add(DamageDataKeys.WaveDamageDealt, info.FinalDamage);
+        info.Attacker?.Data.Add(DamageDataKeys.EncounterDamageDealt, info.FinalDamage);
         info.Attacker?.Data.Add(DamageDataKeys.TotalHits, 1);
-        info.Attacker?.Data.Add(DamageDataKeys.WaveHits, 1);
+        info.Attacker?.Data.Add(DamageDataKeys.EncounterHits, 1);
 
         info.Victim.Data.Add(DamageDataKeys.TotalDamageTaken, info.FinalDamage);
-        info.Victim.Data.Add(DamageDataKeys.WaveDamageTaken, info.FinalDamage);
+        info.Victim.Data.Add(DamageDataKeys.EncounterDamageTaken, info.FinalDamage);
 
         if (info.Attacker != null)
         {
@@ -36,7 +36,7 @@ public sealed class DamageStatisticsProcessor : IDamageProcessor
         if (info.IsCritical)
         {
             info.Attacker?.Data.Add(DamageDataKeys.TotalCriticalHits, 1);
-            info.Attacker?.Data.Add(DamageDataKeys.WaveCriticalHits, 1);
+            info.Attacker?.Data.Add(DamageDataKeys.EncounterCriticalHits, 1);
         }
 
         if (!info.IsFatal)
@@ -45,6 +45,6 @@ public sealed class DamageStatisticsProcessor : IDamageProcessor
         }
 
         info.Attacker?.Data.Add(DamageDataKeys.TotalKills, 1);
-        info.Attacker?.Data.Add(DamageDataKeys.WaveKills, 1);
+        info.Attacker?.Data.Add(DamageDataKeys.EncounterKills, 1);
     }
 }

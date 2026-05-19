@@ -124,7 +124,7 @@ Tools/analyze-godot-scene-logs.sh
 | Owner skill | `damage-system` |
 | Contract / Debug | `GameOS/Capabilities/Damage/Contract.md`；`GameOS/Capabilities/Damage/Debug.md` |
 | Primary APIs | `DamageService`、`HealService`、`DamageTool`、`DamageInfo`、`DamageResult`、`IDamageProcessor`、`DamageDataKeys`；`DamageService.Default`（进程级默认入口）和 `DamageService.Instance`（向后兼容别名）语义相同；测试必须用 `new DamageService()` 独立实例 |
-| DataKeys | CurrentHp、MaxHp、IsDead、IsInvulnerable、Armor、DodgeChance、CritRate、CritDamage、DamageTakenMultiplier、LifeSteal、Shield、ContactDamage、ContactDamageInterval、total/wave damage、hit、crit、kill、healing、shield statistics |
+| DataKeys | CurrentHp、MaxHp、IsDead、IsInvulnerable、Armor、DodgeChance、CritRate、CritDamage、DamageTakenMultiplier、LifeSteal、Shield、ContactDamage、ContactDamageInterval、total/encounter damage、hit、crit、kill、healing、shield statistics |
 | Events | 事件目录 `SlimeAI/GameOS/Capabilities/Damage/Events/`：`Damaged / Dodged / Healed / HealthChanged / Killed`（全部 `IBroadcastEvent`）。 |
 | Selector owner | `None`；从 Attack、Ability、Projectile 或 contact bridge 接收明确 attacker/target 集合。 |
 | RuntimeSchedule boundary | Service call 和 timer-driven periodic damage；调用方负责调度。 |
@@ -207,12 +207,12 @@ Tools/analyze-godot-scene-logs.sh
 | Normalized status | `Experimental` |
 | Owner skill | `ability-system` |
 | Contract / Debug | `GameOS/Capabilities/Ability/Contract.md`；`GameOS/Capabilities/Ability/Debug.md` |
-| Primary APIs | `AbilityService`、`AbilityDataKeys`、`AbilityCastContext`、`AbilityTriggerReport`、`AbilityTargetingTool` |
+| Primary APIs | `AbilityService`、`AbilityDataKeys`、`AbilityCastContext`、`AbilityExecutedResult`、`AbilityTriggerReport`、`AbilityTargetingTool`、`IAbilityTargetQuery`、`RuntimeAbilityTargetQuery`；`AbilityService` 构造注入 `TimerManager`，可注入 `FeatureService` / `DamageService` |
 | DataKeys | Name、Type、TriggerMode、TargetSelection、AutoTargetRange、AutoTargetMaxTargets、AutoTargetIgnoreSameTeam、AutoTargetRequiresDamageable、FeatureHandlerId、FeatureGroupId、Description、IconPath、Level、MaxLevel、CostType、CostAmount、ChargeTime、CastRange、EffectRadius、chain fields、LineEffectScenePath、IsEnabled、IsActive、Cooldown、CooldownRemaining、charge fields、Damage、DamageInterval、DamageRepeatCount、ApplyImmediateDamage |
 | Events | `Ability.Executed`、`Ability.Failed`、`Ability.CooldownStarted`、`Ability.CooldownFinished` |
 | Selector owner | Ability 持有 `IAbilityTargetQuery`，`AbilityTargetingTool` 使用注入 query 获取候选目标（默认 `RuntimeAbilityTargetQuery`）。 |
 | RuntimeSchedule boundary | Manual/event/periodic trigger boundary；periodic auto-trigger tick 由调用方调度。 |
-| GodotBridge boundary | 暂无通用 Ability bridge；BrotatoLike game handlers 通过 `BrotatoLikeAbilityHandlers` 适配游戏侧技能。 |
+| GodotBridge boundary | 暂无通用 Ability bridge；BrotatoLike game handlers 只作为游戏侧验证证据，不作为 framework 默认契约。 |
 | Dependencies | Damage 用于 ability damage；Feature 用于 handler execution；Projectile/Effect/Movement 用于 game-side handler outputs；AI 可准备 auto-trigger contexts。 |
 | Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；selected game-side ability handler paths 触及时运行 BrotatoLike build / main smoke / analyzer。 |
 | Game-slice evidence | Runtime tests 覆盖 target semantics、cooldown、charges、periodic damage、periodic auto-trigger 和 auto-targeting；smoke 曾覆盖多个 BrotatoLike handlers，但至少两个旧技能的 playable-slice evidence 待补。 |
@@ -228,16 +228,16 @@ Tools/analyze-godot-scene-logs.sh
 | Normalized status | `Experimental` |
 | Owner skill | `feature-system` |
 | Contract / Debug | `GameOS/Capabilities/Feature/Contract.md`；`GameOS/Capabilities/Feature/Debug.md` |
-| Primary APIs | `FeatureService`、`FeatureDataKeys`、`FeatureDefinition`、`FeatureModifierEntry`、`IFeatureHandler`、`FeatureHandlerRegistry` |
-| DataKeys | FeatureId、HandlerId、Description、Category、ModifierTargetKey、ModifierType、ModifierValue、ModifierPriority、IsEnabled、IsActive、ActivationCount |
-| Events | `Feature.Activated`、`Feature.Deactivated`、`Feature.ModifierApplied`、`Feature.ModifierRemoved` |
-| Selector owner | 默认 `None`；具体 handler 可以消费 Ability 或 game adapter 提供的 target context。 |
-| RuntimeSchedule boundary | Service-driven lifecycle；handler 不应把长期状态隐藏在 Runtime data 或 services 之外。 |
+| Primary APIs | `FeatureService`、`FeatureDataKeys`、`FeatureDefinition`、`FeatureModifierEntry`、`IFeatureHandler`、`IFeatureAction`、`IFeatureActivationPayload`、`IFeatureExecutionResult`、`FeatureAutoTriggerService`、`FeatureHandlerRegistry` |
+| DataKeys | FeatureId、HandlerId、Description、Category、TriggerMode、Cooldown、TriggerEventType、TriggerChance、ModifierTargetKey、ModifierType、ModifierValue、ModifierPriority、IsEnabled、IsActive、ActivationCount |
+| Events | `Feature.Granted`、`Feature.Removed`、`Feature.Enabled`、`Feature.Disabled`、`Feature.Activated`、`Feature.Executed`、`Feature.Ended` |
+| Selector owner | 默认 `None`；具体 handler 消费 typed activation payload，例如 Ability 提供的 `AbilityCastContext` 或 OnEvent 提供的 `FeatureEventActivationPayload<TEvent>`。 |
+| RuntimeSchedule boundary | Service-driven lifecycle；`FeatureAutoTriggerService` 由调用方注册 Periodic / OnEvent 并持有 Dispose 生命周期；handler 不应把长期状态隐藏在 Runtime data 或 services 之外。 |
 | GodotBridge boundary | 暂无通用 Feature bridge；game-specific handlers 先留在 game adapter code，直到可复用。 |
 | Dependencies | Runtime Data modifiers；Ability 可提供 activation context。 |
-| Validation commands | Framework build/tests；game-side handlers 的 Godot 证据暂不运行。 |
-| Game-slice evidence | Runtime tests 覆盖 grant/remove、handler lifecycle 和 AbilityService handler invocation；BrotatoLike smoke 曾覆盖 selected game-side handlers；playable-slice evidence 待补。 |
-| Gaps | 需要更严格的 source rollback evidence 后才能考虑 `Supported`。 |
+| Validation commands | `Tools/run-build.sh`；`Tools/run-tests.sh`；`Tools/run-dataos-validate.sh`；game-side handler / seed 触及时运行 BrotatoLike build / main scene / main smoke / analyzer。 |
+| Game-slice evidence | Runtime tests 覆盖 grant/remove、handler lifecycle、action execution、Periodic/OnEvent auto-trigger、typed Ability-to-Feature result flow；BrotatoLike smoke 仅作为游戏侧 handler evidence。 |
+| Gaps | 需要更严格的 source rollback evidence 和 game-slice Feature auto-trigger evidence 后才能考虑 `Supported`。 |
 
 ### Projectile
 

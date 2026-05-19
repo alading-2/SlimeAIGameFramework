@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Feature;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Runtime.Entity;
 
@@ -8,7 +9,7 @@ namespace SlimeAI.GameOS.Capabilities.Ability;
 /// <summary>
 /// 单次技能触发上下文。
 /// </summary>
-public sealed class AbilityCastContext
+public sealed class AbilityCastContext : IFeatureActivationPayload
 {
     /// <summary>施法者。</summary>
     public required IEntity Caster { get; init; }

@@ -41,14 +41,14 @@
 
 同写入。碰撞配置通常是双向读取（两个实体互相检查）。
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 - `CollisionSystem` — 碰撞事件管理
 - `GodotCollisionComponent`（GodotBridge）— Area2D 碰撞体
 - `GodotHurtboxComponent`（GodotBridge）— 受击区域
 - `GodotContactDamageComponent`（GodotBridge）— 接触伤害触发器
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 - `CollisionSystem` — 碰撞过滤和事件分发
 - `GodotCollisionIsolation` — 对象池碰撞隔离工具

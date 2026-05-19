@@ -1,7 +1,6 @@
 using System;
 using Godot;
 using SlimeAI.GameOS.Runtime.Entity;
-using SlimeAI.GameOS.Runtime.World;
 
 namespace SlimeAI.GameOS.GodotBridge;
 
@@ -11,6 +10,11 @@ namespace SlimeAI.GameOS.GodotBridge;
 public static class GameOSGodotBridge
 {
     /// <summary>
+    /// 默认 GodotBridge context。旧 static facade 全部转发到这里。
+    /// </summary>
+    public static GodotBridgeContext DefaultContext { get; } = new();
+
+    /// <summary>
     /// 注册 Godot Entity，并可递归注册其子 Component。
     /// </summary>
     /// <param name="entityNode">Entity 所在 Godot 节点。</param>
@@ -18,17 +22,16 @@ public static class GameOSGodotBridge
     /// <param name="registerComponents">是否扫描并注册子 Component。</param>
     public static bool RegisterEntity(Node entityNode, IEntity entity, bool registerComponents = true)
     {
-        ArgumentNullException.ThrowIfNull(entityNode);
-        ArgumentNullException.ThrowIfNull(entity);
+        return DefaultContext.RegisterEntity(entityNode, entity, registerComponents);
+    }
 
-        var nodeRegistered = GodotNodeRegistry.Register(entityNode, entity.EntityId.Value);
-        var entityRegistered = EntityManager.Register(entity);
-        if (registerComponents && (nodeRegistered || entityRegistered))
-        {
-            RegisterComponents(entityNode, entity);
-        }
-
-        return nodeRegistered || entityRegistered;
+    /// <summary>
+    /// 使用显式 context 注册 Godot Entity。
+    /// </summary>
+    public static bool RegisterEntity(GodotBridgeContext context, Node entityNode, IEntity entity, bool registerComponents = true)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return context.RegisterEntity(entityNode, entity, registerComponents);
     }
 
     /// <summary>
@@ -44,17 +47,21 @@ public static class GameOSGodotBridge
         bool unregisterComponents = true,
         bool destroyRuntimeEntity = true)
     {
-        ArgumentNullException.ThrowIfNull(entityNode);
-        ArgumentNullException.ThrowIfNull(entity);
+        return DefaultContext.UnregisterEntity(entityNode, entity, unregisterComponents, destroyRuntimeEntity);
+    }
 
-        if (unregisterComponents)
-        {
-            UnregisterComponents(entityNode, entity);
-        }
-
-        var entityDestroyed = destroyRuntimeEntity && EntityManager.Destroy(entity.EntityId);
-        var nodeUnregistered = GodotNodeRegistry.Unregister(entityNode, entity.EntityId.Value);
-        return entityDestroyed || nodeUnregistered;
+    /// <summary>
+    /// 使用显式 context 注销 Godot Entity。
+    /// </summary>
+    public static bool UnregisterEntity(
+        GodotBridgeContext context,
+        Node entityNode,
+        IEntity entity,
+        bool unregisterComponents = true,
+        bool destroyRuntimeEntity = true)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return context.UnregisterEntity(entityNode, entity, unregisterComponents, destroyRuntimeEntity);
     }
 
     /// <summary>
@@ -64,20 +71,7 @@ public static class GameOSGodotBridge
     /// <param name="entity">运行时 Entity 契约。</param>
     public static bool DestroyEntity(Node entityNode, IEntity entity)
     {
-        ArgumentNullException.ThrowIfNull(entityNode);
-        ArgumentNullException.ThrowIfNull(entity);
-
-        if (entityNode.IsInsideTree())
-        {
-            if (!entityNode.IsQueuedForDeletion())
-            {
-                entityNode.QueueFree();
-            }
-
-            return true;
-        }
-
-        return UnregisterEntity(entityNode, entity);
+        return DefaultContext.DestroyEntity(entityNode, entity);
     }
 
     /// <summary>
@@ -87,23 +81,7 @@ public static class GameOSGodotBridge
     /// <param name="entity">运行时 Entity 契约。</param>
     public static int RegisterComponents(Node entityNode, IEntity entity)
     {
-        ArgumentNullException.ThrowIfNull(entityNode);
-        ArgumentNullException.ThrowIfNull(entity);
-
-        var count = 0;
-        var children = entityNode.FindChildren("*", "Node", recursive: true, owned: false);
-        foreach (var child in children)
-        {
-            if (child is Node componentNode && IsComponentNode(componentNode))
-            {
-                if (RegisterComponent(entityNode, entity, componentNode))
-                {
-                    count++;
-                }
-            }
-        }
-
-        return count;
+        return DefaultContext.RegisterComponents(entityNode, entity);
     }
 
     /// <summary>
@@ -113,32 +91,7 @@ public static class GameOSGodotBridge
     /// <param name="entity">运行时 Entity 契约。</param>
     public static int UnregisterComponents(Node entityNode, IEntity entity)
     {
-        ArgumentNullException.ThrowIfNull(entityNode);
-        ArgumentNullException.ThrowIfNull(entity);
-
-        var count = 0;
-        var componentIds = GodotNodeRegistry.GetAdaptersByEntity(entity.EntityId);
-
-        for (var i = 0; i < componentIds.Count; i++)
-        {
-            var componentId = componentIds[i];
-            var componentNode = GodotNodeRegistry.GetNodeById(componentId);
-            if (componentNode is IGodotComponent component)
-            {
-                using var guard = RuntimeWorld.Default.Commands.EnterGuard("godot-bridge-callback");
-                component.OnComponentUnregistered(entity, entityNode);
-            }
-
-            GodotNodeRegistry.UnregisterAdapter(entity.EntityId, componentId);
-            if (componentNode != null)
-            {
-                GodotNodeRegistry.Unregister(componentNode, componentId);
-            }
-
-            count++;
-        }
-
-        return count;
+        return DefaultContext.UnregisterComponents(entityNode, entity);
     }
 
     /// <summary>
@@ -147,7 +100,7 @@ public static class GameOSGodotBridge
     /// <param name="entityId">稳定运行时 EntityId。</param>
     public static Node? GetEntityNode(EntityId entityId)
     {
-        return GodotNodeRegistry.GetNodeById(entityId.Value);
+        return DefaultContext.GetEntityNode(entityId);
     }
 
     /// <summary>
@@ -155,41 +108,10 @@ public static class GameOSGodotBridge
     /// </summary>
     public static GodotBridgeStats GetStats()
     {
-        var nodes = GodotNodeRegistry.GetAllNodes();
-        var entityCount = 0;
-        var componentCount = 0;
-        for (var i = 0; i < nodes.Count; i++)
-        {
-            if (nodes[i] is IEntity)
-            {
-                entityCount++;
-            }
-
-            if (IsComponentNode(nodes[i]))
-            {
-                componentCount++;
-            }
-        }
-
-        return new GodotBridgeStats(nodes.Count, entityCount, componentCount);
+        return DefaultContext.GetStats();
     }
 
-    private static bool RegisterComponent(Node entityNode, IEntity entity, Node componentNode)
-    {
-        var componentId = GodotNodeRegistry.GetNodeInstanceId(componentNode);
-        var nodeRegistered = GodotNodeRegistry.Register(componentNode, componentId);
-        var adapterRegistered = GodotNodeRegistry.RegisterAdapter(entity.EntityId, componentId);
-
-        if (nodeRegistered && componentNode is IGodotComponent component)
-        {
-            using var guard = RuntimeWorld.Default.Commands.EnterGuard("godot-bridge-callback");
-            component.OnComponentRegistered(entity, entityNode);
-        }
-
-        return nodeRegistered || adapterRegistered;
-    }
-
-    private static bool IsComponentNode(Node node)
+    internal static bool IsComponentNode(Node node)
     {
         return node is IGodotComponent || node.GetType().Name.EndsWith("Component", StringComparison.Ordinal);
     }

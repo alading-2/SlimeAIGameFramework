@@ -110,14 +110,14 @@ public static class DamageDataKeys
         category: DamageCategory.Statistics,
         minValue: 0f);
 
-    /// <summary>当前波次造成伤害。</summary>
-    public static readonly DataKey<float> WaveDamageDealt = DataKey.Create<float>("Damage.WaveDamageDealt",
+    /// <summary>当前战斗遭遇造成伤害。</summary>
+    public static readonly DataKey<float> EncounterDamageDealt = DataKey.Create<float>("Damage.EncounterDamageDealt",
         defaultValue: 0f,
         category: DamageCategory.Statistics,
         minValue: 0f);
 
-    /// <summary>当前波次承受伤害。</summary>
-    public static readonly DataKey<float> WaveDamageTaken = DataKey.Create<float>("Damage.WaveDamageTaken",
+    /// <summary>当前战斗遭遇承受伤害。</summary>
+    public static readonly DataKey<float> EncounterDamageTaken = DataKey.Create<float>("Damage.EncounterDamageTaken",
         defaultValue: 0f,
         category: DamageCategory.Statistics,
         minValue: 0f);
@@ -134,8 +134,8 @@ public static class DamageDataKeys
         category: DamageCategory.Statistics,
         minValue: 0f);
 
-    /// <summary>当前波次命中次数。</summary>
-    public static readonly DataKey<int> WaveHits = DataKey.Create<int>("Damage.WaveHits",
+    /// <summary>当前战斗遭遇命中次数。</summary>
+    public static readonly DataKey<int> EncounterHits = DataKey.Create<int>("Damage.EncounterHits",
         defaultValue: 0,
         category: DamageCategory.Statistics,
         minValue: 0f);
@@ -146,8 +146,8 @@ public static class DamageDataKeys
         category: DamageCategory.Statistics,
         minValue: 0f);
 
-    /// <summary>当前波次暴击次数。</summary>
-    public static readonly DataKey<int> WaveCriticalHits = DataKey.Create<int>("Damage.WaveCriticalHits",
+    /// <summary>当前战斗遭遇暴击次数。</summary>
+    public static readonly DataKey<int> EncounterCriticalHits = DataKey.Create<int>("Damage.EncounterCriticalHits",
         defaultValue: 0,
         category: DamageCategory.Statistics,
         minValue: 0f);
@@ -158,8 +158,8 @@ public static class DamageDataKeys
         category: DamageCategory.Statistics,
         minValue: 0f);
 
-    /// <summary>当前波次击杀次数。</summary>
-    public static readonly DataKey<int> WaveKills = DataKey.Create<int>("Damage.WaveKills",
+    /// <summary>当前战斗遭遇击杀次数。</summary>
+    public static readonly DataKey<int> EncounterKills = DataKey.Create<int>("Damage.EncounterKills",
         defaultValue: 0,
         category: DamageCategory.Statistics,
         minValue: 0f);
@@ -202,15 +202,15 @@ public static class DamageDataKeys
         _ = ContactDamageInterval;
         _ = TotalDamageDealt;
         _ = TotalDamageTaken;
-        _ = WaveDamageDealt;
-        _ = WaveDamageTaken;
+        _ = EncounterDamageDealt;
+        _ = EncounterDamageTaken;
         _ = HighestSingleDamage;
         _ = TotalHits;
-        _ = WaveHits;
+        _ = EncounterHits;
         _ = TotalCriticalHits;
-        _ = WaveCriticalHits;
+        _ = EncounterCriticalHits;
         _ = TotalKills;
-        _ = WaveKills;
+        _ = EncounterKills;
         _ = TotalHealingDone;
         _ = TotalHealingReceived;
         _ = TotalShieldAbsorbed;

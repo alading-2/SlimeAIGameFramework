@@ -6,7 +6,9 @@
 
 - FeatureDefinition 注册和启用
 - Modifier 授予/回滚（Additive/Multiplicative/Override）
-- Handler 生命周期管理（OnActivate/OnDeactivate/OnTick）
+- Handler 生命周期管理（Granted / Removed / Enabled / Disabled / Activated / Executed / Ended）
+- `IFeatureAction` 原子动作列表和 `FeatureService.ExecuteActions`
+- Periodic / OnEvent 自动触发注册
 - 激活计数
 - Ability 触发后的具体执行委托
 
@@ -14,7 +16,8 @@ Feature 是"做什么"，Ability 是"何时做"。
 
 ## 2. 不是本能力职责的内容
 
-- **何时触发技能** → Ability Capability
+- **技能何时触发** → Ability Capability
+- **Feature 自身 Periodic / OnEvent 自动触发注册** → `FeatureAutoTriggerService`
 - **伤害计算细节** → Damage Capability
 - **移动执行** → Movement Capability
 - **数据持久化** → DataOS / Authoring
@@ -38,6 +41,10 @@ Feature 是"做什么"，Ability 是"何时做"。
 |---------|------|------|
 | Feature.IsActive | bool | 是否激活中 |
 | Feature.ActivationCount | int | 激活次数 |
+| Feature.TriggerMode | FeatureTriggerMode | Feature 自身触发模式 |
+| Feature.Cooldown | float | Periodic 触发间隔 / 冷却 |
+| Feature.TriggerEventType | string | OnEvent 触发事件 stable key，第一版由调用方显式注册泛型事件 |
+| Feature.TriggerChance | float | OnEvent 触发概率，0-100 |
 
 Modifier 通过 Data.Modifier API 写入目标 DataKey。
 
@@ -48,32 +55,37 @@ Modifier 通过 Data.Modifier API 写入目标 DataKey。
 | Feature.FeatureId | 能力 ID |
 | Feature.HandlerId | 处理器 ID |
 | Feature.IsEnabled | 是否启用 |
+| Feature.TriggerMode | Feature 自身触发模式 |
+| Feature.Cooldown | Periodic 触发间隔 |
+| Feature.TriggerEventType | OnEvent 事件 stable key |
+| Feature.TriggerChance | OnEvent 触发概率 |
 | Feature.ModifierTargetKey | Modifier 目标 DataKey |
 | Feature.ModifierType | Modifier 类型 |
 | Feature.ModifierValue | Modifier 数值 |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
-- `FeatureService` — 全局 Feature 服务
+- `FeatureService` — Feature 生命周期服务；`Default` 是进程级默认入口，测试和局部运行域优先显式构造。
 - `FeatureHandlerRegistry` — Handler 注册表
 - `IFeatureHandler` — Handler 接口
+- `IFeatureAction` — 纯逻辑原子动作接口
+- `FeatureAutoTriggerService` — Feature Periodic / OnEvent 自动触发注册服务，注册返回 `IDisposable`
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
-- `FeatureService` — Schedule Update 阶段 Tick
-- `FeatureHandlerRegistry` — Handler 注册和查找
+- `FeatureService` — service-driven lifecycle，不隐式挂入 RuntimeSchedule。
+- `FeatureService.ExecuteActions` — 批量执行 `IFeatureAction`，`Grant` 时会执行 `FeatureDefinition.Actions`。
+- `FeatureHandlerRegistry` — Handler 注册和查找。
+- `FeatureAutoTriggerService.RegisterPeriodic` — 使用调用方提供的 `TimerManager` 按 `Feature.Cooldown` 激活，Dispose 后停止。
+- `FeatureAutoTriggerService.RegisterOnEvent<TEvent>` — 订阅调用方提供的 `IEventBus`，通过 `Feature.TriggerChance` gating，Dispose 后退订。
 
-游戏侧 Handler 实现（示例）：
-- `技能.投射物.正弦波射击`
-- `技能.主动.猛击`
-- `技能.被动.环绕技能`
-- 等等（见 `BrotatoLikeAbilityHandlers`）
+游戏侧 handler 可以作为验证证据存在于 `Games/BrotatoLike`，但不属于框架默认契约。
 
 ## 9. 如何启用和关闭
 
-启用：调用 `FeatureDataKeys.RegisterAll()`，注册 Handler，通过 `FeatureService.Activate()` 激活。
+启用：调用 `FeatureDataKeys.RegisterAll()`，注册 Handler，通过 `FeatureService.Grant()` 授予并按需要调用 `Activate()` 或注册 `FeatureAutoTriggerService`。
 
-关闭：调用 `FeatureService.Deactivate()` 或设置 `IsEnabled = false`。
+关闭：调用 `FeatureService.Disable()`、`FeatureService.End()`，或 Dispose 自动触发注册句柄。
 
 ## 10. 如何测试
 
@@ -82,7 +94,7 @@ cd /home/slime/Code/SlimeAI/SlimeAI
 Tools/run-tests.sh
 ```
 
-覆盖 Modifier 授予/回滚、handler 生命周期、ActivationCount。
+覆盖 Modifier 授予/回滚、handler 生命周期、ActivationCount、Feature action 执行、Periodic / OnEvent 自动触发和 typed Ability-to-Feature result flow。
 
 ## 11. 常见错误日志
 
@@ -102,7 +114,8 @@ Tools/run-tests.sh
 
 ### 禁止修改
 
-- 不改 `IFeatureHandler` 接口签名
+- 新 framework handler 必须使用 `FeatureContext.ActivationPayload` / `TryGetActivation<T>()` 和 `ExecutionResult` / `TryGetExecutionResult<T>()`。
+- `ActivationData`、`ExecuteResult`、`SourceEventData`、`ExtraData` 仅为 `[Obsolete]` 兼容迁移入口，不作为新契约。
 - Modifier 回滚必须和授予成对出现
 - 不直接修改被 Modifier 影响的 DataKey（通过 Modifier API）
 

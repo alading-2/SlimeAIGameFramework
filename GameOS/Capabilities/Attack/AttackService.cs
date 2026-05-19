@@ -18,7 +18,10 @@ public sealed class AttackService
     private readonly Dictionary<EntityId, Subscription> subscriptions = new();
 
     /// <summary>进程级默认 AttackService。</summary>
-    public static AttackService Instance { get; } = new(TimerManager.Instance, DamageService.Instance);
+    public static AttackService Default { get; } = new(TimerManager.Instance, DamageService.Default);
+
+    /// <summary>进程级默认 AttackService；向后兼容别名。</summary>
+    public static AttackService Instance => Default;
 
     /// <summary>
     /// 创建普通攻击服务。

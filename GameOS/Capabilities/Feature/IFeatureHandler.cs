@@ -30,7 +30,7 @@ public interface IFeatureHandler
 
     /// <summary>Feature 执行。</summary>
     /// <param name="context">Feature 上下文。</param>
-    object? OnExecute(FeatureContext context) => null;
+    IFeatureExecutionResult? OnExecute(FeatureContext context) => null;
 
     /// <summary>Feature 单次运行结束。</summary>
     /// <param name="context">Feature 上下文。</param>

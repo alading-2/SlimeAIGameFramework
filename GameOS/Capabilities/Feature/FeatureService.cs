@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Feature.Events;
 using SlimeAI.GameOS.Runtime.Data;
@@ -12,7 +13,10 @@ namespace SlimeAI.GameOS.Capabilities.Feature;
 public sealed class FeatureService
 {
     /// <summary>进程级默认 FeatureService。</summary>
-    public static FeatureService Instance { get; } = new();
+    public static FeatureService Default { get; } = new();
+
+    /// <summary>进程级默认 FeatureService；向后兼容别名。</summary>
+    public static FeatureService Instance => Default;
 
     /// <summary>
     /// 创建 FeatureService，并确保 Feature DataKey 已注册。
@@ -41,6 +45,7 @@ public sealed class FeatureService
 
         ApplyModifiers(owner, feature, definition);
         var context = new FeatureContext { Owner = owner, Feature = feature, Definition = definition };
+        ExecuteActions(definition.Actions, context);
         FeatureHandlerRegistry.Get(definition.HandlerId)?.OnGranted(context);
 
         owner.Events.Publish(new Granted(owner, feature, definition));
@@ -84,7 +89,7 @@ public sealed class FeatureService
 
         context.Feature.Events.Publish(new Activated(context));
 
-        context.ExecuteResult = handler?.OnExecute(context);
+        context.ExecutionResult = handler?.OnExecute(context);
         context.Feature.Data.Add(FeatureDataKeys.ActivationCount, 1);
 
         context.Feature.Events.Publish(new Executed(context));
@@ -129,6 +134,25 @@ public sealed class FeatureService
     public void Disable(IEntity owner, IEntity feature)
     {
         SetEnabled(owner, feature, false);
+    }
+
+    /// <summary>
+    /// 批量执行 Feature action。null action 会被跳过。
+    /// </summary>
+    /// <param name="actions">待执行 action 集合。</param>
+    /// <param name="context">Feature 上下文。</param>
+    public void ExecuteActions(IEnumerable<IFeatureAction>? actions, FeatureContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (actions == null)
+        {
+            return;
+        }
+
+        foreach (var action in actions)
+        {
+            action?.Execute(context);
+        }
     }
 
     private static void SetEnabled(IEntity owner, IEntity feature, bool enabled)

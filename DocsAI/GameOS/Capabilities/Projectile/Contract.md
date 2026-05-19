@@ -58,12 +58,12 @@
 | Projectile.DamageType | 伤害类型 |
 | Projectile.DamageTags | 伤害标签 |
 
-## 7. 挂载的 Component
+## 7. 运行时入口 / Adapter
 
 - `ProjectileTool` — 投射物生成和管理
 - `GodotProjectileEffectSpawner`（GodotBridge）— 场景实例化和视觉管理
 
-## 8. 注册的 System / Strategy / Handler
+## 8. Runtime Process / Strategy / Handler
 
 - `ProjectileTool` — 生成、命中处理、生命周期管理
 
