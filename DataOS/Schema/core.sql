@@ -1,5 +1,7 @@
 -- DataOS core schema reference.
 -- Runtime hot path consumes generated snapshots, not arbitrary SQL queries.
+-- 业务 authoring 的完整可执行 schema 由 Migrations/*.sql 组成；002_table_first_authoring.sql
+-- 定义 unit/ability/feature/schedule 等业务表和 dataos_runtime_field_stream 投影视图。
 
 CREATE TABLE IF NOT EXISTS dataos_schema_version (
     version INTEGER PRIMARY KEY,
@@ -43,6 +45,9 @@ CREATE TABLE IF NOT EXISTS data_field (
     FOREIGN KEY (table_id, record_id) REFERENCES data_record(table_id, record_id) ON DELETE CASCADE
 );
 
+-- data_record/data_field 是兼容层和 generator 投影输出形状，不再是业务内容首选手写入口。
+-- 新内容应优先写入具体业务表，再由 dataos_runtime_field_stream 投影为 stable DataKey 字段。
+
 CREATE TABLE IF NOT EXISTS data_key_descriptor (
     stable_key TEXT PRIMARY KEY,
     owner_capability TEXT NOT NULL,
@@ -71,3 +76,6 @@ CREATE TABLE IF NOT EXISTS resource_entry (
     description TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (category, resource_key)
 );
+
+-- resource_entry 只做全局资源索引、legacy 分类或无法归属单一业务行的 lookup。
+-- 单位 visual、技能 projectile/effect 等内容归属路径应写在对应业务表列中。

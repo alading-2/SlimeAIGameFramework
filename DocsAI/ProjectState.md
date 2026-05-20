@@ -1,10 +1,12 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-20（BrotatoLike 单位组合 profile 迁移）
+> 更新日期：2026-05-20（DataOS table-first authoring）
 
 ## 当前阶段
 
 M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17 的 GodotBridge、Movement、Collision、Damage、Ability、Projectile、Effect、Feature、AI、Attack 和 DataOS 最小闭环已完成。M18 DataOS 扩大迁移与正式生成入口切片已完成：框架新增 `ScheduleDataKeys`，Unit / Ability / Feature / Movement / Collision / Damage / AI / Attack / Projectile / Effect 已迁到 typed `DataKey<T>`；后续已补 `MovementDataKeys` 中 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc / AttachToHost 的 handler authoring 参数；BrotatoLike seed 覆盖 TargetingIndicator、ChainAbility、Feature definition / modifier、System config / preset、Spawn config、更多旧 ResourcePaths 和 Ability handler-specific 参数第三段；游戏侧新增 `BrotatoLikeDataOSBootstrap` 和 `BrotatoLikeAbilityHandlers`，正式代码可从 generated typed snapshot 生成 Runtime Entity 并注册 ResourceCatalog，且 SineWave / Boomerang / BezierCurve / CircularArc / Orbit / AttachToHost、Dash、ChainLightning、Slam、TargetPoint、CircleDamage 和 AuraShield 已通过游戏侧 Feature handler 执行闭环。
+
+OpenSpec change `refactor-dataos-table-authoring` 已完成实现、验证并 archived，baseline 已合入 `openspec/specs/dataos-table-authoring/` 等 DataOS 规格：DataOS authoring 主入口从万能 key-value / EAV 行迁到清晰业务表，generator 再投影成现有 Runtime snapshot。核心原则是 AI-first 不是让 AI 在 `data_field` 中靠上下文重建业务含义，而是让人和 AI 先能直接读懂 Unit / Ability / Feature / System / Spawn 业务表；`data_record / data_field` 保留为兼容和 projection 形状，`RuntimeDataSnapshot` JSON shape 与 loader API 未改。
 
 `migrate-brotatolike-unit-composition` 已把旧 `UnitCorePreset / PlayerPreset / EnemyPreset` 的单位行为组成语义迁入 AI-first GameOS：框架新增 `GodotUnitCompositionProfile / GodotUnitCompositionResult / GodotUnitComposer`，按 profile 组合 visual、`GodotUnitAnimationComponent`、orientation、AI、attack、hurtbox 和 contact damage adapter；`GodotUnitAnimationComponent` 新增 idle/run locomotion 与 Damage damaged/death 事件动画。BrotatoLike 新增 `BrotatoLikeUnitProfiles.Player / EnemyMelee`，玩家/敌人生成改为 DataOS 写入后调用框架 composer，再挂游戏侧输入/主动技能 adapter；`BrotatoLikeGameRuntime` 保证 `GodotMovementDriver` 和 `GameOSTimerDriver` 在真实 `_Process` 中推进。
 
@@ -55,6 +57,26 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 - 玩家输入系统已迁入游戏侧：`BrotatoLikePlayerInputComponent`（`Games/BrotatoLike/Src/Game/Bridge/`）读取 Godot Input Map 的 MoveLeft/Right/Up/Down、UseSkill、PreviousSkill、NextSkill，将移动方向写入 `MovementDataKeys.InputDirection`，并发布 game-side `InputUseSkill / InputPreviousSkill / InputNextSkill` 到 Entity EventBus；支持 `CanMoveInput` 门禁和 `Movement.Acceleration` 平滑移动插值。`GodotActiveSkillInputComponent`（游戏侧）订阅技能输入事件，管理 `AbilityDataKeys.OwnedAbilityIds` 和 `CurrentAbilityIndex`，通过 `AbilityTargetingTool` 自动索敌后调用 `AbilityService.TryTrigger`。BrotatoLike `SpawnPlayer` 已接入：生成玩家时从 DataOS 创建 slam / chain_lightning 初始技能实体，挂载双输入组件，启动 PlayerInput 移动策略；框架 GodotBridge 不再持有 BrotatoLike-specific 输入组件。
 
 ## 最新验证
+
+### refactor-dataos-table-authoring（2026-05-20）
+
+```bash
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-dataos-validate.sh
+Tools/run-build.sh && Tools/run-tests.sh
+```
+
+结果：DataOS validation PASS；框架 build/tests PASS。BrotatoLike snapshot shape 保持 `manifest / descriptors / records / resources` runtime handoff，manifest/payload 计数一致：descriptors `136/136`、records `37/37`、resources `18/18`。
+
+```bash
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Data/RuntimeDataValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+结果：BrotatoLike build PASS（`0 Warning(s), 0 Error(s)`）；Runtime/Data 场景 PASS，artifact `.ai-temp/scene-tests/runs/2026-05-20/22-30-25/index.json`；Main smoke artifact PASS，`dataos.snapshot` check 为 pass，artifact `.ai-temp/scene-tests/runs/2026-05-20/22-30-33/index.json`。Scene gate 已检查 `index.json`、`result.json` 和 artifact，`expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 均非空。注意：analyzer 同时捕获到既有游戏侧 `BrotatoLikeGameRuntime.SpawnPlayer()` reparent stderr，需后续 DebugFix 跟进，不属于 DataOS snapshot shape 变更。
 
 ### migrate-brotatolike-unit-composition（2026-05-20）
 

@@ -37,8 +37,8 @@ enabled_capabilities AS (
     ORDER BY capability_id
 ),
 active_fields AS (
-    SELECT f.table_id, f.record_id, f.field_key, f.value_type, f.value_text, d.owner_capability
-    FROM data_field f
+    SELECT f.table_id, f.record_id, f.display_name, f.field_key, f.value_type, f.value_text, d.owner_capability
+    FROM dataos_runtime_field_stream f
     JOIN data_key_descriptor d ON d.stable_key = f.field_key
     JOIN capability_manifest c ON c.capability_id = d.owner_capability
     WHERE c.enabled = 1
@@ -50,7 +50,7 @@ record_docs AS (
         json_object(
             'table', r.table_id,
             'id', r.record_id,
-            'name', r.display_name,
+            'name', COALESCE(NULLIF(MAX(r.display_name), ''), r.record_id),
             'fields', COALESCE((
                 SELECT json_group_object(f.field_key, json(
                     CASE
@@ -67,13 +67,8 @@ record_docs AS (
                 ORDER BY f.field_key
             ), json('{}'))
         ) AS doc
-    FROM data_record r
-    WHERE EXISTS (
-        SELECT 1
-        FROM active_fields f
-        WHERE f.table_id = r.table_id
-          AND f.record_id = r.record_id
-    )
+    FROM active_fields r
+    GROUP BY r.table_id, r.record_id
     ORDER BY r.table_id, r.record_id
 ),
 descriptor_docs AS (

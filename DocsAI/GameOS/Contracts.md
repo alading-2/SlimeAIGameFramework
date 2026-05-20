@@ -189,6 +189,9 @@
 - `EventDataChangeSink` 将 `DataChangedEventData` 包装成 `Runtime.Events.Core.DataPropertyChanged` 事件并通过目标 `IEventBus.Publish` 派发。
 - `RuntimeEntity` 默认创建 `EntityEventBus`，并让 `Data` 通过 `EventDataChangeSink` 接入 `Entity.Events`；`EntitySpawnConfig.DataCatalog` 可指定 profile catalog。
 - `RuntimeDataSnapshot` 只消费 DataOS 生成的 typed JSON snapshot，不在运行时热路径访问 SQLite；它先校验 manifest / descriptors / catalog，再按 resolved `DataKey<T>` typed apply records，并把 profile 允许的资源映射注册到 `ResourceCatalog`。
+- DataOS authoring 的首选入口是业务表，而不是手写 `data_field` 行。`data_field` 是兼容层和 generator projection 形状；Unit / Ability / Feature / System / Spawn 等业务内容应先落到具体业务表，再生成 Runtime field stream。
+- `data_key_descriptor` 是显式 Runtime `DataKey<T>` contract mirror，不能从某个数据行自动推断；缺 descriptor 或 value type 不匹配的 projection 必须被 validator 阻断。
+- `resource_entry` 只承载 ResourceCatalog lookup、legacy 分类或无单一业务 owner 的资源；业务拥有的 visual / effect / projectile path 由对应业务表列负责。
 
 ## Runtime Event 契约
 

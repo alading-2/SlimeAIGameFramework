@@ -5,6 +5,7 @@
 ## 目标
 
 - 使用 SQLite 作为 authoring 真相源。
+- 业务数据先用清晰业务表表达，再投影成 Runtime 机器友好的 snapshot。
 - 通过 schema 和迁移表达约束。
 - 生成 C# / JSON snapshot 供 Runtime 使用。
 - 运行时热路径不直接依赖任意 SQL 查询。
@@ -20,11 +21,14 @@
 ## 当前最小闭环
 
 - `Schema/core.sql`：DataOS core schema 参考。
-- `Migrations/001_initial.sql`：可执行 SQLite migration。
+- `Migrations/001_initial.sql`：核心兼容 schema，保留 `data_record / data_field / data_key_descriptor / resource_entry`。
+- `Migrations/002_table_first_authoring.sql`：table-first authoring schema，定义 `unit_player / unit_enemy / ability / ability_effect / ability_projectile / ability_movement_* / feature_definition / feature_modifier / system_config / system_preset / spawn_config` 等业务表，并通过 `dataos_runtime_field_stream` 投影到 runtime fields。
 - `capability_manifest`：声明 profile 中 capability 的 owner skill、enabled 状态、依赖和 trim policy。
-- `data_key_descriptor`：声明 stable DataKey 的 authoring metadata、owner capability、value type、display/default mirror、range/options 和 modifier/computed 标记。
-- `Generators/generate-runtime-snapshot.sh`：把 authoring DB 生成 typed Runtime JSON snapshot，输出 `manifest / descriptors / records / resources`。
-- `Validation/validate-dataos.sh`：校验外键、空键、bool 值、descriptor 覆盖、type/default drift、disabled capability trimming、资源分类和 `res://` 路径，并输出结构化 report。
+- `data_key_descriptor`：显式声明 stable DataKey 的 authoring metadata、owner capability、value type、display/default mirror、range/options 和 modifier/computed 标记；descriptor 不能从数据行反推。
+- `data_record / data_field`：兼容层和 projection 输出形状，不再是 Unit / Ability / Feature / System / Spawn 等业务内容的首选手写入口。
+- `resource_entry`：资源索引、全局 lookup 和 legacy 分类面；单位 visual、技能 projectile/effect 等内容归属路径优先写在业务表列中。
+- `Generators/generate-runtime-snapshot.sh`：把 authoring DB 的业务表投影为 typed Runtime JSON snapshot，输出 `manifest / descriptors / records / resources`。
+- `Validation/validate-dataos.sh`：校验外键、空键、业务表必填字段、canonical bool、descriptor 覆盖、projection type/default drift、disabled capability trimming、资源分类和 `res://` 路径，并输出结构化 report。
 - `Tools/run-dataos-validate.sh`：框架侧最小 DataOS 验证入口，已接入 `Tools/run-tests.sh`。
 - BrotatoLike 已用同一 schema 扩展 seed，覆盖 Unit / TargetingIndicator / Ability / ChainAbility / Feature / System / Spawn / ResourcePaths 第一批，并通过游戏侧 active catalog + typed snapshot loader 消费 snapshot。
 
@@ -47,6 +51,15 @@
 ## AI 数据操作协议
 
 DataOS 是 AI-first 框架的事实源。AI 操作数据库时必须遵循以下规则：
+
+### AI-first 不是万能 key-value
+
+- AI-first DataOS 的目标是让人和 AI 少猜、少扫描、少靠上下文脑补；不是把业务数据库退化成万能 key-value / EAV 主入口。
+- 新增或迁移业务内容时，优先写清晰业务表：单位写 `unit_player / unit_enemy / unit_targeting_indicator`，技能写 `ability` 与 `ability_effect / ability_projectile / ability_movement_*`，Feature 写 `feature_definition / feature_modifier`，调度和生成写 `system_config / system_preset / spawn_config`。
+- Generator 负责把业务列投影成 `DataKey<T>` stable key；Runtime snapshot shape 仍保持 `manifest / descriptors / records / resources`。
+- `data_field` 只作为兼容输入或投影结果语义存在。除非迁移兼容或框架测试 fixture 明确需要，不要把新的游戏业务字段手写成 `table_id / record_id / field_key / value_text` 行。
+- `data_key_descriptor` 必须显式维护。Validator 会拒绝缺 descriptor 或 value type 不匹配的投影字段，不能因为某条数据行存在就自动合法化 descriptor。
+- `resource_entry` 不再是所有 Asset 的内容主表。只有全局 `ResourceCatalog` lookup、legacy/migration 分类或无法自然归属单一业务行的资源才写入 `resource_entry`；业务拥有的 path 写在业务表列中。
 
 ### seed SQL 是活数据，不是审计日志
 

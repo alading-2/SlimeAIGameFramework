@@ -6,7 +6,9 @@ tmp_db="$(mktemp)"
 tmp_dir="$(mktemp -d)"
 trap 'rm -f "$tmp_db"; rm -rf "$tmp_dir"' EXIT
 
-sqlite3 "$tmp_db" ".read $repo_root/DataOS/Migrations/001_initial.sql"
+while IFS= read -r migration; do
+    sqlite3 "$tmp_db" ".read $migration"
+done < <(find "$repo_root/DataOS/Migrations" -maxdepth 1 -name '*.sql' | sort)
 sqlite3 "$tmp_db" ".read $repo_root/DataOS/Authoring/Framework.seed.sql"
 DATAOS_REPORT_PATH="$tmp_dir/validation-report.json" "$repo_root/DataOS/Validation/validate-dataos.sh" "$tmp_db"
 DATAOS_VALIDATION_REPORT_PATH="$tmp_dir/generator-validation-report.json" \
