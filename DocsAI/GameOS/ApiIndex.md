@@ -277,7 +277,10 @@
 | `SlimeAI.GameOS.GodotBridge.GameOSTimerDriver` | Node | migrated | 用 `_Process` 驱动 `TimerManager.Instance.Tick`。 |
 | `SlimeAI.GameOS.GodotBridge.GodotMovementDriver` | Node | migrated | 用 `_Process` 驱动 `MovementSystem.Tick` 并同步 Runtime Position 到 Node2D。 |
 | `SlimeAI.GameOS.GodotBridge.GodotOrientationComponent` | Node | bootstrap | 消费 `MovementDataKeys.FacingDirection` / `MovementParams.Orientation`，输出 `RotationDegrees` 或 `AnimatedSprite2D.FlipH`。 |
-| `SlimeAI.GameOS.GodotBridge.GodotUnitAnimationComponent` | Node | bootstrap | 消费 `Capabilities.Unit.Events` 动画事件并驱动 `AnimatedSprite2D`，缓存可用动画，支持一次性动画完成事件和待机回退。 |
+| `SlimeAI.GameOS.GodotBridge.GodotUnitAnimationComponent` | Node | bootstrap | 消费 `Capabilities.Unit.Events` 动画事件并驱动 `AnimatedSprite2D`，缓存可用动画，支持一次性动画完成事件、待机回退、idle/run locomotion 和 Damage damaged/death 事件动画。 |
+| `SlimeAI.GameOS.GodotBridge.GodotUnitCompositionProfile` | class | bootstrap | 框架单位组合 profile，声明是否挂载 visual、animation、orientation、AI、attack、hurtbox、contact damage receiver 以及 hurtbox fallback 半径。 |
+| `SlimeAI.GameOS.GodotBridge.GodotUnitCompositionResult` | class | bootstrap | 单位组合结果，记录 `VisualRoot`、新增 adapter、hurtbox shape、注册数量和失败原因。 |
+| `SlimeAI.GameOS.GodotBridge.GodotUnitComposer` | static class | bootstrap | 按 profile 为 `GodotEntity2D` 组合框架通用 adapter；从 `Unit.VisualScenePath` 加载 `VisualRoot`，从 `Collision.Radius` 创建 hurtbox circle，已进树 entity 会重新注册新增 adapter。 |
 | `SlimeAI.GameOS.GodotBridge.GodotPhysicsMovementCollisionTargetQuery` | class | bootstrap | 用 Godot Physics 2D `IntersectShape` 收集 Movement 碰撞 broadphase 候选，并回退 Runtime Entity 扫描。 |
 | `SlimeAI.GameOS.GodotBridge.GodotCollisionBridge` | static class | bootstrap | Godot `CollisionObject2D` / Node 到 Collision Runtime 的实体解析、Data 同步和事件桥。 |
 | `SlimeAI.GameOS.GodotBridge.GodotCollisionComponent` | Node | bootstrap | 桥接 Entity 根 `Area2D` 进入 / 离开信号到 `Capabilities.Collision.Events.Entered / Exited`。 |

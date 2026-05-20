@@ -1,10 +1,12 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-19（OpenSpec 未完成项收敛中）
+> 更新日期：2026-05-20（BrotatoLike 单位组合 profile 迁移）
 
 ## 当前阶段
 
 M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17 的 GodotBridge、Movement、Collision、Damage、Ability、Projectile、Effect、Feature、AI、Attack 和 DataOS 最小闭环已完成。M18 DataOS 扩大迁移与正式生成入口切片已完成：框架新增 `ScheduleDataKeys`，Unit / Ability / Feature / Movement / Collision / Damage / AI / Attack / Projectile / Effect 已迁到 typed `DataKey<T>`；后续已补 `MovementDataKeys` 中 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc / AttachToHost 的 handler authoring 参数；BrotatoLike seed 覆盖 TargetingIndicator、ChainAbility、Feature definition / modifier、System config / preset、Spawn config、更多旧 ResourcePaths 和 Ability handler-specific 参数第三段；游戏侧新增 `BrotatoLikeDataOSBootstrap` 和 `BrotatoLikeAbilityHandlers`，正式代码可从 generated typed snapshot 生成 Runtime Entity 并注册 ResourceCatalog，且 SineWave / Boomerang / BezierCurve / CircularArc / Orbit / AttachToHost、Dash、ChainLightning、Slam、TargetPoint、CircleDamage 和 AuraShield 已通过游戏侧 Feature handler 执行闭环。
+
+`migrate-brotatolike-unit-composition` 已把旧 `UnitCorePreset / PlayerPreset / EnemyPreset` 的单位行为组成语义迁入 AI-first GameOS：框架新增 `GodotUnitCompositionProfile / GodotUnitCompositionResult / GodotUnitComposer`，按 profile 组合 visual、`GodotUnitAnimationComponent`、orientation、AI、attack、hurtbox 和 contact damage adapter；`GodotUnitAnimationComponent` 新增 idle/run locomotion 与 Damage damaged/death 事件动画。BrotatoLike 新增 `BrotatoLikeUnitProfiles.Player / EnemyMelee`，玩家/敌人生成改为 DataOS 写入后调用框架 composer，再挂游戏侧输入/主动技能 adapter；`BrotatoLikeGameRuntime` 保证 `GodotMovementDriver` 和 `GameOSTimerDriver` 在真实 `_Process` 中推进。
 
 Runtime 事件系统已作为 OpenSpec 基线完成：事件 API 换成 type-keyed `Publish<T>(in T) / Subscribe<T>(Action<T>) → IDisposable / ExportObservation(path)` 三件套；事件 payload 是 `readonly record struct` 并自声明 scope（`IEntityEvent / IGlobalEvent / IBroadcastEvent`）；`EventBus / GlobalEventBus / EventContext / EventPriority / Once / Off` 和整个 `GameEventTypes/` 目录已删除；事件按 Capability 组织在 `SlimeAI/GameOS/Capabilities/<Cap>/Events/`，Runtime 级事件在 `SlimeAI/GameOS/Runtime/Events/{Core,Global}/`；`WorldEvents.World` 替换旧 `GlobalEventBus.Global`；同类型嵌套 Publish 被 per-bus reentry guard 阻断；内建 `EventBusObservation.ExportTo` 导出 `eventbus-dump.json`（`schemaVersion / busName / generatedAtUtc / subscriptions / emittedCounts / sameTypeReentryBlockedCounts / handlerExceptions / handlerRegistrationOrder`）。P3 `refactor-runtime-events-purge-game-leakage` 已完成并 archived：Bucket A 旧事件 `MouseSelection* / Wave* / GameStart / GameOver / GamePause / GameResume` 直接删除不迁移；Bucket B `InputUseSkill / InputPreviousSkill / InputNextSkill` 与输入桥接迁到 BrotatoLike；`Runtime/Events/Global/` 当前无 framework-owned payload。
 
@@ -53,6 +55,37 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 - 玩家输入系统已迁入游戏侧：`BrotatoLikePlayerInputComponent`（`Games/BrotatoLike/Src/Game/Bridge/`）读取 Godot Input Map 的 MoveLeft/Right/Up/Down、UseSkill、PreviousSkill、NextSkill，将移动方向写入 `MovementDataKeys.InputDirection`，并发布 game-side `InputUseSkill / InputPreviousSkill / InputNextSkill` 到 Entity EventBus；支持 `CanMoveInput` 门禁和 `Movement.Acceleration` 平滑移动插值。`GodotActiveSkillInputComponent`（游戏侧）订阅技能输入事件，管理 `AbilityDataKeys.OwnedAbilityIds` 和 `CurrentAbilityIndex`，通过 `AbilityTargetingTool` 自动索敌后调用 `AbilityService.TryTrigger`。BrotatoLike `SpawnPlayer` 已接入：生成玩家时从 DataOS 创建 slam / chain_lightning 初始技能实体，挂载双输入组件，启动 PlayerInput 移动策略；框架 GodotBridge 不再持有 BrotatoLike-specific 输入组件。
 
 ## 最新验证
+
+### migrate-brotatolike-unit-composition（2026-05-20）
+
+```bash
+cd /home/slime/Code/SlimeAI
+openspec validate migrate-brotatolike-unit-composition --strict
+openspec validate --specs --strict
+```
+
+结果：active change strict validate PASS；归档后 baseline specs strict validate 输出 `48 passed, 0 failed`。
+
+```bash
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+Tools/run-dataos-validate.sh
+```
+
+结果：框架 build PASS（`0 Warning(s), 0 Error(s)`）；框架 tests PASS；DataOS validation PASS。
+
+```bash
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/GameOS/GodotBridge/UnitComposition/UnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Src/Validation/Game/UnitComposition/BrotatoLikeUnitCompositionValidation.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run res://Scenes/Main.tscn --timeout 10 --log-dir .ai-temp/scene-tests/runs
+Tools/run-godot-scene.sh run-main-smoke --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh
+```
+
+结果：BrotatoLike build PASS（`0 Warning(s), 0 Error(s)`）；框架 UnitComposition scene PASS，artifact `.ai-temp/scene-tests/runs/2026-05-20/09-17-25/.../unit-composition-validation.json` 为 `status=pass`、`failureReasons=[]`；BrotatoLike UnitComposition scene PASS，artifact `.ai-temp/scene-tests/runs/2026-05-20/09-18-27/.../brotatolike-unit-composition-validation.json` 为 `status=pass`、`failureReasons=[]`；普通 Main playable acceptance PASS，artifact `.ai-temp/scene-tests/runs/2026-05-20/09-20-05/.../scene-acceptance.json` 为 `status=pass`；Main smoke PASS，artifact `.ai-temp/scene-tests/runs/2026-05-20/09-20-45/.../scene-smoke.json` 为 `status=pass`。Scene gate 已检查 `index.json`、`result.json` 和 artifact，`expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 均非空。
 
 ### 7 个 OpenSpec 未完成项收敛验证（2026-05-19）
 

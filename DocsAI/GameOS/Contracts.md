@@ -5,7 +5,7 @@
 
 ## 当前契约
 
-当前框架已建立构建边界、发布身份，并迁入 Runtime 最小内核：Runtime Data / Event / Runtime Entity / Relationship / RuntimeSchedule / Resource / Pool / Timer，GodotBridge Adapter 第一版和 Node 池化 / 碰撞隔离扩展第一段，以及 Movement / Collision / Damage / Ability / Feature / AI / Attack / Projectile / Effect Capability 第一批。
+当前框架已建立构建边界、发布身份，并迁入 Runtime 最小内核：Runtime Data / Event / Runtime Entity / Relationship / RuntimeSchedule / Resource / Pool / Timer，GodotBridge Adapter 第一版和 Node 池化 / 碰撞隔离扩展第一段，以及 Movement / Collision / Damage / Ability / Feature / AI / Attack / Projectile / Effect Capability 第一批。GodotBridge 现已提供框架级单位组合入口，允许游戏通过 profile 选择通用 visual、animation、orientation、AI、attack、hurtbox 和 contact damage adapter，而不把游戏 namespace 写入框架。
 
 术语护栏：
 
@@ -104,6 +104,9 @@
 - `SlimeAI.GameOS.GodotBridge.GodotAttackComponent`
 - `SlimeAI.GameOS.GodotBridge.AttackComponent`
 - `SlimeAI.GameOS.GodotBridge.GodotUnitAnimationComponent`
+- `SlimeAI.GameOS.GodotBridge.GodotUnitCompositionProfile`
+- `SlimeAI.GameOS.GodotBridge.GodotUnitCompositionResult`
+- `SlimeAI.GameOS.GodotBridge.GodotUnitComposer`
 - `SlimeAI.GameOS.GodotBridge.GodotAIComponent`
 - `SlimeAI.GameOS.GodotBridge.GodotProjectileEffectSpawner`
 - `SlimeAI.GameOS.Capabilities.Damage.DamageService`
@@ -280,7 +283,9 @@
 - `GodotCollisionIsolation` 负责回池时递归隔离 2D 碰撞：`CollisionObject2D` layer/mask 清零并缓存、`Area2D` 关闭 monitoring/monitorable、`CollisionShape2D / CollisionPolygon2D` 禁用、`CharacterBody2D` 清零速度。
 - `GodotNodePool<T>` 对 `CollisionObject2D` 根节点默认执行泊车位移动和脱树；重新出池时先挂回 `ActiveParent` 并同步禁用碰撞，再由 `Activate` 恢复处理、可见性和碰撞。
 - `GodotContactDamageComponent` 消费 `Capabilities.Collision.Events.HurtboxEntered / HurtboxExited`，只把接触转换为 `DamageService` 请求，不直接修改 HP；`DamageService` / `TimerManager` 可替换，默认只在 adapter boundary 使用进程级入口。
-- `GodotUnitAnimationComponent` 消费 `Capabilities.Unit.Events.PlayAnimationRequested / StopAnimationRequested`，驱动 `VisualRoot` 或子节点中的 `AnimatedSprite2D`，缓存 `UnitDataKeys.AvailableAnimations`，并在非循环动画结束后发布 `Capabilities.Unit.Events.AnimationFinished` 回退到 idle。
+- `GodotUnitComposer.Compose(GodotEntity2D, GodotUnitCompositionProfile)` 是框架级单位组合入口；按 profile 加载 `UnitDataKeys.VisualScenePath` 到 `VisualRoot`，挂载框架通用 visual/animation/orientation/AI/attack/hurtbox/contact damage adapter，并用 `CollisionDataKeys.CollisionRadius` 或 profile fallback 创建 hurtbox `CircleShape2D`。
+- `GodotUnitComposer` 不引用游戏 namespace，不挂载输入、主动技能、HUD、波次或游戏数值逻辑；如果 entity 已经在 SceneTree 中，composer 必须通过当前 `BridgeContext.RegisterComponents(entity, entity)` 注册新增 adapter，否则调用方应在 `AddChild(entity)` 前完成组合。
+- `GodotUnitAnimationComponent` 消费 `Capabilities.Unit.Events.PlayAnimationRequested / StopAnimationRequested`，驱动 `VisualRoot` 或子节点中的 `AnimatedSprite2D`，缓存 `UnitDataKeys.AvailableAnimations`，并在非循环动画结束后发布 `Capabilities.Unit.Events.AnimationFinished` 回退到 idle。启用 `AutoDriveLocomotion` 时根据 `MovementDataKeys.Velocity` 在 idle/run 间切换；启用 damage/death 事件播放时，响应 `Damage.Events.Damaged / Killed`，优先级为 death 高于 damaged 和 locomotion。
 - `GodotAttackComponent` 是普通攻击 Godot bridge 第一段，默认使用 `AttackService.Default`，也可替换 `AttackService`；它把导出攻击参数写入 `AttackDataKeys`，并把 Godot 节点目标解析为 Runtime `IEntity` 后交给 `AttackService.TryRequest`。
 - `GodotAttackComponent` 可选把 `Attack.Started / Cancelled` 转成 Unit 动画请求；默认优先使用 `AttackAnimation`，当该动画不在 `UnitDataKeys.AvailableAnimations` 中时，会选择第一个 `attack*` 可用动画作为旧资源兼容回退；`PreferExistingDataOnRegister=true` 时会保留注册前已有 Attack Data。
 - `AttackComponent` 是旧项目类名 / 场景名兼容包装，继承 `GodotAttackComponent`，默认启用 `PreferExistingDataOnRegister`，用于旧场景迁移时保留 DataNew / 初始化流程写入的攻击参数。

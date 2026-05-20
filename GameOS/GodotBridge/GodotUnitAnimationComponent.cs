@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using SlimeAI.GameOS.Capabilities.Damage;
+using SlimeAI.GameOS.Capabilities.Damage.Events;
+using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Capabilities.Unit;
 using SlimeAI.GameOS.Capabilities.Unit.Events;
 using SlimeAI.GameOS.Runtime.Entity;
@@ -16,15 +19,42 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
     private AnimatedSprite2D? sprite;
     private IDisposable? playToken;
     private IDisposable? stopToken;
+    private IDisposable? damagedToken;
+    private IDisposable? killedToken;
     private bool isOneShotAnimation;
+    private bool isDeadAnimation;
 
     /// <summary>默认待机动画名。</summary>
     [Export]
     public string IdleAnimation { get; set; } = "idle";
 
+    /// <summary>默认移动动画名。</summary>
+    [Export]
+    public string RunAnimation { get; set; } = "run";
+
+    /// <summary>默认受击动画名。</summary>
+    [Export]
+    public string DamagedAnimation { get; set; } = "beattacked";
+
+    /// <summary>默认死亡动画名。</summary>
+    [Export]
+    public string DeathAnimation { get; set; } = "dead";
+
     /// <summary>是否注册时立即播放待机动画。</summary>
     [Export]
     public bool PlayIdleOnRegister { get; set; } = true;
+
+    /// <summary>是否根据 Movement.Velocity 自动切换 idle/run。</summary>
+    [Export]
+    public bool AutoDriveLocomotion { get; set; }
+
+    /// <summary>是否在 Damage.Damaged 事件时播放受击动画。</summary>
+    [Export]
+    public bool PlayDamagedOnDamage { get; set; }
+
+    /// <summary>是否在 Damage.Killed 事件时播放死亡动画。</summary>
+    [Export]
+    public bool PlayDeathOnKilled { get; set; }
 
     /// <summary>当前动画名。</summary>
     public string CurrentAnimation { get; private set; } = string.Empty;
@@ -34,9 +64,20 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
     {
         this.entity = entity;
         UnitDataKeys.RegisterAll();
+        MovementDataKeys.RegisterAll();
+        DamageDataKeys.RegisterAll();
         sprite = ResolveSprite(entityNode);
         playToken = entity.Events.Subscribe<PlayAnimationRequested>(OnPlayAnimationRequested);
         stopToken = entity.Events.Subscribe<StopAnimationRequested>(OnStopAnimationRequested);
+        if (PlayDamagedOnDamage)
+        {
+            damagedToken = entity.Events.Subscribe<Damaged>(OnDamaged);
+        }
+
+        if (PlayDeathOnKilled)
+        {
+            killedToken = entity.Events.Subscribe<Killed>(OnKilled);
+        }
 
         if (sprite != null)
         {
@@ -54,8 +95,12 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
     {
         playToken?.Dispose();
         stopToken?.Dispose();
+        damagedToken?.Dispose();
+        killedToken?.Dispose();
         playToken = null;
         stopToken = null;
+        damagedToken = null;
+        killedToken = null;
 
         if (sprite != null && GodotObject.IsInstanceValid(sprite))
         {
@@ -66,6 +111,19 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
         this.entity = null;
         CurrentAnimation = string.Empty;
         isOneShotAnimation = false;
+        isDeadAnimation = false;
+    }
+
+    /// <inheritdoc />
+    public override void _Process(double delta)
+    {
+        if (!AutoDriveLocomotion || entity == null || sprite == null || isOneShotAnimation || isDeadAnimation)
+        {
+            return;
+        }
+
+        var velocity = entity.Data.Get<Vector2Value>(MovementDataKeys.Velocity, Vector2Value.Zero);
+        Play(velocity.Length > 0.001f ? RunAnimation : IdleAnimation, forceRestart: false);
     }
 
     private void OnPlayAnimationRequested(PlayAnimationRequested data)
@@ -88,7 +146,39 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
         sprite.Stop();
         sprite.SpeedScale = 1f;
         isOneShotAnimation = false;
+        isDeadAnimation = false;
         Play(IdleAnimation, forceRestart: true);
+    }
+
+    private void OnDamaged(Damaged data)
+    {
+        if (entity == null || data.Info.Victim.EntityId != entity.EntityId || isDeadAnimation)
+        {
+            return;
+        }
+
+        if (entity.Data.Get<bool>(DamageDataKeys.IsDead, false))
+        {
+            return;
+        }
+
+        if (isOneShotAnimation && CurrentAnimation == DeathAnimation)
+        {
+            return;
+        }
+
+        Play(DamagedAnimation, forceRestart: true);
+    }
+
+    private void OnKilled(Killed data)
+    {
+        if (entity == null || data.Victim.EntityId != entity.EntityId)
+        {
+            return;
+        }
+
+        isDeadAnimation = true;
+        Play(DeathAnimation, forceRestart: true);
     }
 
     private void Play(string animationName, bool forceRestart = false, float duration = -1f)
@@ -115,6 +205,7 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
 
         CurrentAnimation = animationName;
         isOneShotAnimation = !sprite.SpriteFrames.GetAnimationLoop(animationName);
+        isDeadAnimation = isDeadAnimation || animationName == DeathAnimation;
         sprite.SpeedScale = ResolveSpeedScale(animationName, duration);
         sprite.Play(animationName);
     }
@@ -147,7 +238,7 @@ public partial class GodotUnitAnimationComponent : Node, IGodotComponent
         isOneShotAnimation = false;
         entity.Events.Publish(new AnimationFinished(entity, finishedAnimation));
 
-        if (finishedAnimation != IdleAnimation)
+        if (finishedAnimation != IdleAnimation && finishedAnimation != DeathAnimation)
         {
             Play(IdleAnimation, forceRestart: true);
         }
