@@ -76,6 +76,30 @@ DataOS 是 AI-first 框架的事实源。AI 操作数据库时必须遵循以下
 - **废弃资源**：先标 `'intentionally-dropped'` 确认意图，确认后 DELETE 该行。不要长期保留 `'intentionally-dropped'` 行。
 - **修改资源**：直接 `INSERT OR REPLACE` 覆盖。不需要保留旧值行。
 
+## 功能开关：DataOS 层
+
+DataOS 是功能开关的第一层（最底层）。在 seed SQL 中通过 `capability_manifest.enabled` 控制：
+
+```sql
+-- 关闭某个 Capability：其 DataKey 不进 DataCatalog，运行时无法访问
+INSERT OR IGNORE INTO capability_manifest(capability_id, enabled, ...)
+VALUES ('AI', 0, ...);  -- AI 系统不会进入 snapshot
+
+-- 框架自测用的 DisabledProbe：enabled=0, trim_policy='trim'
+-- Generator 会自动裁剪，不进游戏 snapshot
+```
+
+与运行期开关的区别：
+
+| 属性 | DataOS 开关 | RuntimeSchedule 开关 | ProjectState 开关 |
+| --- | --- | --- | --- |
+| 生效时机 | snapshot 生成时 | 运行时即时 | 运行时即时 |
+| 持久性 | 永久（直到下次改 seed 重新生成） | 当前会话 | 当前会话 |
+| 回滚方式 | 改 seed SQL + 重新生成 snapshot | `SetSystemEnabled(id, true)` | `ProjectState.ClosePauseMenu()` 等 |
+| 适用场景 | 该游戏根本不需要某个 Capability | 局内临时关闭刷怪/AI | 暂停/菜单/过场 |
+
+完整开关模型见 `DocsAI/GameOS/Overview.md#功能开关总览`。
+
 ## 验证
 
 ```bash

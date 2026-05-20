@@ -43,6 +43,32 @@ dotnet build GameOS/SlimeAI.GameOS.csproj
 Tools/run-build.sh
 ```
 
+## AI 路由：GodotBridge 三条路径
+
+GodotBridge 是 AI 的边界护栏，不是必须通过的强制层。AI 创建 Godot 实体时按需选择：
+
+| 路径 | 做法 | 适用场景 |
+| --- | --- | --- |
+| 直接继承 | 继承 `GodotEntity2D`，在子类里直接写 Godot API（`Sprite2D`、`AnimationPlayer` 等） | 简单实体、一次性原型、不需要框架通用 Adapter |
+| 使用 Composer | 调用 `GodotUnitComposer.Compose(entity, profile)`，按 profile 自动挂载 animation/orientation/AI/attack/hurtbox/contact damage adapter | 标准敌人/玩家，需要框架通用表现层 Adapter |
+| 自定义 Adapter | 自己写 `IGodotComponent` 实现，通过 `GameOSGodotBridge.RegisterComponents` 注册 | 框架 Adapter 不满足需求，需要自定义生命周期桥接 |
+
+关键原则：三条路径的 Entity 都通过 `Entity.Data` 持有运行时状态，通过 `Entity.Events` 收发事件。Godot 场景节点只负责表现，不做玩法真相源。
+
+## 功能开关总览
+
+AI 可通过三层开关控制功能的启用/禁用：
+
+| 层 | 机制 | 生效时机 | 适用场景 |
+| --- | --- | --- | --- |
+| DataOS | `capability_manifest.enabled = 0/1`（seed SQL） | snapshot 生成时 | 永久关闭某个 Capability，其 DataKey 不进 DataCatalog |
+| RuntimeSchedule | `schedule.SetSystemEnabled("SpawnSystem", false)` | 运行时即时 | 动态启停某个 System 的 Tick |
+| ProjectState | `schedule.ProjectState.OpenPauseMenu()` / `BeginGameplaySession()` | 运行时即时 | 整个游戏状态切换（暂停/恢复/菜单） |
+
+优先级：DataOS 是编译/生成期开关（不可运行时改变），RuntimeSchedule 和 ProjectState 是运行期开关（可动态切换）。
+
+游戏侧可通过 Godot `[Export]` 变量或 `GameConfig` 资源暴露开关给人类玩家；DataOS 开关改 seed SQL 后需重新生成 snapshot。
+
 ## 契约
 
 - `Contracts.md`
