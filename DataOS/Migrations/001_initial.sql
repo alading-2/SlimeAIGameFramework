@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS resource_entry (
     resource_key TEXT NOT NULL,
     resource_path TEXT NOT NULL,
     owner_capability TEXT NOT NULL DEFAULT 'shared',
-    legacy_status TEXT NOT NULL DEFAULT 'active' CHECK (legacy_status IN ('active', 'legacy')),
+    legacy_status TEXT NOT NULL DEFAULT 'active' CHECK (legacy_status IN ('active', 'legacy', 'legacy-input', 'missing', 'intentionally-dropped')),
     description TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (category, resource_key)
 );

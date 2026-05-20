@@ -130,14 +130,23 @@ Structured validation report 最低字段：
 
 ## Resource Status
 
-资源路径状态：
+资源路径状态与操作语义（与 `DataOS/Overview.md#AI 数据操作协议` 对齐）：
 
-| 状态 | 含义 |
-| --- | --- |
-| `migrated` | 路径指向新仓库可用资源，并由验证报告或迁移账本确认。 |
-| `legacy` | 路径仍指向旧结构或旧语义，例如 `res://Src/...`。 |
-| `missing` | 路径应该存在，但当前仓库找不到。 |
-| `intentionally dropped` | 旧资源明确不迁移，且有账本或设计原因。 |
+| 状态 | 含义 | 进 snapshot | 保留在 seed SQL |
+| --- | --- | --- | --- |
+| `active` | 当前使用中。 | ✅ | ✅ |
+| `legacy-input` | 旧路径但仍在用，迁移中。 | ✅ | ✅ |
+| `legacy` | 兼容保留，暂不删除。validator 报 warning。 | ✅ | ✅ |
+| `intentionally-dropped` | 已废弃，确认不迁移。 | ❌ | ❌ — 确认后应 DELETE |
+| `missing` | 引用丢失。 | ❌ | ❌ — 应 DELETE 或修复路径 |
+
+操作规则：
+
+- `intentionally-dropped` 和 `missing` 是迁移过程中的临时标注，确认后必须从 seed SQL 中 DELETE。不要长期保留死行。
+- Generator 不输出 `intentionally-dropped` / `missing` 资源到 snapshot JSON。
+- Runtime `RegisterResourcesWithReport()` 跳过 `legacyStatus` 为 `intentionally-dropped` / `missing` 的资源。
+- Validator 对 `intentionally-dropped` / `missing` 行报 warning，提示应清理。
+- 迁移审计靠 `git log` 和 OpenSpec change 历史，不靠数据库里的死行。
 
 资源检查项示例：
 
@@ -152,7 +161,7 @@ Structured validation report 最低字段：
 }
 ```
 
-`migrated` 只表示资源路径状态，不表示玩法行为完成。旧行为是否完成必须由 migration ledger、Observation artifact 和可玩切片 PASS/FAIL evidence 证明。
+`active` 只表示资源路径状态，不表示玩法行为完成。旧行为是否完成必须由 migration ledger、Observation artifact 和可玩切片 PASS/FAIL evidence 证明。
 
 ## DataKey Type Consistency
 
@@ -181,10 +190,10 @@ Structured validation report 最低字段：
 
 遇到 `res://Src/...` 时：
 
-- 如果新路径已存在并已写入 authoring data，旧路径标记为 `migrated` 或从 seed 中删除。
-- 如果旧路径仍保留但后续需要迁，标记为 `legacy`。
-- 如果旧路径应该迁但当前仓库没有对应资源，标记为 `missing`。
-- 如果旧资源明确不再需要，标记为 `intentionally dropped`，并引用迁移账本原因。
+- 如果新路径已存在并已写入 authoring data，旧路径标记为 `legacy-input` 或从 seed 中 DELETE。
+- 如果旧路径仍保留但后续需要迁，标记为 `legacy-input`。
+- 如果旧路径应该迁但当前仓库没有对应资源，标记为 `missing`；确认后 DELETE 该行或修复路径。
+- 如果旧资源明确不再需要，标记为 `intentionally-dropped`；确认后 DELETE 该行。不要长期保留。
 
 DataOS validator 或 migration ledger 必须至少有一个地方记录该分类，避免把旧路径存在误判为已迁移。
 

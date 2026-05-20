@@ -131,6 +131,16 @@ WITH checks AS (
            'resource is marked legacy'
     FROM resource_entry
     WHERE legacy_status = 'legacy'
+    UNION ALL
+    SELECT 'resource.intentionally_dropped', 'warning', '$source_path', resource_key, 'deleted from seed', legacy_status,
+           'intentionally-dropped resource should be deleted from seed SQL, not kept as a zombie row'
+    FROM resource_entry
+    WHERE legacy_status = 'intentionally-dropped'
+    UNION ALL
+    SELECT 'resource.missing', 'warning', '$source_path', resource_key, 'deleted or fixed in seed', legacy_status,
+           'missing resource should be deleted or fixed in seed SQL, not kept as a zombie row'
+    FROM resource_entry
+    WHERE legacy_status = 'missing'
 )
 SELECT json_object(
     'checks', COALESCE(json_group_array(json_object(

@@ -84,6 +84,7 @@ internal partial class Program
             ("Runtime DataOS snapshot applies data and resources", TestRuntimeDataSnapshotAppliesDataAndResources),
             ("Runtime DataOS snapshot rejects invalid fields", TestRuntimeDataSnapshotRejectsInvalidFields),
             ("Runtime DataOS snapshot trims disabled resources", TestRuntimeDataSnapshotRejectsDisabledResources),
+            ("Runtime DataOS snapshot rejects dropped and missing resources", TestRuntimeDataSnapshotRejectsDroppedAndMissingResources),
             ("Collision layer mask event", TestCollisionLayerMaskEvent),
             ("Damage service applies health", TestDamageServiceAppliesHealth),
             ("Damage service killed event", TestDamageServiceKilledEvent),

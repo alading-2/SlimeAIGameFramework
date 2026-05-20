@@ -154,6 +154,13 @@ public sealed class RuntimeDataSnapshot
         for (var i = 0; i < Resources.Count; i++)
         {
             var resource = Resources[i];
+            if (string.Equals(resource.LegacyStatus, "intentionally-dropped", StringComparison.Ordinal)
+                || string.Equals(resource.LegacyStatus, "missing", StringComparison.Ordinal))
+            {
+                report.AddError("snapshot.resource_legacy_dropped", resource.Key, "active or legacy legacyStatus", resource.LegacyStatus, "resource is intentionally-dropped or missing, should not enter snapshot");
+                continue;
+            }
+
             if (!string.Equals(resource.OwnerCapability, "shared", StringComparison.Ordinal)
                 && !Manifest.EnabledCapabilities.Contains(resource.OwnerCapability))
             {

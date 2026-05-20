@@ -44,6 +44,38 @@
 
 生成器默认写入稳定 `generatedAtUtc = 1970-01-01T00:00:00Z`，避免构建反复改动 snapshot；需要真实时间时传入 `DATAOS_GENERATED_AT_UTC`。
 
+## AI 数据操作协议
+
+DataOS 是 AI-first 框架的事实源。AI 操作数据库时必须遵循以下规则：
+
+### seed SQL 是活数据，不是审计日志
+
+- seed SQL 只保留当前有效数据。已废弃、已确认不迁移的资源应直接 `DELETE`，不要留在表里标状态。
+- 迁移审计靠 `git log` 和 OpenSpec change 历史，不靠数据库里的死行。
+- AI 查询 `SELECT * FROM resource_entry` 时应看到全部活资源，不需要额外 `WHERE` 过滤死行。
+
+### legacy_status 操作语义
+
+| 值 | 含义 | 进 snapshot | 保留在 seed SQL |
+| --- | --- | --- | --- |
+| `active` | 当前使用中 | ✅ | ✅ |
+| `legacy-input` | 旧路径但仍在用，迁移中 | ✅ | ✅ |
+| `legacy` | 兼容保留，暂不删除 | ✅（validator 报 warning） | ✅ |
+| `intentionally-dropped` | 已废弃，确认不迁移 | ❌ | ❌ — 应 DELETE |
+| `missing` | 引用丢失 | ❌ | ❌ — 应 DELETE 或修复路径 |
+
+- `intentionally-dropped` 和 `missing` 是**迁移过程中的临时标注**，确认后必须从 seed SQL 中删除。
+- Generator 不输出 `intentionally-dropped` / `missing` 资源到 snapshot JSON。
+- Runtime `RegisterResourcesWithReport()` 跳过 `intentionally-dropped` / `missing` 资源（防御性检查）。
+- Validator 对 `intentionally-dropped` / `missing` 行报 warning，提示应清理。
+
+### AI 增删改规则
+
+- **新增资源**：`INSERT OR REPLACE INTO resource_entry`，`legacy_status` 默认 `'active'`。
+- **迁移中资源**：旧路径标 `'legacy-input'`，新路径标 `'active'`；迁移完成后 DELETE 旧行。
+- **废弃资源**：先标 `'intentionally-dropped'` 确认意图，确认后 DELETE 该行。不要长期保留 `'intentionally-dropped'` 行。
+- **修改资源**：直接 `INSERT OR REPLACE` 覆盖。不需要保留旧值行。
+
 ## 验证
 
 ```bash

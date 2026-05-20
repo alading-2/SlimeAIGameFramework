@@ -110,8 +110,9 @@ resource_docs AS (
     ) AS doc
     FROM resource_entry r
     LEFT JOIN capability_manifest c ON c.capability_id = r.owner_capability
-    WHERE r.owner_capability = 'shared'
-       OR c.enabled = 1
+    WHERE r.legacy_status NOT IN ('intentionally-dropped', 'missing')
+      AND (r.owner_capability = 'shared'
+       OR c.enabled = 1)
     ORDER BY r.category, r.resource_key
 ),
 counts AS (

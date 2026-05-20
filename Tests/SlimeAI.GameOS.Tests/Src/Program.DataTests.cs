@@ -278,6 +278,39 @@ internal partial class Program
             snapshot.RegisterResourcesWithReport().Errors[0].Code);
     }
 
+    static void TestRuntimeDataSnapshotRejectsDroppedAndMissingResources()
+    {
+        const string json = """
+        {
+          "schemaVersion": 2,
+          "generatedAtUtc": "2026-05-05T00:00:00Z",
+          "manifest": {
+            "schemaVersion": 2,
+            "generatedAtUtc": "2026-05-05T00:00:00Z",
+            "profile": "test",
+            "catalogId": "framework",
+            "enabledCapabilities": ["Damage"],
+            "descriptorCount": 0,
+            "recordCount": 0,
+            "resourceCount": 2,
+            "validation": { "warningCount": 0, "errorCount": 0 }
+          },
+          "descriptors": [],
+          "records": [],
+          "resources": [
+            { "category": "Entity", "key": "DroppedEntity", "path": "res://Dropped.tscn", "ownerCapability": "shared", "legacyStatus": "intentionally-dropped" },
+            { "category": "Entity", "key": "MissingEntity", "path": "res://Missing.tscn", "ownerCapability": "shared", "legacyStatus": "missing" }
+          ]
+        }
+        """;
+
+        var snapshot = RuntimeDataSnapshot.FromJson(json);
+        var report = snapshot.RegisterResourcesWithReport();
+        AssertEqual("dropped resource error count", 2, report.ErrorCount);
+        AssertEqual("dropped resource first code", "snapshot.resource_legacy_dropped", report.Errors[0].Code);
+        AssertEqual("missing resource second code", "snapshot.resource_legacy_dropped", report.Errors[1].Code);
+    }
+
     static string BuildSingleFieldSnapshot(
         string fieldKey,
         string fieldType,
