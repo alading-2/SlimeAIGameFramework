@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Data;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Schedule;
@@ -19,6 +20,8 @@ public sealed class MovementSystem : IRuntimeSystem
         public required MovementCollisionPolicy CollisionPolicy { get; init; }
         public MovementParams Params { get; set; }
     }
+
+    private static readonly GameOSContextLog Log = GameOSLog.For("MovementSystem");
 
     private readonly Dictionary<EntityId, ActiveMovement> activeMovements = new();
     private readonly IMovementCollisionTargetQuery collisionTargetQuery;
@@ -73,6 +76,16 @@ public sealed class MovementSystem : IRuntimeSystem
 
         entity.Data.Set(MovementDataKeys.IsMoving, true);
         entity.Events.Publish(new MovementEvents.Started(entity, movementParams));
+        Log.Info(
+            $"Movement started: {entity.EntityId.Value}, mode={movementParams.Mode}, speed={movementParams.Speed:0.##}",
+            new Dictionary<string, object?>
+            {
+                ["entityId"] = entity.EntityId.Value,
+                ["mode"] = movementParams.Mode.ToString(),
+                ["speed"] = movementParams.Speed,
+                ["maxDistance"] = movementParams.MaxDistance,
+                ["maxDuration"] = movementParams.MaxDuration,
+            });
         return true;
     }
 
@@ -89,6 +102,15 @@ public sealed class MovementSystem : IRuntimeSystem
             return false;
         }
 
+        Log.Info(
+            $"Movement stopped: {entity.EntityId.Value}, reason={reason}",
+            new Dictionary<string, object?>
+            {
+                ["entityId"] = entity.EntityId.Value,
+                ["reason"] = reason.ToString(),
+                ["elapsedTime"] = active.Params.ElapsedTime,
+                ["traveledDistance"] = active.Params.TraveledDistance,
+            });
         Finish(entity, active, reason);
         return true;
     }
@@ -268,5 +290,15 @@ public sealed class MovementSystem : IRuntimeSystem
         var context = new MovementStopContext(entity, active.Params, reason, finalPosition);
         active.Strategy.OnStop(entity, entity.Data, in context);
         entity.Events.Publish(new MovementEvents.Stopped(context));
+        Log.Debug(
+            $"Movement finished: {entity.EntityId.Value}, reason={reason}, duration={active.Params.ElapsedTime:0.##}s, distance={active.Params.TraveledDistance:0.##}",
+            new Dictionary<string, object?>
+            {
+                ["entityId"] = entity.EntityId.Value,
+                ["reason"] = reason.ToString(),
+                ["elapsedTime"] = active.Params.ElapsedTime,
+                ["traveledDistance"] = active.Params.TraveledDistance,
+                ["finalPosition"] = finalPosition.ToString(),
+            });
     }
 }

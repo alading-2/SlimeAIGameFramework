@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Attack.Events;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Timer;
 
@@ -13,6 +14,8 @@ namespace SlimeAI.GameOS.Capabilities.Attack;
 /// </summary>
 public sealed class AttackService
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("AttackService");
+
     private readonly TimerManager timerManager;
     private readonly DamageService damageService;
     private readonly Dictionary<EntityId, Subscription> subscriptions = new();
@@ -92,10 +95,27 @@ public sealed class AttackService
         var validation = Validate(request);
         if (validation.Result != AttackTriggerResult.Success)
         {
+            Log.Warn(
+                $"Attack request rejected: {request.Attacker.EntityId.Value} -> {request.Target?.EntityId.Value ?? "none"}, reason={validation.Result}, msg={validation.Message}",
+                new Dictionary<string, object?>
+                {
+                    ["attackerId"] = request.Attacker.EntityId.Value,
+                    ["targetId"] = request.Target?.EntityId.Value,
+                    ["result"] = validation.Result.ToString(),
+                    ["message"] = validation.Message,
+                });
             EmitCancelledForValidation(request, validation.Result);
             return validation;
         }
 
+        Log.Info(
+            $"Attack started: {request.Attacker.EntityId.Value} -> {request.Target?.EntityId.Value ?? "none"}",
+            new Dictionary<string, object?>
+            {
+                ["attackerId"] = request.Attacker.EntityId.Value,
+                ["targetId"] = request.Target?.EntityId.Value,
+                ["damage"] = request.Attacker.Data.Get<float>(AttackDataKeys.Damage, 0f),
+            });
         StartAttack(request);
         return new AttackTriggerReport(AttackTriggerResult.Success, null, string.Empty);
     }
@@ -141,12 +161,27 @@ public sealed class AttackService
         var target = request.Target;
         if (target == null || target.Data.Get<bool>(DamageDataKeys.IsDead, false))
         {
-            Cancel(attacker, target == null ? AttackCancelReason.TargetInvalid : AttackCancelReason.TargetDead);
+            var reason = target == null ? AttackCancelReason.TargetInvalid : AttackCancelReason.TargetDead;
+            Log.Warn(
+                $"Attack cancelled: {attacker.EntityId.Value}, reason={reason}",
+                new Dictionary<string, object?>
+                {
+                    ["attackerId"] = attacker.EntityId.Value,
+                    ["cancelReason"] = reason.ToString(),
+                });
+            Cancel(attacker, reason);
             return;
         }
 
         if (attacker.Data.Get<bool>(DamageDataKeys.IsDead, false))
         {
+            Log.Warn(
+                $"Attack cancelled: {attacker.EntityId.Value}, reason={AttackCancelReason.SelfDead}",
+                new Dictionary<string, object?>
+                {
+                    ["attackerId"] = attacker.EntityId.Value,
+                    ["cancelReason"] = AttackCancelReason.SelfDead.ToString(),
+                });
             Cancel(attacker, AttackCancelReason.SelfDead);
             return;
         }
@@ -161,6 +196,16 @@ public sealed class AttackService
             Tags = DamageTags.Attack
         });
         attacker.Events.Publish(new Finished(attacker, target, result.Applied));
+        Log.Info(
+            $"Attack hit: {attacker.EntityId.Value} -> {target.EntityId.Value}, applied={result.Applied}, damage={result.Info.FinalDamage:0.##}",
+            new Dictionary<string, object?>
+            {
+                ["attackerId"] = attacker.EntityId.Value,
+                ["targetId"] = target.EntityId.Value,
+                ["applied"] = result.Applied,
+                ["finalDamage"] = result.Info.FinalDamage,
+                ["isFatal"] = result.Info.IsFatal,
+            });
         StartRecovery(attacker);
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.Capabilities.Damage;
@@ -10,6 +11,8 @@ namespace SlimeAI.GameOS.Capabilities.Damage;
 /// </summary>
 public sealed class DamageService
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("DamageService");
+
     /// <summary>进程级默认 DamageService。</summary>
     public static DamageService Instance { get; } = new();
 
@@ -50,7 +53,50 @@ public sealed class DamageService
 
         var applied = info.FinalDamage > 0f && !info.IsBlocked && !info.IsDodged;
         var message = applied ? string.Empty : ResolveBlockedMessage(info);
-        return new DamageResult(applied, info, info.OldHp, info.NewHp, message);
+        var result = new DamageResult(applied, info, info.OldHp, info.NewHp, message);
+
+        if (applied)
+        {
+            Log.Info(
+                $"Damage applied: {info.Attacker?.EntityId.Value ?? "none"} -> {info.Victim.EntityId.Value}, " +
+                $"raw={info.Damage:0.##}, final={info.FinalDamage:0.##}, hp={info.OldHp:0.##}->{info.NewHp:0.##}",
+                new Dictionary<string, object?>
+                {
+                    ["attackerId"] = info.Attacker?.EntityId.Value,
+                    ["victimId"] = info.Victim.EntityId.Value,
+                    ["rawDamage"] = info.Damage,
+                    ["finalDamage"] = info.FinalDamage,
+                    ["oldHp"] = info.OldHp,
+                    ["newHp"] = info.NewHp,
+                    ["isCritical"] = info.IsCritical,
+                    ["isFatal"] = info.IsFatal,
+                });
+        }
+        else if (info.IsDodged)
+        {
+            Log.Info(
+                $"Damage dodged: {info.Attacker?.EntityId.Value ?? "none"} -> {info.Victim.EntityId.Value}",
+                new Dictionary<string, object?>
+                {
+                    ["attackerId"] = info.Attacker?.EntityId.Value,
+                    ["victimId"] = info.Victim.EntityId.Value,
+                    ["rawDamage"] = info.Damage,
+                });
+        }
+        else if (info.IsBlocked)
+        {
+            Log.Info(
+                $"Damage blocked: {info.Attacker?.EntityId.Value ?? "none"} -> {info.Victim.EntityId.Value}, reason={message}",
+                new Dictionary<string, object?>
+                {
+                    ["attackerId"] = info.Attacker?.EntityId.Value,
+                    ["victimId"] = info.Victim.EntityId.Value,
+                    ["rawDamage"] = info.Damage,
+                    ["blockReason"] = message,
+                });
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -62,6 +108,7 @@ public sealed class DamageService
         ArgumentNullException.ThrowIfNull(processor);
         processors.Add(processor);
         processors.Sort(static (a, b) => a.Priority.CompareTo(b.Priority));
+        Log.Debug($"Registered damage processor: {processor.GetType().Name} (priority={processor.Priority})");
     }
 
     /// <summary>

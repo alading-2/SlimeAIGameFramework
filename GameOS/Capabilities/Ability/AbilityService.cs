@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Ability.Events;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Feature;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Timer;
 
@@ -13,6 +14,8 @@ namespace SlimeAI.GameOS.Capabilities.Ability;
 /// </summary>
 public sealed class AbilityService
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("AbilityService");
+
     private readonly TimerManager timerManager;
     private readonly FeatureService featureService;
     private readonly DamageService damageService;
@@ -79,6 +82,15 @@ public sealed class AbilityService
         var check = CheckCanUse(context);
         if (check.Result != AbilityTriggerResult.Success)
         {
+            Log.Warn(
+                $"Ability trigger failed: {context.Ability.EntityId.Value} by {context.Caster.EntityId.Value}, reason={check.Result}, msg={check.Message}",
+                new Dictionary<string, object?>
+                {
+                    ["abilityId"] = context.Ability.EntityId.Value,
+                    ["casterId"] = context.Caster.EntityId.Value,
+                    ["result"] = check.Result.ToString(),
+                    ["message"] = check.Message,
+                });
             EmitFailed(context, check.Result, check.Message);
             return check;
         }
@@ -91,6 +103,18 @@ public sealed class AbilityService
         var executed = ExecuteFeatureOrDamage(context);
         context.Ability.Data.Set(AbilityDataKeys.IsActive, false);
         context.Ability.Events.Publish(new Executed(context, executed));
+
+        Log.Info(
+            $"Ability triggered: {context.Ability.EntityId.Value} by {context.Caster.EntityId.Value}, " +
+            $"targetsHit={executed.TargetsHit}, totalDamage={executed.TotalDamage:0.##}",
+            new Dictionary<string, object?>
+            {
+                ["abilityId"] = context.Ability.EntityId.Value,
+                ["casterId"] = context.Caster.EntityId.Value,
+                ["targetsHit"] = executed.TargetsHit,
+                ["totalDamage"] = executed.TotalDamage,
+                ["damageType"] = context.DamageType.ToString(),
+            });
 
         return new AbilityTriggerReport(AbilityTriggerResult.Success, executed, string.Empty);
     }
@@ -116,7 +140,19 @@ public sealed class AbilityService
                 continue;
             }
 
-            ability.Data.Set(AbilityDataKeys.CooldownRemaining, MathF.Max(0f, remaining - delta));
+            var newRemaining = MathF.Max(0f, remaining - delta);
+            ability.Data.Set(AbilityDataKeys.CooldownRemaining, newRemaining);
+            if (newRemaining <= 0f && remaining > 0f)
+            {
+                Log.Debug(
+                    $"Ability cooldown ready: {ability.EntityId.Value}",
+                    new Dictionary<string, object?>
+                    {
+                        ["abilityId"] = ability.EntityId.Value,
+                        ["previousRemaining"] = remaining,
+                        ["delta"] = delta,
+                    });
+            }
         }
     }
 
