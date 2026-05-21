@@ -48,9 +48,16 @@ public sealed class FindNearestTargetAction : BehaviorNode
                 continue;
             }
 
+            var candidateTeam = candidate.Data.Get<int>(CollisionDataKeys.Team, 0);
+            var candidateHp = candidate.Data.Get<float>(DamageDataKeys.CurrentHp, 0f);
+            if (candidateTeam == 0 || candidateHp <= 0f)
+            {
+                continue;
+            }
+
             if (excludeSameTeam
                 && selfTeam != 0
-                && candidate.Data.Get<int>(CollisionDataKeys.Team, 0) == selfTeam)
+                && candidateTeam == selfTeam)
             {
                 continue;
             }

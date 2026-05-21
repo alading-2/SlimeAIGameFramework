@@ -48,18 +48,29 @@ internal partial class Program
         var sameTeam = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-same-team") });
         sameTeam.Data.Set(MovementDataKeys.Position, new Vector2Value(1f, 0f));
         sameTeam.Data.Set(CollisionDataKeys.Team, 1);
+        sameTeam.Data.Set(DamageDataKeys.MaxHp, 20f);
+        sameTeam.Data.Set(DamageDataKeys.CurrentHp, 20f);
+
+        var nonCombatAbility = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-ability-entity") });
+        nonCombatAbility.Data.Set(MovementDataKeys.Position, new Vector2Value(1.5f, 0f));
 
         var farEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-far-enemy") });
         farEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(8f, 0f));
         farEnemy.Data.Set(CollisionDataKeys.Team, 2);
+        farEnemy.Data.Set(DamageDataKeys.MaxHp, 20f);
+        farEnemy.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
         var nearEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-near-enemy") });
         nearEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 0f));
         nearEnemy.Data.Set(CollisionDataKeys.Team, 2);
+        nearEnemy.Data.Set(DamageDataKeys.MaxHp, 20f);
+        nearEnemy.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
         var deadEnemy = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("ai-query-dead-enemy") });
         deadEnemy.Data.Set(MovementDataKeys.Position, new Vector2Value(2f, 0f));
         deadEnemy.Data.Set(CollisionDataKeys.Team, 2);
+        deadEnemy.Data.Set(DamageDataKeys.MaxHp, 20f);
+        deadEnemy.Data.Set(DamageDataKeys.CurrentHp, 0f);
         deadEnemy.Data.Set(DamageDataKeys.IsDead, true);
 
         var context = new AIContext { Entity = agent, Delta = 0.1f };
@@ -137,6 +148,8 @@ internal partial class Program
         agent.Data.Set(AIDataKeys.AttackRange, 5f);
         target.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 4f));
         target.Data.Set(CollisionDataKeys.Team, 2);
+        target.Data.Set(DamageDataKeys.MaxHp, 20f);
+        target.Data.Set(DamageDataKeys.CurrentHp, 20f);
 
         var requested = 0;
         agent.Events.Subscribe<AttackEvents.Requested>(_ => requested++);

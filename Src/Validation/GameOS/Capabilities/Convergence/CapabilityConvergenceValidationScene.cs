@@ -347,6 +347,7 @@ public partial class CapabilityConvergenceValidationScene : Node
         var aiTarget = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("scene-ai-target") });
         aiTarget.Data.Set(MovementDataKeys.Position, new Vector2Value(3f, 0f));
         aiTarget.Data.Set(CollisionDataKeys.Team, 2);
+        aiTarget.Data.Set(DamageDataKeys.CurrentHp, 20f);
         var ignoredTarget = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("scene-ai-ignored") });
         ignoredTarget.Data.Set(MovementDataKeys.Position, new Vector2Value(1f, 0f));
         ignoredTarget.Data.Set(CollisionDataKeys.Team, 2);

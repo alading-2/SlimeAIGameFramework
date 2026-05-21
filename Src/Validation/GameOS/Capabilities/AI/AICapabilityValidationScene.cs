@@ -38,6 +38,7 @@ public partial class AICapabilityValidationScene : Node
             new[]
             {
                 "FindNearestTargetAction selects nearest valid enemy through injected query",
+                "FindNearestTargetAction ignores non-combat ability-like candidates without team and HP data",
                 "PatrolAction writes deterministic AI movement intent",
                 "RequestAttackAction publishes attack request and stops movement speed",
                 "PrepareAbilityAutoTargetContextsAction builds AbilityCastContext for auto-target ability"
@@ -70,16 +71,24 @@ public partial class AICapabilityValidationScene : Node
         var near = CapabilityValidationSupport.Spawn("ai-scene-near");
         var far = CapabilityValidationSupport.Spawn("ai-scene-far");
         var friend = CapabilityValidationSupport.Spawn("ai-scene-friend");
+        var nonCombatAbility = CapabilityValidationSupport.Spawn("ai-scene-ability-entity");
         self.Data.Set(MovementDataKeys.Position, Vector2Value.Zero);
         self.Data.Set(CollisionDataKeys.Team, 1);
         near.Data.Set(MovementDataKeys.Position, new Vector2Value(10f, 0f));
         near.Data.Set(CollisionDataKeys.Team, 2);
+        near.Data.Set(DamageDataKeys.MaxHp, 20f);
+        near.Data.Set(DamageDataKeys.CurrentHp, 20f);
         far.Data.Set(MovementDataKeys.Position, new Vector2Value(40f, 0f));
         far.Data.Set(CollisionDataKeys.Team, 2);
+        far.Data.Set(DamageDataKeys.MaxHp, 20f);
+        far.Data.Set(DamageDataKeys.CurrentHp, 20f);
         friend.Data.Set(MovementDataKeys.Position, new Vector2Value(1f, 0f));
         friend.Data.Set(CollisionDataKeys.Team, 1);
+        friend.Data.Set(DamageDataKeys.MaxHp, 20f);
+        friend.Data.Set(DamageDataKeys.CurrentHp, 20f);
+        nonCombatAbility.Data.Set(MovementDataKeys.Position, new Vector2Value(2f, 0f));
 
-        var query = new FixedAITargetQuery(new IEntity[] { far, friend, near });
+        var query = new FixedAITargetQuery(new IEntity[] { far, friend, nonCombatAbility, near });
         var state = new FindNearestTargetAction(range: 30f, targetQuery: query).Evaluate(new AIContext { Entity = self, Delta = 0.1f });
         var selected = self.Data.Get<EntityId?>(AIDataKeys.TargetEntity, null);
         var success = state == AIState.Success
@@ -91,6 +100,7 @@ public partial class AICapabilityValidationScene : Node
             ("queryCalls", query.Calls),
             ("selected", selected?.Value),
             ("expected", near.EntityId.Value),
+            ("ignoredNonCombat", nonCombatAbility.EntityId.Value),
             ("state", state.ToString())));
     }
 

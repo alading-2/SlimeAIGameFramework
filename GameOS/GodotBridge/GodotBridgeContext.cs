@@ -57,6 +57,11 @@ public sealed class GodotBridgeContext
         ArgumentNullException.ThrowIfNull(entityNode);
         ArgumentNullException.ThrowIfNull(entity);
 
+        if (!IsRegisteredEntityNode(entityNode, entity))
+        {
+            return false;
+        }
+
         if (unregisterComponents)
         {
             UnregisterComponents(entityNode, entity);
@@ -77,6 +82,7 @@ public sealed class GodotBridgeContext
 
         if (entityNode.IsInsideTree())
         {
+            UnregisterEntityImmediate(entityNode, entity);
             if (!entityNode.IsQueuedForDeletion())
             {
                 entityNode.QueueFree();
@@ -190,5 +196,23 @@ public sealed class GodotBridgeContext
         }
 
         return nodeRegistered || adapterRegistered;
+    }
+
+    private bool UnregisterEntityImmediate(Node entityNode, IEntity entity)
+    {
+        if (!IsRegisteredEntityNode(entityNode, entity))
+        {
+            return false;
+        }
+
+        UnregisterComponents(entityNode, entity);
+        var entityDestroyed = World.EntityRegistry.DestroyImmediate(entity.EntityId);
+        var nodeUnregistered = Registry.Unregister(entityNode, entity.EntityId.Value);
+        return entityDestroyed || nodeUnregistered;
+    }
+
+    private bool IsRegisteredEntityNode(Node entityNode, IEntity entity)
+    {
+        return Registry.GetNodeById(entity.EntityId.Value) == entityNode;
     }
 }
