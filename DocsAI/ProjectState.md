@@ -1,6 +1,6 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-21（BrotatoLike lifecycle regression fix）
+> 更新日期：2026-05-21（BrotatoLike runtime pooling / input / wave UI fix）
 
 ## 当前阶段
 
@@ -9,6 +9,8 @@ M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17
 OpenSpec change `systemagent-integrated-validation-governance` 已落地 SystemAgent C 方案主体：新增 SeniorGameDeveloper / SeniorProgrammer 审查角色，强化 ReviewGates / TDD / BDD 场景映射，BrotatoLike 新增 `DocsAI/ValidationManifest.json` 作为 release-batch 权威选择源，Godot runner/analyzer 产出 durable `gate-report.json` 并联合检查 README、`index.json`、per-scene `result.json` 和 scene artifact 五字段。Targeted gate report `Games/BrotatoLike/.ai-temp/scene-tests/runs/2026-05-21/10-06-55/gate-report.json` 为 `pass`；历史 release-batch gate report `Games/BrotatoLike/.ai-temp/scene-tests/runs/2026-05-21/10-13-37/gate-report.json` 为 `block`，当时 blocker 是 game-owned `BrotatoLikePlayableUXValidation` 和 `BrotatoLikeProgressionLoopValidation` 的 artifact check 失败，不是 metadata 漏项。`BrotatoLikePlayableUXValidation` 已在 `fix-brotatolike-lifecycle-regressions` targeted run 中复验通过；完整 release-batch 仍需后续重跑，`BrotatoLikeProgressionLoopValidation` 仍按历史 blocker 处理。
 
 OpenSpec change `fix-brotatolike-lifecycle-regressions` 已完成 targeted 修复与验证：`GodotBridgeContext.DestroyEntity()` 在树内销毁时同步释放 Runtime Entity、node registry 和 adapter registry 后再 `QueueFree()`，避免同 EntityId 复活同帧重建时输入/技能 adapter 绑定丢失；`FindNearestTargetAction` 现在排除自身、死亡、无有效 team、无正数 HP evidence、同队和超范围候选，防止 ability/projectile/effect 等非战斗实体被 AI 攻击；BrotatoLike HUD 改为由 `BrotatoLikeHud` 统一执行 world-to-canvas 坐标转换，`HealthBarUI` / `DamageNumberUI` 只接收 CanvasLayer-local `Position`。验证证据见“最新验证 / fix-brotatolike-lifecycle-regressions”。
+
+OpenSpec change `fix-brotatolike-runtime-pooling-input-wave-ui-regressions` 已完成 targeted 修复与验证：`GodotProjectileEffectSpawner` 对 Projectile / Effect visual 使用 scene-path keyed `GodotNodePool`，Runtime entity destroy 时注销 `GodotNodeRegistry` 并优先回池，`QueueFree()` 只作为 fallback；finite Effect 按 `Effect.Duration` 或可推导的非循环 `AnimatedSprite2D` 动画生命周期销毁 Runtime effect entity。游戏侧同步修复 HUD transient UI 池化、技能槽数字键直选、有限 wave expected spawn count evidence 和鱼人/豺狼人头顶血条高度。验证证据见“最新验证 / fix-brotatolike-runtime-pooling-input-wave-ui-regressions”。
 
 OpenSpec change `refactor-dataos-table-authoring` 已完成实现、验证并 archived，baseline 已合入 `openspec/specs/dataos-table-authoring/` 等 DataOS 规格：DataOS authoring 主入口从万能 key-value / EAV 行迁到清晰业务表，generator 再投影成现有 Runtime snapshot。核心原则是 AI-first 不是让 AI 在 `data_field` 中靠上下文重建业务含义，而是让人和 AI 先能直接读懂 Unit / Ability / Feature / System / Spawn 业务表；`data_record / data_field` 保留为兼容和 projection 形状，`RuntimeDataSnapshot` JSON shape 与 loader API 未改。
 
@@ -61,6 +63,29 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 - 玩家输入系统已迁入游戏侧：`BrotatoLikePlayerInputComponent`（`Games/BrotatoLike/Src/Game/Bridge/`）读取 Godot Input Map 的 MoveLeft/Right/Up/Down、UseSkill、PreviousSkill、NextSkill，将移动方向写入 `MovementDataKeys.InputDirection`，并发布 game-side `InputUseSkill / InputPreviousSkill / InputNextSkill` 到 Entity EventBus；支持 `CanMoveInput` 门禁和 `Movement.Acceleration` 平滑移动插值。`GodotActiveSkillInputComponent`（游戏侧）订阅技能输入事件，管理 `AbilityDataKeys.OwnedAbilityIds` 和 `CurrentAbilityIndex`，通过 `AbilityTargetingTool` 自动索敌后调用 `AbilityService.TryTrigger`。BrotatoLike `SpawnPlayer` 已接入：生成玩家时从 DataOS 创建 slam / chain_lightning 初始技能实体，挂载双输入组件，启动 PlayerInput 移动策略；框架 GodotBridge 不再持有 BrotatoLike-specific 输入组件。
 
 ## 最新验证
+
+### fix-brotatolike-runtime-pooling-input-wave-ui-regressions（2026-05-21）
+
+```bash
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run-many \
+  res://SlimeAI/Src/Validation/GameOS/Capabilities/Effect/EffectCapabilityValidation.tscn \
+  res://SlimeAI/Src/Validation/GameOS/Capabilities/Projectile/ProjectileCapabilityValidation.tscn \
+  res://Src/Validation/Game/Input/BrotatoLikeInputEventValidation.tscn \
+  res://Src/Validation/Game/PlayableUX/BrotatoLikePlayableUXValidation.tscn \
+  res://Src/Validation/Game/Skills/BrotatoLikeSkillValidation.tscn \
+  res://Src/Validation/Game/RunFlow/BrotatoLikeRunFlowValidation.tscn \
+  res://Scenes/Main.tscn \
+  --timeout 25 --continue-on-fail --errors-only --log-dir .ai-temp/scene-tests/runs
+Tools/analyze-godot-scene-logs.sh --run-dir .ai-temp/scene-tests/runs/2026-05-21/21-56-47 --manifest DocsAI/ValidationManifest.json --gate-report .ai-temp/scene-tests/runs/2026-05-21/21-56-47/gate-report.json
+```
+
+结果：框架 build PASS（`0 Warning(s), 0 Error(s)`）；框架 tests 全部 PASS；BrotatoLike build PASS（DataOS validation PASS，`0 Warning(s), 0 Error(s)`）。Godot targeted run `Games/BrotatoLike/.ai-temp/scene-tests/runs/2026-05-21/21-56-47/index.json` 为 7 executed、7 passed、0 failed、0 stderr lines；`gate-report.json` verdict `pass`。Effect artifact `finite_visual_lifecycle_pool_cleanup` 与 Projectile artifact `visual_lifecycle_pool_cleanup` 均为 pass，记录 node registry cleanup 和 pool return；Input/PlayableUX/RunFlow/Main artifact 记录直接技能槽、HUD transient cleanup、有限 wave expected/actual spawn count 和血条高度 evidence。Scene gate 已检查 `index.json`、7 个 per-scene `result.json`、7 个 scene artifact 和 `gate-report.json`；artifact 的 `expectedInputs / expectedObservations / passCriteria / failCriteria / artifactPath` 均非空。
 
 ### fix-brotatolike-lifecycle-regressions（2026-05-21）
 

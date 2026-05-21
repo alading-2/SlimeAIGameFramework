@@ -4,9 +4,11 @@ using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Capabilities.Projectile;
 using ProjectileEvents = SlimeAI.GameOS.Capabilities.Projectile.Events;
+using SlimeAI.GameOS.GodotBridge;
 using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Pool;
 
 namespace SlimeAI.SceneTests.GameOS.Capabilities.Projectile;
 
@@ -34,7 +36,8 @@ public partial class ProjectileCapabilityValidationScene : Node
                 "ProjectileTool.Spawn writes projectile data and spawned event",
                 "movement collision emits hit events",
                 "pierce/max hits and lifetime destroy are enforced",
-                "damage integration applies projectile damage"
+                "damage integration applies projectile damage",
+                "projectile visual node returns to pool on runtime entity destruction"
             },
             new[] { $"stdout contains {PassMarker}", "artifact status is pass", "failureReasons is empty" },
             new[] { $"stdout contains {FailMarker}", "any Projectile check fails", "artifact standard-answer fields are missing" },
@@ -44,6 +47,7 @@ public partial class ProjectileCapabilityValidationScene : Node
                 validation.Check("movement_hit_and_damage", "ProjectileHit", ValidateMovementHitAndDamage);
                 validation.Check("pierce_max_hits", "ProjectileLifecycle", ValidatePierceMaxHits);
                 validation.Check("lifetime_destroy", "ProjectileLifecycle", ValidateLifetimeDestroy);
+                validation.Check("visual_lifecycle_pool_cleanup", "ProjectileVisualLifecycle", () => ValidateVisualLifecycle(this));
             });
     }
 
@@ -181,5 +185,62 @@ public partial class ProjectileCapabilityValidationScene : Node
 
         return CheckResult.From(success, success ? "projectile destroyed after lifetime" : "projectile lifetime destroy mismatch", CapabilityValidationSupport.Details(
             ("destroyed", success)));
+    }
+
+    private static CheckResult ValidateVisualLifecycle(Node owner)
+    {
+        EntityManager.Clear();
+        WorldEvents.World.Clear();
+        GodotNodeRegistry.Clear();
+        ObjectPoolManager.DestroyAll();
+
+        var spawner = new GodotProjectileEffectSpawner
+        {
+            Name = "ProjectileVisualLifecycleSpawner",
+            AutoSubscribe = false
+        };
+        owner.AddChild(spawner);
+        spawner.Subscribe();
+
+        var source = CapabilityValidationSupport.Spawn("projectile-scene-visual-source");
+        var projectileId = new EntityId("projectile-scene-visual-projectile");
+        var result = ProjectileTool.Spawn(new ProjectileSpawnOptions
+        {
+            Source = source,
+            EntityId = projectileId,
+            ScenePath = "res://SlimeAI/Src/Validation/GameOS/Capabilities/Projectile/ProjectileVisualProbe.tscn",
+            SpawnPosition = new Vector2Value(5f, 6f),
+            Direction = new Vector2Value(1f, 0f),
+            Speed = 1f
+        });
+
+        var node = GodotNodeRegistry.GetNodeById(projectileId.Value);
+        var poolName = node != null && node.HasMeta("GameOSVisualPoolName")
+            ? node.GetMeta("GameOSVisualPoolName").AsString()
+            : string.Empty;
+        EntityManager.Destroy(result.Projectile);
+
+        var destroyed = EntityManager.Get(projectileId) == null;
+        var registryCleared = GodotNodeRegistry.GetNodeById(projectileId.Value) == null;
+        var poolReturned = !string.IsNullOrWhiteSpace(poolName)
+            && ObjectPoolManager.GetAllStats().TryGetValue(poolName, out var stats)
+            && stats.TotalReleased >= 1
+            && stats.Count >= 1;
+        var success = result.Created
+            && node != null
+            && destroyed
+            && registryCleared
+            && poolReturned;
+
+        spawner.Unsubscribe();
+        spawner.QueueFree();
+
+        return CheckResult.From(success, success ? "projectile visual returned to pool" : "projectile visual lifecycle mismatch", CapabilityValidationSupport.Details(
+            ("created", result.Created),
+            ("nodeRegisteredBeforeCleanup", node != null),
+            ("poolName", poolName),
+            ("runtimeDestroyed", destroyed),
+            ("registryCleared", registryCleared),
+            ("poolReturned", poolReturned)));
     }
 }

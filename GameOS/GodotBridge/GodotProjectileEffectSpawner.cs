@@ -11,6 +11,7 @@ using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Events.Core;
 using SlimeAI.GameOS.Runtime.Resource;
+using SlimeAI.GameOS.Runtime.Timer;
 
 namespace SlimeAI.GameOS.GodotBridge;
 
@@ -23,6 +24,7 @@ public partial class GodotProjectileEffectSpawner : Node
     private IDisposable? effectSpawnedToken;
     private IDisposable? entityDestroyedToken;
     private readonly HashSet<EntityId> spawnedVisualEntityIds = new();
+    private readonly Dictionary<string, GodotNodePool<Node>> visualPools = new(StringComparer.Ordinal);
 
     /// <summary>
     /// 是否进入 SceneTree 后自动订阅 Runtime 事件。
@@ -100,6 +102,7 @@ public partial class GodotProjectileEffectSpawner : Node
         if (node != null)
         {
             PlayEffectAnimation(data.Effect, node);
+            ScheduleFiniteEffectCleanup(data.Effect, node);
         }
     }
 
@@ -117,6 +120,11 @@ public partial class GodotProjectileEffectSpawner : Node
         }
 
         GodotNodeRegistry.Unregister(node, data.Entity.EntityId.Value);
+        if (GodotNodePoolManager.ReturnToPool(node))
+        {
+            return;
+        }
+
         if (node.IsInsideTree() && !node.IsQueuedForDeletion())
         {
             node.QueueFree();
@@ -135,6 +143,42 @@ public partial class GodotProjectileEffectSpawner : Node
             return null;
         }
 
+        var pool = GetOrCreateVisualPool(scenePath, parent, kind);
+        if (pool == null)
+        {
+            return null;
+        }
+
+        var node = pool.Get(activateNode: false);
+        node.Name = $"{kind}_{entity.EntityId.Value}";
+        ResetVisualNodeForAcquire(node);
+        ApplyInitialPosition(node, position);
+        node.SetMeta("GameOSVisualKind", kind);
+        node.SetMeta("GameOSVisualScenePath", scenePath);
+        node.SetMeta("GameOSVisualPoolName", pool.PoolName);
+        if (GodotNodeRegistry.Register(node, entity.EntityId.Value))
+        {
+            spawnedVisualEntityIds.Add(entity.EntityId);
+            pool.Activate(node);
+            return node;
+        }
+
+        if (!GodotNodePoolManager.ReturnToPool(node) && node.IsInsideTree() && !node.IsQueuedForDeletion())
+        {
+            node.QueueFree();
+        }
+
+        return null;
+    }
+
+    private GodotNodePool<Node>? GetOrCreateVisualPool(string scenePath, Node parent, string kind)
+    {
+        var key = $"{kind}|{scenePath}";
+        if (visualPools.TryGetValue(key, out var existing))
+        {
+            return existing;
+        }
+
         var scene = ResourceManagement.LoadPath<PackedScene>(scenePath);
         if (scene == null)
         {
@@ -142,22 +186,18 @@ public partial class GodotProjectileEffectSpawner : Node
             return null;
         }
 
-        var node = scene.Instantiate();
-        node.Name = $"{kind}_{entity.EntityId.Value}";
-        ApplyInitialPosition(node, position);
-        parent.AddChild(node);
-        if (GodotNodeRegistry.Register(node, entity.EntityId.Value))
-        {
-            spawnedVisualEntityIds.Add(entity.EntityId);
-            return node;
-        }
-
-        if (node.IsInsideTree() && !node.IsQueuedForDeletion())
-        {
-            node.QueueFree();
-        }
-
-        return null;
+        var pool = new GodotNodePool<Node>(
+            () => scene.Instantiate(),
+            new GodotNodePoolConfig
+            {
+                Name = BuildPoolName(kind, scenePath),
+                InitialSize = 0,
+                MaxSize = -1,
+                ActiveParent = parent
+            },
+            ResetVisualNodeForRelease);
+        visualPools[key] = pool;
+        return pool;
     }
 
     private Node ResolveParent(NodePath? path)
@@ -176,6 +216,47 @@ public partial class GodotProjectileEffectSpawner : Node
         {
             node2D.Position = new Vector2(position.X, position.Y);
         }
+    }
+
+    private static void ScheduleFiniteEffectCleanup(IEntity effect, Node node)
+    {
+        var lifetime = ResolveEffectLifetime(effect, node);
+        if (lifetime <= 0f)
+        {
+            return;
+        }
+
+        var effectId = effect.EntityId;
+        TimerManager.Instance.Delay(lifetime).OnComplete(() =>
+        {
+            if (EntityManager.Get(effectId) != null)
+            {
+                EntityManager.Destroy(effectId);
+            }
+        });
+    }
+
+    private static float ResolveEffectLifetime(IEntity effect, Node node)
+    {
+        var duration = effect.Data.Get<float>(EffectDataKeys.Duration, -1f);
+        if (duration > 0f)
+        {
+            return duration;
+        }
+
+        var sprite = ResolveAnimatedSprite(node);
+        if (sprite?.SpriteFrames == null)
+        {
+            return -1f;
+        }
+
+        var animationName = ResolveEffectAnimationName(effect, sprite);
+        if (string.IsNullOrWhiteSpace(animationName))
+        {
+            return -1f;
+        }
+
+        return ResolveAnimationDuration(sprite, animationName);
     }
 
     private static void PlayEffectAnimation(IEntity effect, Node node)
@@ -235,6 +316,94 @@ public partial class GodotProjectileEffectSpawner : Node
         }
 
         return (float)(frameCount / fps / duration);
+    }
+
+    private static float ResolveAnimationDuration(AnimatedSprite2D sprite, string animationName)
+    {
+        if (sprite.SpriteFrames == null)
+        {
+            return -1f;
+        }
+
+        if (sprite.SpriteFrames.GetAnimationLoop(animationName))
+        {
+            return -1f;
+        }
+
+        var frameCount = sprite.SpriteFrames.GetFrameCount(animationName);
+        var fps = sprite.SpriteFrames.GetAnimationSpeed(animationName);
+        if (frameCount <= 0 || fps <= 0f)
+        {
+            return -1f;
+        }
+
+        return (float)(frameCount / fps);
+    }
+
+    private static void ResetVisualNodeForAcquire(Node node)
+    {
+        ResetVisualNodeForRelease(node);
+        if (node is CanvasItem item)
+        {
+            item.Visible = true;
+        }
+    }
+
+    private static void ResetVisualNodeForRelease(Node node)
+    {
+        if (node is Node2D node2D)
+        {
+            node2D.Position = Vector2.Zero;
+            node2D.Rotation = 0f;
+            node2D.Scale = Vector2.One;
+        }
+
+        if (node is CanvasItem item)
+        {
+            item.Modulate = new Color(1f, 1f, 1f, 1f);
+            item.SelfModulate = new Color(1f, 1f, 1f, 1f);
+        }
+
+        var sprite = ResolveAnimatedSprite(node);
+        if (sprite != null)
+        {
+            sprite.Stop();
+            sprite.Frame = 0;
+            sprite.FrameProgress = 0f;
+            sprite.SpeedScale = 1f;
+        }
+
+        var players = node.FindChildren("*", nameof(AnimationPlayer), recursive: true, owned: false);
+        for (var i = 0; i < players.Count; i++)
+        {
+            if (players[i] is AnimationPlayer player)
+            {
+                player.Stop();
+            }
+        }
+    }
+
+    private string BuildPoolName(string kind, string scenePath)
+    {
+        var suffix = SanitizePoolNameSegment(scenePath);
+        return $"GameOS{kind}VisualPool_{GetInstanceId()}_{suffix}";
+    }
+
+    private static string SanitizePoolNameSegment(string value)
+    {
+        Span<char> buffer = stackalloc char[Math.Min(96, Math.Max(1, value.Length))];
+        var index = 0;
+        for (var i = 0; i < value.Length && index < buffer.Length; i++)
+        {
+            var c = value[i];
+            buffer[index++] = (c >= 'A' && c <= 'Z')
+                || (c >= 'a' && c <= 'z')
+                || (c >= '0' && c <= '9')
+                ? c
+                : '_';
+        }
+
+        return index > 0 ? new string(buffer[..index]) : "visual";
     }
 
     private static AnimatedSprite2D? ResolveAnimatedSprite(Node node)

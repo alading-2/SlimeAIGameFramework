@@ -2,9 +2,12 @@ using Godot;
 using SlimeAI.GameOS.Capabilities.Effect;
 using SlimeAI.GameOS.Capabilities.Effect.Events;
 using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.GodotBridge;
 using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
+using SlimeAI.GameOS.Runtime.Pool;
+using SlimeAI.GameOS.Runtime.Timer;
 
 namespace SlimeAI.SceneTests.GameOS.Capabilities.Effect;
 
@@ -32,7 +35,8 @@ public partial class EffectCapabilityValidationScene : Node
                 "EffectTool.Spawn writes source, ability, target, path, name, position and duration data",
                 "source SpawnedEffectIds owner list includes the spawned effect",
                 "Effect Spawned event payload points to source/target/ability",
-                "visual path remains a string data contract"
+                "visual path remains a string data contract",
+                "finite visual effects destroy runtime entity and return their Godot node to pool"
             },
             new[] { $"stdout contains {PassMarker}", "artifact status is pass", "failureReasons is empty" },
             new[] { $"stdout contains {FailMarker}", "any Effect check fails", "artifact standard-answer fields are missing" },
@@ -41,6 +45,7 @@ public partial class EffectCapabilityValidationScene : Node
                 validation.Check("spawn_data_and_owner_list", "EffectSpawn", ValidateSpawnDataAndOwnerList);
                 validation.Check("spawn_event_payload", "EffectEvents", ValidateSpawnEventPayload);
                 validation.Check("visual_path_as_data", "EffectVisualBoundary", ValidateVisualPathAsData);
+                validation.Check("finite_visual_lifecycle_pool_cleanup", "EffectVisualLifecycle", () => ValidateFiniteVisualLifecycle(this));
             });
     }
 
@@ -124,5 +129,62 @@ public partial class EffectCapabilityValidationScene : Node
         return CheckResult.From(success, success ? "visual path stayed as data" : "effect visual path mismatch", CapabilityValidationSupport.Details(
             ("scenePath", path),
             ("animation", animation)));
+    }
+
+    private static CheckResult ValidateFiniteVisualLifecycle(Node owner)
+    {
+        EntityManager.Clear();
+        WorldEvents.World.Clear();
+        GodotNodeRegistry.Clear();
+        ObjectPoolManager.DestroyAll();
+
+        var spawner = new GodotProjectileEffectSpawner
+        {
+            Name = "EffectVisualLifecycleSpawner",
+            AutoSubscribe = false
+        };
+        owner.AddChild(spawner);
+        spawner.Subscribe();
+
+        var source = CapabilityValidationSupport.Spawn("effect-scene-visual-source");
+        var effectId = new EntityId("effect-scene-visual-effect");
+        var result = EffectTool.Spawn(new EffectSpawnOptions
+        {
+            Source = source,
+            EntityId = effectId,
+            ScenePath = "res://SlimeAI/Src/Validation/GameOS/Capabilities/Effect/EffectVisualProbe.tscn",
+            Name = "visual-effect",
+            Position = new Vector2Value(3f, 4f),
+            Duration = 0.1f
+        });
+
+        var node = GodotNodeRegistry.GetNodeById(effectId.Value);
+        var poolName = node != null && node.HasMeta("GameOSVisualPoolName")
+            ? node.GetMeta("GameOSVisualPoolName").AsString()
+            : string.Empty;
+        TimerManager.Instance.Tick(0.11f, 0.11f);
+
+        var destroyed = EntityManager.Get(effectId) == null;
+        var registryCleared = GodotNodeRegistry.GetNodeById(effectId.Value) == null;
+        var poolReturned = !string.IsNullOrWhiteSpace(poolName)
+            && ObjectPoolManager.GetAllStats().TryGetValue(poolName, out var stats)
+            && stats.TotalReleased >= 1
+            && stats.Count >= 1;
+        var success = result.Created
+            && node != null
+            && destroyed
+            && registryCleared
+            && poolReturned;
+
+        spawner.Unsubscribe();
+        spawner.QueueFree();
+
+        return CheckResult.From(success, success ? "finite effect visual returned to pool" : "finite effect visual lifecycle mismatch", CapabilityValidationSupport.Details(
+            ("created", result.Created),
+            ("nodeRegisteredBeforeCleanup", node != null),
+            ("poolName", poolName),
+            ("runtimeDestroyed", destroyed),
+            ("registryCleared", registryCleared),
+            ("poolReturned", poolReturned)));
     }
 }
