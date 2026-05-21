@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Effect.Events;
 using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.Capabilities.Effect;
@@ -10,6 +12,7 @@ namespace SlimeAI.GameOS.Capabilities.Effect;
 /// </summary>
 public static class EffectTool
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("EffectTool");
     private static bool ownerCleanupRegistered;
 
     /// <summary>
@@ -67,6 +70,16 @@ public static class EffectTool
         effect.Data.Set(EffectDataKeys.Position, position);
         effect.Data.Set(EffectDataKeys.Duration, options.Duration);
         effect.Data.Set(MovementDataKeys.Position, position);
+
+        Log.Debug(
+            $"Effect played: {effect.EntityId}",
+            new Dictionary<string, object?>
+            {
+                ["effectId"] = effect.EntityId.Value,
+                ["sourceId"] = options.Source.EntityId.Value,
+                ["targetId"] = options.Target?.EntityId.Value,
+                ["animationName"] = options.AnimationName,
+            });
 
         effect.Events.Publish(new Spawned(effect, options.Source, options.Ability, options.Target));
         return new EffectSpawnResult(effect, true);

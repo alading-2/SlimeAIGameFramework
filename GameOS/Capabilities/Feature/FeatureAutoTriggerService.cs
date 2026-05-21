@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Timer;
@@ -10,6 +12,8 @@ namespace SlimeAI.GameOS.Capabilities.Feature;
 /// </summary>
 public sealed class FeatureAutoTriggerService
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("FeatureAutoTriggerService");
+
     private readonly FeatureService featureService;
     private readonly TimerManager timerManager;
     private readonly Func<float> rollPercent;
@@ -45,10 +49,22 @@ public sealed class FeatureAutoTriggerService
             .Loop(interval)
             .OnLoop(() =>
             {
+                var triggered = 0;
                 if (feature.Data.Get<bool>(FeatureDataKeys.IsEnabled, true))
                 {
                     featureService.Activate(CreateContext(owner, feature, definition));
+                    triggered = 1;
                 }
+
+                Log.Debug(
+                    $"Auto-trigger check: {triggered}/1",
+                    new Dictionary<string, object?>
+                    {
+                        ["triggered"] = triggered,
+                        ["checked"] = 1,
+                        ["featureId"] = definition.FeatureId,
+                        ["featureEntityId"] = feature.EntityId
+                    });
             });
 
         return new TimerRegistration(timer);

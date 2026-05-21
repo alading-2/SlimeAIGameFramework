@@ -2,6 +2,8 @@
 
 本文档记录 Godot 4.6.2 引擎中 C# 脚本与场景加载的硬约束，基于引擎源码分析。这些约束决定了框架不能通过 NuGet 或 ProjectReference 共享 `.tscn` 场景。
 
+日常 Godot 表现层编码陷阱（坐标系、Camera2D、生命周期、输入门控等）见 `GameOS/GodotPitfalls.md`。本文档只覆盖引擎源码级硬约束。
+
 ## C# 优先边界
 
 SlimeAI 的纯 Runtime、DataOS tooling、验证入口和普通数据处理优先使用 C# 标准库与框架 API，不默认使用 Godot helper：

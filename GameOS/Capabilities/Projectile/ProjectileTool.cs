@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Collision;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Capabilities.Movement.Events;
 using SlimeAI.GameOS.Capabilities.Projectile.Events;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 
@@ -14,6 +16,7 @@ namespace SlimeAI.GameOS.Capabilities.Projectile;
 /// </summary>
 public static class ProjectileTool
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("ProjectileTool");
     private static bool ownerCleanupRegistered;
 
     /// <summary>
@@ -81,6 +84,16 @@ public static class ProjectileTool
         projectile.Data.Set(ProjectileDataKeys.DamageTags, options.DamageTags);
         projectile.Data.Set(MovementDataKeys.Position, options.SpawnPosition);
         projectile.Data.Set(MovementDataKeys.FacingDirection, direction);
+
+        Log.Info(
+            $"Projectile fired: {projectile.EntityId}, speed={options.Speed}",
+            new Dictionary<string, object?>
+            {
+                ["projectileId"] = projectile.EntityId.Value,
+                ["sourceId"] = options.Source.EntityId.Value,
+                ["targetId"] = options.Target?.EntityId.Value,
+                ["speed"] = options.Speed,
+            });
 
         projectile.Events.Publish(new Spawned(projectile, options.Source, options.Ability, options.Target));
         return new ProjectileSpawnResult(projectile, true);
@@ -195,6 +208,17 @@ public static class ProjectileTool
                 Tags = options.DamageTags ?? projectile.Data.Get<DamageTags>(ProjectileDataKeys.DamageTags, DamageTags.Projectile)
             });
         }
+
+        Log.Info(
+            $"Projectile hit: {projectile.EntityId}, target={context.Target.EntityId}",
+            new Dictionary<string, object?>
+            {
+                ["projectileId"] = projectile.EntityId.Value,
+                ["sourceId"] = source?.EntityId.Value,
+                ["targetId"] = context.Target.EntityId.Value,
+                ["hitCount"] = hitCount,
+                ["damageApplied"] = damage.Applied,
+            });
 
         projectile.Events.Publish(new Hit(
             projectile,

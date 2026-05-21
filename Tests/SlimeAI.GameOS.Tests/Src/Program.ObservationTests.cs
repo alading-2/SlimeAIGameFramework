@@ -25,6 +25,31 @@ internal partial class Program
         GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
+    static void TestObservationContextFilterOverridesMinimumLevel()
+    {
+        GameOSLog.Reset(new GameOSLogOptions
+        {
+            EnableStdout = false,
+            EnableJsonl = false,
+            MinimumLevel = GameOSLogLevel.Info,
+            ContextFilters = new Dictionary<string, GameOSLogLevel>
+            {
+                ["FilteredContext"] = GameOSLogLevel.Debug
+            }
+        });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
+        GameOSLog.For("FilteredContext").Debug("context debug");
+        GameOSLog.For("OtherContext").Debug("global debug");
+
+        AssertEqual("context filter count", 1, memory.Entries.Count);
+        AssertEqual("context filter context", "FilteredContext", memory.Entries[0].Context);
+        AssertEqual("context filter level", GameOSLogLevel.Debug, memory.Entries[0].Level);
+
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+    }
+
     static void TestObservationJsonlSerialization()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"gameos-observation-{Guid.NewGuid():N}");

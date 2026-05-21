@@ -1,4 +1,5 @@
 using System;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.CommandBuffer;
 using SlimeAI.GameOS.Runtime.Schedule;
 
@@ -9,6 +10,8 @@ namespace SlimeAI.GameOS.Runtime.World;
 /// </summary>
 public sealed class RuntimeWorld : IDisposable
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("RuntimeWorld");
+
     private readonly EntityRegistry entities;
     private readonly LifecycleTreeImpl lifecycle;
     private readonly WorldEventBusImpl events;
@@ -30,6 +33,13 @@ public sealed class RuntimeWorld : IDisposable
         resources = new ResourceCatalogState();
         pools = new ObjectPoolManagerState();
         this.disposeStepObserver = disposeStepObserver;
+
+        Log.Info(
+            $"RuntimeWorld created (isDefault={IsDefault})",
+            new Dictionary<string, object?>
+            {
+                ["isDefault"] = IsDefault
+            });
     }
 
     /// <summary>进程级默认 world；现有 static facade 全部转发到这里。</summary>

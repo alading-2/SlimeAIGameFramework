@@ -65,6 +65,37 @@ FAIL 判定：
 - artifact `runtime-data-validation.json` 的 `status` 为 `fail`。
 - artifact `failureReasons` 至少包含一条失败原因。
 
+## Standard answer
+
+### expectedInputs
+
+- typed `DataCatalog`，包含 Health、Energy、Mode 和 computed Power keys。
+- `RuntimeData` default、set/get/tryget/has/remove/reset、clamp、option、modifier 操作。
+- `RuntimeEntity.Data.Set` 到 `DataPropertyChanged` event bridge。
+
+### expectedObservations
+
+- catalog 可解析 typed keys 和 capability metadata。
+- typed lifecycle、clamp、option guard、modifier/computed dirty、reset by category 行为符合 Runtime/Data contract。
+- entity data change event 携带 stable key、old value 和 new value。
+
+### passCriteria
+
+- `index.json` 对应 entry `status=passed` 且 `exitCode=0`。
+- per-scene `result.json` `status=passed`，`firstError=null`。
+- artifact `status=pass`，`failureReasons=[]`，五个标准答案字段非空。
+- `checks[]` 包含 catalog、typed lifecycle、clamp/option、modifier/computed、reset 和 entity event checks。
+
+### failCriteria
+
+- stdout 含 `GameOS Runtime Data validation FAIL`。
+- 任一 Runtime/Data lifecycle、clamp、option、modifier、reset 或 bridge check 失败。
+- artifact `status=fail`、`failureReasons` 非空或标准答案字段缺失。
+
+### artifactPath
+
+`artifacts/runtime-data-validation.json`
+
 ## Artifact
 
 scene runner 会把 artifact 写入：

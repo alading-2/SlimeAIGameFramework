@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Resource;
 
 namespace SlimeAI.GameOS.Runtime.Data;
@@ -11,6 +12,8 @@ namespace SlimeAI.GameOS.Runtime.Data;
 /// </summary>
 public sealed class RuntimeDataSnapshot
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("DataOS");
+
     /// <summary>当前 snapshot schema 版本。</summary>
     public int SchemaVersion { get; init; }
 
@@ -35,10 +38,25 @@ public sealed class RuntimeDataSnapshot
     public static RuntimeDataSnapshot FromJson(string json)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
-        return JsonSerializer.Deserialize<RuntimeDataSnapshot>(
+        var snapshot = JsonSerializer.Deserialize<RuntimeDataSnapshot>(
             json,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new InvalidOperationException("DataOS snapshot JSON 解析失败。");
+
+        var seed = $"{snapshot.Manifest.Profile}/{snapshot.Manifest.CatalogId}";
+        Log.Info(
+            $"DataOS loaded: {snapshot.Records.Count} entries from {seed}",
+            new Dictionary<string, object?>
+            {
+                ["entries"] = snapshot.Records.Count,
+                ["seed"] = seed,
+                ["profile"] = snapshot.Manifest.Profile,
+                ["catalogId"] = snapshot.Manifest.CatalogId,
+                ["descriptors"] = snapshot.Descriptors.Count,
+                ["resources"] = snapshot.Resources.Count,
+            });
+
+        return snapshot;
     }
 
     /// <summary>

@@ -71,6 +71,38 @@ FAIL 判定：
 - artifact `runtime-event-validation.json` 的 `status` 为 `fail`。
 - artifact `failureReasons` 至少包含一条失败原因。
 
+## Standard answer
+
+### expectedInputs
+
+- typed/parameterless handlers、priority、Once、Off、exception、reentrancy、StopPropagation。
+- entity-local EventBus 与 GlobalEventBus。
+- `RuntimeEntity + Data.Set` 到 `GameEventType.Data.PropertyChanged` bridge。
+
+### expectedObservations
+
+- handlers 按 priority 顺序触发，Once 只执行一次，Off 后不再触发。
+- handler exception 被捕获且后续 handler 继续。
+- 同事件重入被阻止，StopPropagation 阻断低优先级 handler。
+- local/global bus 隔离，Data-to-Event bridge 可运行。
+
+### passCriteria
+
+- `index.json` 对应 entry `status=passed` 且 `exitCode=0`。
+- per-scene `result.json` `status=passed`，`firstError=null`。
+- artifact `status=pass`，`failureReasons=[]`，五个标准答案字段非空。
+- `checks[]` 覆盖 registration、dispose、exception、reentry、entity rejection、broadcast 和 data bridge。
+
+### failCriteria
+
+- stdout 含 `GameOS Runtime Event validation FAIL`。
+- 任一 EventBus core 或 Data-to-Event bridge check 失败。
+- artifact `status=fail`、`failureReasons` 非空或标准答案字段缺失。
+
+### artifactPath
+
+`artifacts/runtime-event-validation.json`
+
 ## 日志
 
 场景使用框架侧 `SceneValidationSession` 输出固定文本格式，便于 Godot Output、人类终端和 AI 检索：

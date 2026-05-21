@@ -86,6 +86,16 @@ public class WorldEventBus : IWorldEventBus
 
     private void DispatchLocal<T>(Type eventType, in T @event) where T : struct, IEvent
     {
+        var handlerCount = subscriptions.TryGetValue(eventType, out var handlers) ? handlers.Count : 0;
+        Log.Debug(
+            $"Event published: {eventType.Name}, handlers={handlerCount}",
+            new Dictionary<string, object?>
+            {
+                ["busName"] = BusName,
+                ["eventType"] = eventType.FullName,
+                ["handlerCount"] = handlerCount,
+            });
+
         observation.RecordPublish(eventType);
 
         if (!dispatchingTypes.Add(eventType))
@@ -105,12 +115,12 @@ public class WorldEventBus : IWorldEventBus
 
         try
         {
-            if (!subscriptions.TryGetValue(eventType, out var list) || list.Count == 0)
+            if (handlerCount == 0 || handlers == null)
             {
                 return;
             }
 
-            var snapshot = list.ToArray();
+            var snapshot = handlers.ToArray();
             using var guard = EnterHandlerDispatchGuard(eventType);
             foreach (var subscription in snapshot)
             {

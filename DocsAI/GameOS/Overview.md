@@ -74,4 +74,5 @@ AI 可通过三层开关控制功能的启用/禁用：
 - `Contracts.md`
 - `ApiIndex.md`
 - `DebugGuide.md`
+- `GodotPitfalls.md`：AI 写 Godot 表现层代码前必读的陷阱知识库（坐标系、Camera、生命周期、输入门控等）
 - `SlimeAI.GameOS.Migration.md`

@@ -1,3 +1,4 @@
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.Events.Core;
@@ -28,6 +29,23 @@ internal static class RuntimeWorldTests
         }
 
         throw new InvalidOperationException("RuntimeWorld.Default.Dispose should throw InvalidOperationException");
+    }
+
+    public static void ScopedCreationLogsWorldCreated()
+    {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
+        using var world = RuntimeWorld.CreateScoped();
+
+        var created = memory.Entries.Single(entry =>
+            entry.Context == "RuntimeWorld" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "RuntimeWorld created (isDefault=False)");
+        AssertEqual("runtime world created value", false, created.Values["isDefault"]);
+
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     public static void CreateScopedIsolatesSubsystems()

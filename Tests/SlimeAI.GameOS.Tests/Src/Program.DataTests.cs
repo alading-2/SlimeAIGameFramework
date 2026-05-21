@@ -2,6 +2,7 @@ using SlimeAI.GameOS.Capabilities.Ability;
 using SlimeAI.GameOS.Capabilities.Attack;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Data;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Resource;
@@ -184,10 +185,17 @@ internal partial class Program
         """;
 
         ResourceCatalog.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
         var snapshot = RuntimeDataSnapshot.FromJson(json);
         AssertEqual("snapshot schema", 2, snapshot.SchemaVersion);
         AssertEqual("snapshot descriptor count", 5, snapshot.Descriptors.Count);
         AssertEqual("snapshot find record", true, snapshot.TryFindRecord("unit.enemy", "鱼人", out var record));
+        AssertEqual("snapshot loaded log", true, memory.Entries.Any(entry =>
+            entry.Context == "DataOS" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "DataOS loaded: 1 entries from test/framework"));
 
         var data = new Data();
         AssertEqual("snapshot applied count", 5, snapshot.ApplyRecord(data, record));
@@ -199,6 +207,7 @@ internal partial class Program
         AssertEqual("snapshot resources", 1, snapshot.RegisterResources());
         AssertEqual("snapshot resource path", "res://Scenes/Enemy.tscn", ResourceManagement.GetPath("EnemyEntity", ResourceCategory.Entity));
         ResourceCatalog.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestRuntimeDataSnapshotRejectsInvalidFields()

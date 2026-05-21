@@ -181,7 +181,7 @@ public sealed class GodotBridgeContext
     {
         var componentId = GodotNodeRegistry.GetNodeInstanceId(componentNode);
         var nodeRegistered = Registry.Register(componentNode, componentId);
-        var adapterRegistered = Registry.RegisterAdapter(entity.EntityId, componentId);
+        var adapterRegistered = Registry.RegisterAdapter(entity.EntityId, componentId, componentNode.GetType().Name);
 
         if (nodeRegistered && componentNode is IGodotComponent component)
         {

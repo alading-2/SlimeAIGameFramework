@@ -2,6 +2,7 @@ using SlimeAI.GameOS.Capabilities.Collision;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Capabilities.Projectile;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
 using SlimeAI.GameOS.Runtime.World;
@@ -12,6 +13,9 @@ internal partial class Program
 {
     static void TestProjectileToolSpawnsRuntimeEntity()
     {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
         EntityManager.Clear();
         WorldEvents.World.Clear();
         var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-source") });
@@ -57,14 +61,22 @@ internal partial class Program
         AssertNear("projectile max lifetime", 2f, result.Projectile.Data.Get<float>(ProjectileDataKeys.MaxLifeTime));
         AssertNear("projectile damage", 4f, result.Projectile.Data.Get<float>(ProjectileDataKeys.Damage));
         AssertEqual("projectile events", 1, spawnedEvents);
+        AssertEqual("projectile fired log", true, memory.Entries.Any(entry =>
+            entry.Context == "ProjectileTool" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "Projectile fired: projectile-runtime, speed=12"));
 
         spawnSub.Dispose();
         WorldEvents.World.Clear();
         EntityManager.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestProjectileMovementHitDamagesAndDestroys()
     {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
         EntityManager.Clear();
         WorldEvents.World.Clear();
         var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("projectile-hit-source") });
@@ -112,10 +124,15 @@ internal partial class Program
         AssertNear("projectile target damaged", 14f, target.Data.Get<float>(DamageDataKeys.CurrentHp));
         AssertEqual("projectile destroyed", null, EntityManager.Get(projectile.Projectile.EntityId));
         AssertEqual("projectile movement stopped after destroy", false, movement.IsMoving(projectile.Projectile));
+        AssertEqual("projectile hit log", true, memory.Entries.Any(entry =>
+            entry.Context == "ProjectileTool" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "Projectile hit: projectile-hit-runtime, target=projectile-hit-target"));
 
         hitSub.Dispose();
         WorldEvents.World.Clear();
         EntityManager.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestProjectileMovementPiercesAndDestroysAfterMaxHits()

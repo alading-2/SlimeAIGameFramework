@@ -71,9 +71,9 @@ public static class GodotNodeRegistry
     /// 把 <paramref name="adapterId"/> 注册到 <paramref name="entityId"/> 名下，
     /// 替代旧 Relationship 层的 <c>EntityToComponent</c>。
     /// </summary>
-    public static bool RegisterAdapter(EntityId entityId, string adapterId)
+    public static bool RegisterAdapter(EntityId entityId, string adapterId, string? componentType = null)
     {
-        return GameOSGodotBridge.DefaultContext.Registry.RegisterAdapter(entityId, adapterId);
+        return GameOSGodotBridge.DefaultContext.Registry.RegisterAdapter(entityId, adapterId, componentType);
     }
 
     /// <summary>

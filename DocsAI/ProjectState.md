@@ -1,10 +1,12 @@
 # SlimeAI ProjectState
 
-> 更新日期：2026-05-20（DataOS table-first authoring）
+> 更新日期：2026-05-21（SystemAgent integrated validation governance）
 
 ## 当前阶段
 
 M3 Runtime 最小内核已完成，M4 BrotatoLike 最小接入已完成，M5-M17 的 GodotBridge、Movement、Collision、Damage、Ability、Projectile、Effect、Feature、AI、Attack 和 DataOS 最小闭环已完成。M18 DataOS 扩大迁移与正式生成入口切片已完成：框架新增 `ScheduleDataKeys`，Unit / Ability / Feature / Movement / Collision / Damage / AI / Attack / Projectile / Effect 已迁到 typed `DataKey<T>`；后续已补 `MovementDataKeys` 中 SineWave / Orbit / Boomerang / Bezier / Parabola / CircularArc / AttachToHost 的 handler authoring 参数；BrotatoLike seed 覆盖 TargetingIndicator、ChainAbility、Feature definition / modifier、System config / preset、Spawn config、更多旧 ResourcePaths 和 Ability handler-specific 参数第三段；游戏侧新增 `BrotatoLikeDataOSBootstrap` 和 `BrotatoLikeAbilityHandlers`，正式代码可从 generated typed snapshot 生成 Runtime Entity 并注册 ResourceCatalog，且 SineWave / Boomerang / BezierCurve / CircularArc / Orbit / AttachToHost、Dash、ChainLightning、Slam、TargetPoint、CircleDamage 和 AuraShield 已通过游戏侧 Feature handler 执行闭环。
+
+OpenSpec change `systemagent-integrated-validation-governance` 已落地 SystemAgent C 方案主体：新增 SeniorGameDeveloper / SeniorProgrammer 审查角色，强化 ReviewGates / TDD / BDD 场景映射，BrotatoLike 新增 `DocsAI/ValidationManifest.json` 作为 release-batch 权威选择源，Godot runner/analyzer 产出 durable `gate-report.json` 并联合检查 README、`index.json`、per-scene `result.json` 和 scene artifact 五字段。当前 targeted gate report `Games/BrotatoLike/.ai-temp/scene-tests/runs/2026-05-21/10-06-55/gate-report.json` 为 `pass`；release-batch gate report `Games/BrotatoLike/.ai-temp/scene-tests/runs/2026-05-21/10-13-37/gate-report.json` 为 `block`，剩余 blocker 是 game-owned `BrotatoLikePlayableUXValidation` 和 `BrotatoLikeProgressionLoopValidation` 的 artifact check 失败，不是 metadata 漏项。
 
 OpenSpec change `refactor-dataos-table-authoring` 已完成实现、验证并 archived，baseline 已合入 `openspec/specs/dataos-table-authoring/` 等 DataOS 规格：DataOS authoring 主入口从万能 key-value / EAV 行迁到清晰业务表，generator 再投影成现有 Runtime snapshot。核心原则是 AI-first 不是让 AI 在 `data_field` 中靠上下文重建业务含义，而是让人和 AI 先能直接读懂 Unit / Ability / Feature / System / Spawn 业务表；`data_record / data_field` 保留为兼容和 projection 形状，`RuntimeDataSnapshot` JSON shape 与 loader API 未改。
 
@@ -57,6 +59,25 @@ GameOS Observation 已建立第一版通用日志和场景验证 helper：`GameO
 - 玩家输入系统已迁入游戏侧：`BrotatoLikePlayerInputComponent`（`Games/BrotatoLike/Src/Game/Bridge/`）读取 Godot Input Map 的 MoveLeft/Right/Up/Down、UseSkill、PreviousSkill、NextSkill，将移动方向写入 `MovementDataKeys.InputDirection`，并发布 game-side `InputUseSkill / InputPreviousSkill / InputNextSkill` 到 Entity EventBus；支持 `CanMoveInput` 门禁和 `Movement.Acceleration` 平滑移动插值。`GodotActiveSkillInputComponent`（游戏侧）订阅技能输入事件，管理 `AbilityDataKeys.OwnedAbilityIds` 和 `CurrentAbilityIndex`，通过 `AbilityTargetingTool` 自动索敌后调用 `AbilityService.TryTrigger`。BrotatoLike `SpawnPlayer` 已接入：生成玩家时从 DataOS 创建 slam / chain_lightning 初始技能实体，挂载双输入组件，启动 PlayerInput 移动策略；框架 GodotBridge 不再持有 BrotatoLike-specific 输入组件。
 
 ## 最新验证
+
+### systemagent-integrated-validation-governance（2026-05-21）
+
+```bash
+cd /home/slime/Code/SlimeAI
+bash Workspace/Tools/ai-config-sync/sync-ai-config.sh
+bash Workspace/SystemAgent/Tools/skill-test/lint.sh static all --no-fail --summary-only
+
+cd /home/slime/Code/SlimeAI/SlimeAI
+Tools/run-build.sh
+Tools/run-tests.sh
+
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-build.sh
+Tools/run-godot-scene.sh run-all --manifest DocsAI/ValidationManifest.json --release-batch --continue-on-fail --log-dir .ai-temp/scene-tests/runs --errors-only
+Tools/analyze-godot-scene-logs.sh --run-dir .ai-temp/scene-tests/runs/2026-05-21/10-13-37 --manifest DocsAI/ValidationManifest.json --gate-report .ai-temp/scene-tests/runs/2026-05-21/10-13-37/gate-report.json
+```
+
+结果：AI config sync 完成；skill lint `Critical:0 | Advisory:0`；框架 build/tests PASS；BrotatoLike build PASS。Targeted run `2026-05-21/10-06-55` gate report 为 `pass`，8/8 scenes 均有 README 五字段、`index.json`、`result.json` 和 artifact oracle 证据。Release-batch run `2026-05-21/10-13-37` 执行 25 个 manifest scenes，23 pass、2 fail、0 missing，gate report verdict 为 `block`；失败场景为 `res://Src/Validation/Game/PlayableUX/BrotatoLikePlayableUXValidation.tscn` 的 `scene_backed_formal_ui` 和 `res://Src/Validation/Game/Progression/BrotatoLikeProgressionLoopValidation.tscn` 的 `pause_menu_blocks_and_resumes_tick` / `scene_backed_pause_menu`。所有剩余 blocker 的 artifact 五字段非空，不能用 stdout 或 exit code 覆盖该 gate 结论。
 
 ### refactor-dataos-table-authoring（2026-05-20）
 

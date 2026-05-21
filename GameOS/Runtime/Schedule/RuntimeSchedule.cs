@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.CommandBuffer;
 using SlimeAI.GameOS.Runtime.World;
 
@@ -10,6 +12,8 @@ namespace SlimeAI.GameOS.Runtime.Schedule;
 /// </summary>
 public sealed class RuntimeSchedule : IRuntimeSchedule
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("RuntimeSchedule");
+
     private sealed class Entry
     {
         public required SystemDescriptor Descriptor { get; init; }
@@ -60,16 +64,39 @@ public sealed class RuntimeSchedule : IRuntimeSchedule
 
         if (!string.Equals(descriptor.SystemId, config.SystemId, StringComparison.Ordinal))
         {
+            Log.Warn(
+                $"System registration id mismatch: descriptor={descriptor.SystemId}, config={config.SystemId}",
+                new Dictionary<string, object?>
+                {
+                    ["descriptorSystemId"] = descriptor.SystemId,
+                    ["configSystemId"] = config.SystemId
+                });
             return false;
         }
 
         if (descriptors.ContainsKey(descriptor.SystemId))
         {
+            Log.Debug(
+                $"System registration skipped: {descriptor.SystemId} already registered",
+                new Dictionary<string, object?>
+                {
+                    ["systemId"] = descriptor.SystemId
+                });
             return false;
         }
 
         descriptors[descriptor.SystemId] = descriptor;
         configs[config.SystemId] = config;
+        Log.Info(
+            $"System registered: {descriptor.SystemId}, phase={config.Group}",
+            new Dictionary<string, object?>
+            {
+                ["systemId"] = descriptor.SystemId,
+                ["group"] = config.Group,
+                ["phase"] = config.Group,
+                ["priority"] = config.Priority,
+                ["startEnabled"] = config.StartEnabled
+            });
         return true;
     }
 
@@ -81,10 +108,25 @@ public sealed class RuntimeSchedule : IRuntimeSchedule
         var ordered = new List<SystemConfig>(configs.Values);
         ordered.Sort(static (left, right) => left.Priority.CompareTo(right.Priority));
 
+        Log.Info(
+            $"RuntimeSchedule bootstrap started: {ordered.Count} systems",
+            new Dictionary<string, object?>
+            {
+                ["systemCount"] = ordered.Count
+            });
+
         foreach (var config in ordered)
         {
             EnsureSystem(config.SystemId);
         }
+
+        Log.Info(
+            $"RuntimeSchedule bootstrap completed: {entries.Count} systems loaded",
+            new Dictionary<string, object?>
+            {
+                ["systemCount"] = entries.Count
+            });
+        PrintStatus();
     }
 
     /// <summary>
@@ -129,6 +171,16 @@ public sealed class RuntimeSchedule : IRuntimeSchedule
 
         entries[systemId] = entry;
         ApplyEntryState(entry, notifyTransition: true);
+        Log.Info(
+            $"System loaded: {systemId}, enabled={entry.IsEnabled}, stateAllowed={entry.IsStateAllowed}, running={entry.IsRunning}",
+            new Dictionary<string, object?>
+            {
+                ["systemId"] = systemId,
+                ["isEnabled"] = entry.IsEnabled,
+                ["isStateAllowed"] = entry.IsStateAllowed,
+                ["isRunning"] = entry.IsRunning,
+                ["blockedReason"] = entry.BlockedReason
+            });
         return true;
     }
 
@@ -279,7 +331,68 @@ public sealed class RuntimeSchedule : IRuntimeSchedule
             throw new ObjectDisposedException(nameof(RuntimeSchedule));
         }
 
-        return commandBuffer?.Playback(phase) ?? CommandPlaybackReport.Empty(phase);
+        var report = commandBuffer?.Playback(phase) ?? CommandPlaybackReport.Empty(phase);
+        Log.Debug(
+            $"Phase {phase}: {report.PlayedCount} systems executed",
+            new Dictionary<string, object?>
+            {
+                ["phase"] = phase,
+                ["count"] = report.PlayedCount,
+                ["queuedCount"] = report.QueuedCount,
+                ["playedCount"] = report.PlayedCount,
+                ["failedCount"] = report.FailedCount,
+                ["skippedCount"] = report.SkippedCount
+            });
+        return report;
+    }
+
+    /// <summary>
+    /// 输出已加载系统状态摘要。
+    /// </summary>
+    public void PrintStatus()
+    {
+        var snapshot = ProjectState.Snapshot;
+        var builder = new StringBuilder();
+        builder.Append("RuntimeSchedule status: ")
+            .Append(entries.Count)
+            .Append(" systems, flowState=")
+            .Append(snapshot.FlowState)
+            .Append(", overlays=")
+            .Append(snapshot.Overlays)
+            .Append(", simulation=")
+            .Append(snapshot.SimulationState);
+
+        foreach (var entry in entries.Values)
+        {
+            builder.AppendLine()
+                .Append("- ")
+                .Append(entry.Descriptor.SystemId)
+                .Append(" group=")
+                .Append(entry.Config.Group)
+                .Append(" enabled=")
+                .Append(entry.IsEnabled)
+                .Append(" stateAllowed=")
+                .Append(entry.IsStateAllowed)
+                .Append(" running=")
+                .Append(entry.IsRunning);
+
+            if (!string.IsNullOrWhiteSpace(entry.BlockedReason))
+            {
+                builder.Append(" blockedReason=\"")
+                    .Append(entry.BlockedReason)
+                    .Append('"');
+            }
+        }
+
+        Log.Info(
+            builder.ToString(),
+            new Dictionary<string, object?>
+            {
+                ["systemCount"] = entries.Count,
+                ["flowState"] = snapshot.FlowState,
+                ["overlays"] = snapshot.Overlays,
+                ["simulationState"] = snapshot.SimulationState
+            });
     }
 
     /// <summary>
@@ -305,6 +418,17 @@ public sealed class RuntimeSchedule : IRuntimeSchedule
 
     private void OnProjectStateChanged(object? sender, ProjectStateChangedEventArgs args)
     {
+        Log.Info(
+            $"FlowState: {args.Previous.FlowState}->{args.Current.FlowState}, overlays={args.Current.Overlays}",
+            new Dictionary<string, object?>
+            {
+                ["previousFlowState"] = args.Previous.FlowState,
+                ["currentFlowState"] = args.Current.FlowState,
+                ["overlays"] = args.Current.Overlays,
+                ["previousOverlays"] = args.Previous.Overlays,
+                ["simulationState"] = args.Current.SimulationState
+            });
+
         foreach (var entry in entries.Values)
         {
             var (isBlocked, blockedReason) = entry.Config.RunCondition.GetBlockedReason(args.Current);

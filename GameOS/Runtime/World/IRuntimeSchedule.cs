@@ -21,5 +21,6 @@ public interface IRuntimeSchedule
         where TSystem : class, IRuntimeCommandHandler<TRequest, TResult>;
     IReadOnlyList<SystemRuntimeInfo> GetRuntimeInfo();
     CommandPlaybackReport RunPhase(SchedulePhase phase);
+    void PrintStatus();
     void Clear();
 }

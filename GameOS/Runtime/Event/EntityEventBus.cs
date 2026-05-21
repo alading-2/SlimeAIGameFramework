@@ -52,6 +52,16 @@ public sealed class EntityEventBus : IEventBus
             return;
         }
 
+        var handlerCount = subscriptions.TryGetValue(eventType, out var handlers) ? handlers.Count : 0;
+        Log.Debug(
+            $"Event published: {BusName}/{eventType.Name}, handlers={handlerCount}",
+            new Dictionary<string, object?>
+            {
+                ["busName"] = BusName,
+                ["eventType"] = eventType.FullName,
+                ["handlerCount"] = handlerCount,
+            });
+
         observation.RecordPublish(eventType);
 
         if (!dispatchingTypes.Add(eventType))

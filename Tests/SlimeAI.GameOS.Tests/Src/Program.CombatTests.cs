@@ -1,6 +1,7 @@
 using SlimeAI.GameOS.Capabilities.Collision;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Movement;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Timer;
 using SlimeAI.GameOS.Runtime.World;
@@ -292,6 +293,10 @@ internal partial class Program
 
     static void TestHealServiceAppliesAndClamps()
     {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
         using var world = RuntimeWorld.CreateScoped();
         var healer = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-healer") });
         var target = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("heal-service-target") });
@@ -320,7 +325,17 @@ internal partial class Program
         AssertNear("heal done stat", 10f, healer.Data.Get<float>(DamageDataKeys.TotalHealingDone));
         AssertNear("heal received stat", 10f, target.Data.Get<float>(DamageDataKeys.TotalHealingReceived));
         AssertEqual("heal events", 1, healedEvents);
+        AssertEqual("heal log", true, memory.Entries.Any(entry =>
+            entry.Context == "HealService" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "Heal applied: heal-service-healer->heal-service-target, amount=10, hp=10->20" &&
+            Equals(entry.Values["healer"], healer.EntityId) &&
+            Equals(entry.Values["target"], target.EntityId) &&
+            Equals(entry.Values["amount"], 10f) &&
+            Equals(entry.Values["oldHp"], 10f) &&
+            Equals(entry.Values["newHp"], 20f)));
 
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestDamageToolMultiTargetAndPeriodic()

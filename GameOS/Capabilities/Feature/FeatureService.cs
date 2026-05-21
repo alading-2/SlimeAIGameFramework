@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Feature.Events;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Data;
 using SlimeAI.GameOS.Runtime.Entity;
 
@@ -12,6 +13,8 @@ namespace SlimeAI.GameOS.Capabilities.Feature;
 /// </summary>
 public sealed class FeatureService
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("FeatureService");
+
     /// <summary>进程级默认 FeatureService。</summary>
     public static FeatureService Default { get; } = new();
 
@@ -149,10 +152,28 @@ public sealed class FeatureService
             return;
         }
 
+        var count = 0;
         foreach (var action in actions)
         {
-            action?.Execute(context);
+            if (action == null)
+            {
+                continue;
+            }
+
+            action.Execute(context);
+            count++;
         }
+
+        var featureId = context.Definition?.FeatureId
+            ?? context.Feature?.Data.Get(FeatureDataKeys.FeatureId, string.Empty)
+            ?? string.Empty;
+        Log.Info(
+            $"Feature executed: {featureId}, actions={count}",
+            new Dictionary<string, object?>
+            {
+                ["featureId"] = featureId,
+                ["actions"] = count
+            });
     }
 
     private static void SetEnabled(IEntity owner, IEntity feature, bool enabled)

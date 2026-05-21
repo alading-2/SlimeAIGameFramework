@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.GodotBridge;
@@ -13,6 +14,8 @@ namespace SlimeAI.GameOS.GodotBridge;
 /// </remarks>
 public sealed class GodotBridgeNodeRegistry
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("GodotBridge");
+
     private readonly Dictionary<string, Node> nodes = new(StringComparer.Ordinal);
     private readonly Dictionary<EntityId, List<string>> entityToAdapterIds = new();
     private readonly Dictionary<string, EntityId> adapterIdToEntity = new(StringComparer.Ordinal);
@@ -87,7 +90,7 @@ public sealed class GodotBridgeNodeRegistry
     /// <summary>
     /// 把 adapter id 注册到指定 Runtime Entity。
     /// </summary>
-    public bool RegisterAdapter(EntityId entityId, string adapterId)
+    public bool RegisterAdapter(EntityId entityId, string adapterId, string? componentType = null)
     {
         if (entityId.IsEmpty || string.IsNullOrWhiteSpace(adapterId))
         {
@@ -107,6 +110,16 @@ public sealed class GodotBridgeNodeRegistry
 
         list.Add(adapterId);
         adapterIdToEntity[adapterId] = entityId;
+        var boundComponentType = string.IsNullOrWhiteSpace(componentType) ? adapterId : componentType;
+        Log.Info(
+            $"{boundComponentType} bound to entity {entityId}",
+            new Dictionary<string, object?>
+            {
+                ["componentType"] = boundComponentType,
+                ["entityId"] = entityId.Value,
+                ["adapterId"] = adapterId,
+            });
+
         return true;
     }
 

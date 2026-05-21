@@ -6,6 +6,7 @@ using SlimeAI.GameOS.Capabilities.Effect;
 using SlimeAI.GameOS.Capabilities.Feature;
 using SlimeAI.GameOS.Capabilities.Movement;
 using SlimeAI.GameOS.Capabilities.Projectile;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Data;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
@@ -311,6 +312,14 @@ internal partial class Program
 
     static void TestEffectToolSpawnsRuntimeEntity()
     {
+        GameOSLog.Reset(new GameOSLogOptions
+        {
+            EnableStdout = false,
+            EnableJsonl = false,
+            MinimumLevel = GameOSLogLevel.Debug
+        });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
         EntityManager.Clear();
         WorldEvents.World.Clear();
         var source = EntityManager.Spawn(new EntitySpawnConfig { EntityId = new EntityId("effect-source") });
@@ -351,10 +360,15 @@ internal partial class Program
         AssertEqual("effect target position", new Vector2Value(2f, 3f), result.Effect.Data.Get<Vector2Value>(EffectDataKeys.Position));
         AssertNear("effect duration", 0.75f, result.Effect.Data.Get<float>(EffectDataKeys.Duration));
         AssertEqual("effect events", 1, spawnedEvents);
+        AssertEqual("effect played log", true, memory.Entries.Any(entry =>
+            entry.Context == "EffectTool" &&
+            entry.Level == GameOSLogLevel.Debug &&
+            entry.Message == "Effect played: effect-runtime"));
 
         spawnSub.Dispose();
         WorldEvents.World.Clear();
         EntityManager.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestFeatureServiceGrantsModifiersAndRemoves()
@@ -432,6 +446,10 @@ internal partial class Program
 
     static void TestFeatureActionsExecuteAndGrant()
     {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
         using var world = RuntimeWorld.CreateScoped();
         var owner = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-action-owner") });
         var feature = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("feature-action") });
@@ -452,10 +470,27 @@ internal partial class Program
         });
 
         AssertEqual("feature grant action", 1, grantAction.Count);
+        AssertEqual("feature executed log", true, memory.Entries.Any(entry =>
+            entry.Context == "FeatureService" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "Feature executed: feature.action, actions=1" &&
+            Equals(entry.Values["featureId"], "feature.action") &&
+            Equals(entry.Values["actions"], 1)));
+
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestFeatureAutoTriggerPeriodic()
     {
+        GameOSLog.Reset(new GameOSLogOptions
+        {
+            EnableStdout = false,
+            EnableJsonl = false,
+            MinimumLevel = GameOSLogLevel.Debug
+        });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
         using var world = RuntimeWorld.CreateScoped();
         FeatureHandlerRegistry.Clear();
         var timerManager = new TimerManager("feature-periodic-test-timers");
@@ -481,6 +516,12 @@ internal partial class Program
         timerManager.Tick(0.01f);
         AssertEqual("feature periodic activated", 1, handler.Activated);
         AssertEqual("feature periodic executed", 1, handler.Executed);
+        AssertEqual("feature auto trigger log", true, memory.Entries.Any(entry =>
+            entry.Context == "FeatureAutoTriggerService" &&
+            entry.Level == GameOSLogLevel.Debug &&
+            entry.Message == "Auto-trigger check: 1/1" &&
+            Equals(entry.Values["triggered"], 1) &&
+            Equals(entry.Values["checked"], 1)));
 
         registration.Dispose();
         timerManager.Tick(0.5f);
@@ -488,6 +529,7 @@ internal partial class Program
 
         timerManager.Clear();
         FeatureHandlerRegistry.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestFeatureAutoTriggerOnEvent()

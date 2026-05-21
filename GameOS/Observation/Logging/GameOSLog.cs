@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SlimeAI.GameOS.Observation;
 
 /// <summary>
@@ -68,7 +70,10 @@ public static class GameOSLog
         IGameOSLogSink[] currentSinks;
         lock (Sync)
         {
-            if (entry.Level < options.MinimumLevel)
+            var minimumLevel = options.ContextFilters.TryGetValue(entry.Context, out var contextLevel)
+                ? contextLevel
+                : options.MinimumLevel;
+            if (entry.Level < minimumLevel)
             {
                 return;
             }
@@ -163,7 +168,9 @@ public enum GameOSLogLevel
 /// </summary>
 public sealed class GameOSLogOptions
 {
-    public GameOSLogLevel MinimumLevel { get; init; } = GameOSLogLevel.Trace;
+    public GameOSLogLevel MinimumLevel { get; init; } = GameOSLogLevel.Info;
+
+    public Dictionary<string, GameOSLogLevel> ContextFilters { get; init; } = new();
 
     public bool EnableStdout { get; init; } = true;
 

@@ -3,6 +3,7 @@
 > Status: runtime-validation-contract
 > First scene: `Runtime/Event/RuntimeEventValidation`
 > 标准答案集中索引：[ValidationCatalog.md](ValidationCatalog.md)
+> Batch manifest: `Games/BrotatoLike/DocsAI/ValidationManifest.json`
 
 ## 目标
 
@@ -32,7 +33,13 @@ GameOS/Capabilities/Projectile
 GameOS/Capabilities/Unit
 GameOS/Capabilities/Convergence
 GameOS/Observation
+GameOS/GodotBridge/UnitComposition
 BrotatoLike Game/Input
+BrotatoLike Game/UnitComposition
+BrotatoLike Game/GameLifecycle
+BrotatoLike Game/PlayableUX
+BrotatoLike Game/Progression
+BrotatoLike Game/LegacyResources
 ```
 
 新增功能如果依赖 GodotBridge、Godot Node 生命周期、Physics、Input、Resource、UI、动画或游戏侧胶水，必须新增独立验证场景。`run-main-smoke` 和普通主场景 playable acceptance 只能作为回归补充，不能替代该功能自己的验证场景。
@@ -112,6 +119,17 @@ Games/BrotatoLike/Src/Validation/Game/Input/README.md
 Games/BrotatoLike/Src/Validation/Game/Input/BrotatoLikeInputEventValidationScene.cs
 ```
 
+## 验证范围
+
+验证场景按 manifest 中的 `scope` 分类：
+
+- `owner`：单个 Runtime layer、Capability、GodotBridge adapter 或游戏 adapter。
+- `interaction`：两到三个系统的边界契约，例如 Input + Ability 或 GodotBridge composition。
+- `feature-slice`：用户可见玩法切片，例如 death/respawn、Playable UX、Progression loop。
+- `release-batch`：`ValidationManifest.json` 中 `releaseBatch=true` 的回归集合。
+
+`run-all --filter Validation` 只能作为发现辅助；验收、archive 和 release 前的批量验证必须优先使用 manifest，避免 scanner filter 漏跑或误跑。
+
 ## README 必填项
 
 每个场景旁的 README 必须包含：
@@ -120,7 +138,7 @@ Games/BrotatoLike/Src/Validation/Game/Input/BrotatoLikeInputEventValidationScene
 - 允许依赖。
 - 不覆盖内容。
 - 运行命令。
-- 标准答案：expected inputs、expected observations、pass criteria、fail criteria。
+- 标准答案五字段，字段名必须按原文出现且非空：`expectedInputs`、`expectedObservations`、`passCriteria`、`failCriteria`、`artifactPath`。
 - PASS/FAIL 判定。
 - artifact 路径和字段。
 - 常见失败排查顺序。
@@ -146,6 +164,20 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 
 每个场景进程会收到 `GODOT_SCENE_TEST_RUN_DIR`、`GODOT_SCENE_TEST_SCENE_DIR`、`GODOT_SCENE_TEST_SCREENSHOT_DIR`、`GODOT_SCENE_TEST_ARTIFACT_DIR` 及对应 `_REL` 环境变量。
 
+## Manifest Batch 和 Gate Report
+
+release-batch 使用游戏侧 manifest 作为权威选择源：
+
+```bash
+cd /home/slime/Code/SlimeAI/Games/BrotatoLike
+Tools/run-godot-scene.sh run-all --manifest DocsAI/ValidationManifest.json --release-batch --continue-on-fail --log-dir .ai-temp/scene-tests/runs --errors-only
+Tools/analyze-godot-scene-logs.sh --run-dir .ai-temp/scene-tests/runs/<date>/<time> --manifest DocsAI/ValidationManifest.json --gate-report .ai-temp/scene-tests/runs/<date>/<time>/gate-report.json
+```
+
+analyzer 必须产出 durable `gate-report.json`，至少包含 requested/passed/failed/skipped/missing、每场景 evidence path、README 五字段完整性、artifact 五字段完整性、manifest checks coverage、freshness 和 `pass|warn|block` verdict。
+
+单场景 claim 必须引用同一 run 的 `index.json`、per-scene `result.json` 和 scene artifact；batch claim 优先引用 `gate-report.json`，再下钻到失败或关键 scene 的 `result.json` 和 artifact。`exitCode=0`、stdout PASS marker 或“无 error”只能说明进程诊断状态，不能单独作为正确性证明。
+
 ## Artifact 约定
 
 使用 scene runner 的 `GODOT_SCENE_TEST_ARTIFACT_DIR` 写入 JSON。缺失该环境变量时，场景可以退化写入当前目录下的 `.ai-temp/scene-tests/manual/artifacts`，但 CI 和验收命令必须使用 `--log-dir`。
@@ -161,6 +193,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
   "expectedObservations": [],
   "passCriteria": [],
   "failCriteria": [],
+  "artifactPath": ".ai-temp/scene-tests/runs/<date>/<time>/<scene-attempt>/artifacts/<artifact>.json",
   "checks": [],
   "logs": [],
   "failureReasons": [],
@@ -178,6 +211,7 @@ README 的人类说明可以使用中文；命令、路径、marker 和字段名
 - `expectedObservations`: AI 用来判断方向是否正确的标准答案，例如期望实体状态、事件顺序、目标选择结果、UI/Bridge 状态或 artifact 字段。
 - `passCriteria`: 通过条件，必须能映射到 `checks` 或总 PASS marker。
 - `failCriteria`: 失败条件，必须能映射到 `failureReasons` 或 `[FAIL]` 日志。
+- `artifactPath`: 当前 artifact 的相对或绝对路径，必须非空。
 - `checks`: 每个检查项的结构化证据，至少包含 `name`、`status`、`category`。
 - `logs`: 与 stdout 同源的关键日志条目，至少包含 `level`、`context`、`message`。
 - `failureReasons`: 失败原因数组；PASS 时必须为空。
@@ -258,14 +292,17 @@ BrotatoLike Game Input validation FAIL
 
 验收标准必须同时满足：
 
-- Godot 进程 exit code 为 `0`。
-- stdout 包含 PASS marker。
-- artifact `status` 为 `pass`。
-- artifact `failureReasons` 为空。
+- `index.json` 包含目标 scene，且 entry `status=passed`、`exitCode=0`。
+- per-scene `result.json` 为 `status=passed`、`exitCode=0`、`firstError=null`。
+- stdout 包含对应 PASS marker。
+- scene artifact `status=pass`。
+- artifact `failureReasons=[]`。
+- artifact `expectedInputs`、`expectedObservations`、`passCriteria`、`failCriteria`、`artifactPath` 均非空。
+- artifact `checks[].name` 覆盖 manifest 或 BDD mapping 要求的检查项。
 
 失败时必须：
 
-- Godot 进程 exit code 非 `0`。
+- `index.json` 或 `result.json` 标记失败、超时或缺失，或 scene artifact oracle 不通过。
 - stdout 包含 FAIL marker。
 - artifact `status` 为 `fail`。
 - artifact `failureReasons` 至少包含一条原因。

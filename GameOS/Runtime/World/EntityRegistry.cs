@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.CommandBuffer;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Events.Core;
@@ -12,6 +13,8 @@ namespace SlimeAI.GameOS.Runtime.World;
 /// </summary>
 public sealed class EntityRegistry : IEntityRegistry
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("EntityManager");
+
     private readonly Dictionary<EntityId, IEntity> entities = new();
     private readonly ILifecycleTree lifecycle;
     private readonly IWorldEventBus events;
@@ -47,6 +50,12 @@ public sealed class EntityRegistry : IEntityRegistry
 
         Register(entity);
         AttachLifecycleParentFromConfig(entity.EntityId, config);
+        Log.Info(
+            $"Entity spawned: {entity.EntityId}",
+            new Dictionary<string, object?>
+            {
+                ["entityId"] = entity.EntityId
+            });
         return entity;
     }
 
@@ -99,6 +108,12 @@ public sealed class EntityRegistry : IEntityRegistry
         entities.Remove(entityId);
         entity.Data.Reset();
         entity.Events.Publish(new EntityDestroyed(entity));
+        Log.Info(
+            $"Entity destroyed: {entityId}",
+            new Dictionary<string, object?>
+            {
+                ["entityId"] = entityId
+            });
         return true;
     }
 

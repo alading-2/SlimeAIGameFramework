@@ -29,6 +29,38 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/World/RuntimeW
 - PASS marker: `GameOS Runtime World validation PASS`
 - FAIL marker: `GameOS Runtime World validation FAIL`
 
+## Standard answer
+
+### expectedInputs
+
+- `RuntimeWorld.Default`。
+- `RuntimeWorld.CreateScoped()`。
+- dispose 顺序、teardown events、dispose 后访问请求。
+
+### expectedObservations
+
+- scoped world 与 default world 隔离。
+- default world 不能 dispose。
+- dispose 按七步顺序执行并派发 teardown events。
+- dispose 后访问抛出预期异常。
+
+### passCriteria
+
+- `index.json` 对应 entry `status=passed` 且 `exitCode=0`。
+- per-scene `result.json` `status=passed`，`firstError=null`。
+- artifact `status=pass`，`failureReasons=[]`，且 `checks[]` 全部为 pass。
+- stdout 含 `GameOS Runtime World validation PASS`。
+
+### failCriteria
+
+- stdout 含 `GameOS Runtime World validation FAIL`。
+- 任一 scoped isolation、default dispose、dispose order、teardown event 或 disposed access check 失败。
+- artifact `status=fail`、`failureReasons` 非空或标准答案字段缺失。
+
+### artifactPath
+
+`artifacts/runtime-world-validation.json`
+
 ## Artifact
 
 `artifacts/runtime-world-validation.json`

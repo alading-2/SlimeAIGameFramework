@@ -29,6 +29,39 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Lifecycle/Runt
 - PASS marker: `GameOS Runtime Lifecycle validation PASS`
 - FAIL marker: `GameOS Runtime Lifecycle validation FAIL`
 
+## Standard answer
+
+### expectedInputs
+
+- `LifecycleTree` attach/detach、single parent、自循环和 empty id 输入。
+- destroy policy recursive/detach 请求。
+- `EntityIdList` value semantics。
+- owner cleanup registry。
+
+### expectedObservations
+
+- attach/detach 和 single parent 约束正确。
+- self-cycle 与 empty id 被拒绝。
+- destroy policy 递归清理和 detach 行为正确。
+- `EntityIdList` value semantics 与 owner cleanup hook 正确维护。
+
+### passCriteria
+
+- `index.json` 对应 entry `status=passed` 且 `exitCode=0`。
+- per-scene `result.json` `status=passed`，`firstError=null`。
+- artifact `status=pass`，`failureReasons=[]`，且 `checks[]` 全部为 pass。
+- stdout 含 `GameOS Runtime Lifecycle validation PASS`。
+
+### failCriteria
+
+- stdout 含 `GameOS Runtime Lifecycle validation FAIL`。
+- 任一 lifecycle tree、destroy policy、EntityIdList 或 owner cleanup check 失败。
+- artifact `status=fail`、`failureReasons` 非空或标准答案字段缺失。
+
+### artifactPath
+
+`artifacts/runtime-lifecycle-validation.json`
+
 ## Artifact
 
 `artifacts/runtime-lifecycle-validation.json`

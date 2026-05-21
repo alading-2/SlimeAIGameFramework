@@ -30,6 +30,37 @@ Tools/run-godot-scene.sh run res://SlimeAI/Src/Validation/Runtime/Entity/Runtime
 - FAIL marker: `GameOS Runtime Entity validation FAIL`
 - Godot 进程 exit code 必须与 marker 一致。
 
+## Standard answer
+
+### expectedInputs
+
+- `EntityId.Empty`、自定义 `EntityId` 和 generated entity id。
+- `EntityManager` spawn / destroy 请求。
+- typed entity lifecycle event payload。
+
+### expectedObservations
+
+- `EntityId.Empty` 边界检查通过。
+- 自定义 id 与 generated id 可区分且 registry 状态正确。
+- entity event payload 保留 typed entity id 和 lifecycle 信息。
+
+### passCriteria
+
+- `index.json` 对应 entry `status=passed` 且 `exitCode=0`。
+- per-scene `result.json` `status=passed`，`firstError=null`。
+- artifact `status=pass`，`failureReasons=[]`，且 `checks[]` 全部为 pass。
+- stdout 含 `GameOS Runtime Entity validation PASS`。
+
+### failCriteria
+
+- stdout 含 `GameOS Runtime Entity validation FAIL`。
+- 任一 EntityId、registry 或 typed event check 失败。
+- artifact `status=fail`、`failureReasons` 非空或标准答案字段缺失。
+
+### artifactPath
+
+`artifacts/runtime-entity-validation.json`
+
 ## Artifact
 
 `artifacts/runtime-entity-validation.json`

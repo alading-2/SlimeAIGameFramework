@@ -136,6 +136,62 @@ internal static class EventBusTests
         AssertEqual("broadcast world handler", 1, worldHandled);
     }
 
+    public static void WorldPublishLogsEventAndHandlerCount()
+    {
+        GameOSLog.Reset(new GameOSLogOptions
+        {
+            EnableStdout = false,
+            EnableJsonl = false,
+            MinimumLevel = GameOSLogLevel.Debug
+        });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+        try
+        {
+            var world = new WorldEventBus();
+            world.Subscribe<TestGlobalEvent>(_ => { });
+
+            world.Publish(new TestGlobalEvent(1));
+
+            AssertEqual("world event published log", true, memory.Entries.Any(entry =>
+                entry.Context == "EventBus" &&
+                entry.Level == GameOSLogLevel.Debug &&
+                entry.Message == "Event published: TestGlobalEvent, handlers=1"));
+        }
+        finally
+        {
+            GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        }
+    }
+
+    public static void EntityPublishLogsEventAndHandlerCount()
+    {
+        GameOSLog.Reset(new GameOSLogOptions
+        {
+            EnableStdout = false,
+            EnableJsonl = false,
+            MinimumLevel = GameOSLogLevel.Debug
+        });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+        try
+        {
+            var entity = new EntityEventBus("entity:publish-log");
+            entity.Subscribe<TestEntityEvent>(_ => { });
+
+            entity.Publish(new TestEntityEvent(1));
+
+            AssertEqual("entity event published log", true, memory.Entries.Any(entry =>
+                entry.Context == "EventBus" &&
+                entry.Level == GameOSLogLevel.Debug &&
+                entry.Message == "Event published: entity:publish-log/TestEntityEvent, handlers=1"));
+        }
+        finally
+        {
+            GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        }
+    }
+
     public static void EntityEventOnWorldBusRejected()
     {
         WithMutedLog(() =>

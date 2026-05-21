@@ -1,5 +1,6 @@
 using SlimeAI.GameOS.Capabilities.Damage;
 using SlimeAI.GameOS.Capabilities.Projectile;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Runtime.Data;
 using SlimeAI.GameOS.Runtime.Entity;
 using SlimeAI.GameOS.Runtime.Event;
@@ -64,6 +65,30 @@ internal partial class Program
 
         spawnSub.Dispose();
         destroySub.Dispose();
+    }
+
+    static void TestEntityRegistrySpawnDestroyLogs()
+    {
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
+        using var world = RuntimeWorld.CreateScoped();
+        var entity = world.Entities.Spawn(new EntitySpawnConfig { EntityId = new EntityId("entity-log") });
+        world.Entities.Destroy(entity);
+
+        AssertEqual("entity spawned log", true, memory.Entries.Any(entry =>
+            entry.Context == "EntityManager" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "Entity spawned: entity-log" &&
+            Equals(entry.Values["entityId"], entity.EntityId)));
+        AssertEqual("entity destroyed log", true, memory.Entries.Any(entry =>
+            entry.Context == "EntityManager" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "Entity destroyed: entity-log" &&
+            Equals(entry.Values["entityId"], entity.EntityId)));
+
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestLifecycleTree()
@@ -283,6 +308,60 @@ internal partial class Program
         AssertEqual("schedule command blocked", false, schedule.Execute<ScheduleProbeSystem, int, int>(2).Success);
 
         schedule.Clear();
+    }
+
+    static void TestRuntimeScheduleLoggingAndStatus()
+    {
+        GameOSLog.Reset(new GameOSLogOptions
+        {
+            EnableStdout = false,
+            EnableJsonl = false,
+            MinimumLevel = GameOSLogLevel.Debug
+        });
+        var memory = new GameOSMemoryLogSink();
+        GameOSLog.AddSink(memory);
+
+        var schedule = new RuntimeSchedule();
+        schedule.Register(
+            new SystemDescriptor("probe-log", static () => new ScheduleProbeSystem()),
+            new SystemConfig
+            {
+                SystemId = "probe-log",
+                Group = SystemGroup.Gameplay,
+                Priority = 7,
+                RunCondition = SystemRunCondition.GameplayRunning()
+            });
+        schedule.Bootstrap();
+        schedule.ProjectState.BeginGameplaySession();
+        schedule.RunPhase(SchedulePhase.Manual);
+        schedule.PrintStatus();
+
+        AssertEqual("registered log", true, memory.Entries.Any(entry =>
+            entry.Context == "RuntimeSchedule" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "System registered: probe-log, phase=Gameplay" &&
+            Equals(entry.Values["systemId"], "probe-log") &&
+            Equals(entry.Values["group"], SystemGroup.Gameplay)));
+        AssertEqual("phase log", true, memory.Entries.Any(entry =>
+            entry.Context == "RuntimeSchedule" &&
+            entry.Level == GameOSLogLevel.Debug &&
+            entry.Message == "Phase Manual: 0 systems executed" &&
+            Equals(entry.Values["phase"], SchedulePhase.Manual)));
+        AssertEqual("status log", true, memory.Entries.Any(entry =>
+            entry.Context == "RuntimeSchedule" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message.Contains("RuntimeSchedule status", StringComparison.Ordinal) &&
+            Equals(entry.Values["systemCount"], 1)));
+        AssertEqual("flow state log", true, memory.Entries.Any(entry =>
+            entry.Context == "RuntimeSchedule" &&
+            entry.Level == GameOSLogLevel.Info &&
+            entry.Message == "FlowState: Boot->Gameplay, overlays=None" &&
+            Equals(entry.Values["previousFlowState"], GameFlowState.Boot) &&
+            Equals(entry.Values["currentFlowState"], GameFlowState.SessionPlaying) &&
+            Equals(entry.Values["overlays"], OverlayFlags.None)));
+
+        schedule.Clear();
+        GameOSLog.Reset(new GameOSLogOptions { EnableStdout = false, EnableJsonl = false });
     }
 
     static void TestObjectPool()

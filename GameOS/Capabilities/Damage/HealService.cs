@@ -1,5 +1,7 @@
 using System;
+using SlimeAI.GameOS.Observation;
 using SlimeAI.GameOS.Capabilities.Damage.Events;
+using SlimeAI.GameOS.Runtime.Entity;
 
 namespace SlimeAI.GameOS.Capabilities.Damage;
 
@@ -8,6 +10,8 @@ namespace SlimeAI.GameOS.Capabilities.Damage;
 /// </summary>
 public sealed class HealService
 {
+    private static readonly GameOSContextLog Log = GameOSLog.For("HealService");
+
     /// <summary>进程级默认 HealService。</summary>
     public static HealService Instance { get; } = new();
 
@@ -55,6 +59,16 @@ public sealed class HealService
         if (!info.IsSimulation)
         {
             ApplyHeal(info);
+            Log.Info(
+                $"Heal applied: {info.Healer?.EntityId}->{info.Target.EntityId}, amount={info.FinalAmount}, hp={info.OldHp}->{info.NewHp}",
+                new Dictionary<string, object?>
+                {
+                    ["healer"] = info.Healer?.EntityId ?? EntityId.Empty,
+                    ["target"] = info.Target.EntityId,
+                    ["amount"] = info.FinalAmount,
+                    ["oldHp"] = info.OldHp,
+                    ["newHp"] = info.NewHp
+                });
         }
 
         return new HealResult(true, info, info.OldHp, info.NewHp, string.Empty);
