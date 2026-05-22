@@ -250,7 +250,7 @@ public class WorldEventBus : IWorldEventBus
 }
 
 /// <summary>
-/// 进程级事件总线的静态访问点。替换旧 GlobalEventBus.Global。
+/// 进程级事件总线的静态访问点。
 /// </summary>
 public static class WorldEvents
 {

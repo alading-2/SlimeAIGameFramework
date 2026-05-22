@@ -333,11 +333,11 @@ BrotatoLike Game Input validation FAIL
 
 `RuntimeEventValidation` 必须验证：
 
-- 注册顺序即派发顺序。
+- registration order 即派发顺序。
 - `IDisposable.Dispose()` 退订后不再派发。
-- handler exception 被 `EventBusObservation` 捕获，后续 handler 继续执行。
-- 同类型嵌套 Publish 被 per-bus reentry guard 阻断，并记录尝试次数和实际执行次数。
-- `IEntityEvent` 被 `WorldEventBus.Publish` 时 log Error + return，不派发。
+- handler exception 被捕获，后续 handler 继续执行。
+- 同类型 nested Publish 被 per-bus reentry guard 阻断。
+- `IEntityEvent` 被 `WorldEvents.World.Publish` 时不派发。
 - `IBroadcastEvent` 在 entity bus 一次 Publish MUST 同时派发到 entity bus 和 world bus。
 - `RuntimeEntity + Data.Set` 触发 `Runtime.Events.Core.DataPropertyChanged`，并标注为 Data-to-Event 跨层桥接检查。
 
